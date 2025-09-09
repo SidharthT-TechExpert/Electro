@@ -1,0 +1,19 @@
+{
+  "name": "electro",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Sidharth T",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mongodb": "^6.19.0",
+    "mongose": "^0.0.2-security",
+    "nodemon": "^2.0.22"
+  }
+}
