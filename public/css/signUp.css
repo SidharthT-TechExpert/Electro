@@ -1,0 +1,261 @@
+/* Wrapper */
+.signup-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 92vh;
+  background: #0b0b0b;
+  padding: 20px;
+}
+
+/* Container */
+.signup-container {
+  display: flex;
+  width: 100%;
+  max-width: 1050px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #111;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+  transition: transform 0.6s ease-in-out;
+}
+
+/* Left (Form) */
+.form-section {
+  flex: 1;
+  background: #111;
+  color: #fff;
+  padding: 50px 40px;
+  transition: 0.6s;
+  animation: fadeIn 0.6s ease;
+}
+.form-section h2 {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.subtitle {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+/* Form Groups */
+.form-group {
+  position: relative;
+  margin-bottom: 25px;
+}
+.form-group input {
+  width: 100%;
+  padding: 12px 40px 12px 12px;
+  border: none;
+  border-bottom: 1px solid #444;
+  background: transparent;
+  color: #fff;
+  outline: none;
+}
+.form-group label {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  color: #777;
+  pointer-events: none;
+  transition: 0.3s ease;
+}
+.form-group input:focus + label,
+.form-group input:valid + label {
+  top: -10px;
+  font-size: 12px;
+  color: #DB4444;
+}
+.form-group i {
+  position: absolute;
+  right: 10px;
+  top: 14px;
+  color: #777;
+}
+.toggle-password {
+  cursor: pointer;
+}
+
+/* Remember Me */
+.remember-me {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* Buttons */
+.btn-main {
+  width: 100%;
+  padding: 12px;
+  background: #DB4444;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: 0.3s;
+}
+.btn-main:hover {
+  background: #e05252;
+}
+.btn-social {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  margin-bottom: 12px;
+  transition: 0.3s;
+}
+.btn-social:hover {
+  background: #333;
+}
+.btn-social.google { color: #fff; }
+.btn-social.facebook { color: #1877f2; border-color: #1877f2; }
+
+/* Right (Promo) */
+.promo-section {
+  flex: 1;
+  background: linear-gradient(135deg, #DB4444, #ff6b6b);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.6s ease;
+}
+.promo-card {
+  text-align: center;
+  color: #fff;
+  padding: 30px;
+  animation: fadeIn 1s ease;
+}
+.promo-card img {
+  margin: 20px 0;
+  max-width: 240px;
+  border-radius: 12px;
+}
+.btn-toggle {
+  margin-top: 15px;
+  background: #fff;
+  color: #DB4444;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-toggle:hover { background: #f7f7f7; }
+
+/* Slide Mode (Login) */
+.signup-container.login-mode .promo-section {
+  transform: translateX(-100%);
+}
+.signup-container.login-mode .form-section {
+  flex: 2;
+}
+.signup-container.login-mode .signup-only {
+  display: none;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .signup-container {
+    flex-direction: column;
+  }
+  .promo-section {
+    order: -1;
+    min-height: 200px;
+  }
+}
+
+/* Wrapper */
+.signup-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh; /* Reduced height */
+  background: #0b0b0b;
+  padding: 20px;
+}
+
+/* Container */
+.signup-container {
+  display: flex;
+  max-width: 950px;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+  transition: transform 0.6s ease-in-out;
+}
+
+/* Left Form Section */
+.signup-left {
+  flex: 1;
+  background: #111;
+  padding: 40px;
+  color: #fff;
+  position: relative;
+  transition: transform 0.6s ease;
+}
+
+/* Right Promo Section */
+.signup-right {
+  flex: 1;
+  background: linear-gradient(135deg, #DB4444, #ff6b6b);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.6s ease;
+}
+.promo-card {
+  text-align: center;
+  color: #fff;
+  padding: 20px;
+}
+.promo-card img {
+  margin-top: 15px;
+  max-width: 200px;
+  border-radius: 10px;
+}
+.btn-login-toggle {
+  margin-top: 20px;
+  background: #fff;
+  color: #DB4444;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-login-toggle:hover {
+  background: #f7f7f7;
+}
+
+/* Form Hidden Elements */
+.signup-only {
+  display: block;
+}
+
+/* --- ACTIVE LOGIN MODE --- */
+.signup-container.login-mode .signup-right {
+  transform: translateX(-100%);
+}
+.signup-container.login-mode .signup-left {
+  flex: 2;
+}
+.signup-container.login-mode .signup-only {
+  display: none; /* Hide confirm password in login mode */
+}
+.signup-container.login-mode #formTitle {
+  content: "Login";
+}
+
