@@ -1,0 +1,119 @@
+/* ------------------------------
+   Main Header Styles
+------------------------------ */
+
+/* Fix main header on top */
+header.main-header {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  background: #f8f9fa;
+}
+
+/* ------------------------------
+   Search Bar
+------------------------------ */
+header .input-group {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+header .input-group-text {
+  background: #fff;
+  border: none;
+}
+header .form-control {
+  border: none;
+  box-shadow: none;
+}
+header .form-control:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ------------------------------
+   User Dropdown Button
+------------------------------ */
+header .user-btn {
+  background-color: #2c2c2c;
+  border: none;
+  font-size: 14px;
+  padding: 6px 12px;
+  color: #fff;
+}
+header .user-btn i {
+  font-size: 16px;
+}
+
+/* Arrow rotation animation */
+header .arrow-icon {
+  transition: transform 0.2s ease-in-out;
+}
+header .user-btn.show .arrow-icon {
+  transform: rotate(180deg);
+}
+
+/* ------------------------------
+   Dark Dropdown Menu
+------------------------------ */
+.dropdown-dark {
+  background: #2c2c2c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dropdown-dark .dropdown-item {
+  color: #fff;
+  font-size: 14px;
+  padding: 10px 14px;
+}
+.dropdown-dark .dropdown-item i {
+  width: 18px;
+}
+.dropdown-dark .dropdown-item:hover {
+  background: #444;
+}
+.dropdown-dark .dropdown-divider {
+  border-color: #555;
+}
+
+/* ------------------------------
+   Cart + Hamburger
+------------------------------ */
+header .btn-outline-secondary {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  padding: 6px 12px;
+  color: #333;
+}
+header .btn-outline-secondary:hover {
+  background: #eaeaea;
+}
+header .btn-outline-secondary i {
+  font-size: 16px;
+}
+
+/* Cart badge */
+header .btn-outline-secondary .badge {
+  font-size: 11px;
+  padding: 3px 6px;
+}
+
+/* ------------------------------
+   Top Info Bar
+------------------------------ */
+.top-info-bar {
+  font-size: 13px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+.top-info-bar a {
+  color: #000;
+  font-weight: 600;
+  text-decoration: none;
+}
+.top-info-bar a:hover {
+  text-decoration: underline;
+}
