@@ -12,7 +12,7 @@ const loadHomePage = async (req, res) => {
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {
   try {
-    res.render("page-404");
+    res.render("page-404", { user: req.user || { name: "Guest" }  , cartCount : req.cartCount || 2});
   } catch (error) {
     res.status(HTTP_STATUS.NOT_FOUND).redirect("/pageNotFound");
   }
