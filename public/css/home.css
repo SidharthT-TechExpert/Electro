@@ -23,7 +23,7 @@
 }
 .categories .cat-box:hover,
 .categories .cat-box.active {
-  background: #DB4444;
+  background: #db4444;
   color: #fff;
 }
 .categories .cat-box i {
@@ -38,9 +38,9 @@
   color: #fff;
 }
 .products .nav-tabs .nav-link.active {
-  color: #DB4444;
+  color: #db4444;
   border: none;
-  border-bottom: 2px solid #DB4444;
+  border-bottom: 2px solid #db4444;
 }
 .product-card {
   border-radius: 8px;
@@ -49,7 +49,7 @@
 }
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 .product-card img {
   background: #f9f9f9;
@@ -63,11 +63,18 @@
   max-width: 220px;
   margin: 10px;
 }
+
+.footer {
+  background: #000000;
+  color: #ccc;
+  padding: 40px 0;
+}
+
 .features .icon {
   width: 60px;
   height: 60px;
   margin: 0 auto 10px;
-  background: #000;
+  background: #000000;
   color: #fff;
   border-radius: 50%;
   display: flex;
@@ -75,11 +82,49 @@
   align-items: center;
   font-size: 22px;
 }
+/* Store buttons (Google Play / App Store) */
+.store-btn {
+  border-radius: 8px;
+  border: 3px solid #fff;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+/* Footer email input */
+.footer-input {
+  border-radius: 15px;       /* Rounded corners */
+  background-color: #161515;    /* Black background */
+  color: #fff;               /* White text */
+  border: 1px solid #444;    /* Subtle border */
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+/* Placeholder color */
+.footer-input::placeholder {
+  color: #d6d0d0;
+}
+
+/* Focus state */
+.footer-input:focus {
+  border-color: #fff;
+  box-shadow: none;
+  background-color: #111;
+  color: #fff;
+}
+
+/* Hover effect */
+.store-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
 
 /* Footer */
-.footer h6 {
-  font-weight: bold;
+.footer h6,
+h5 {
+  font-weight: bolder;
   margin-bottom: 15px;
+  color: #c8b7b7;
 }
 .footer p,
 .footer li {
@@ -87,4 +132,19 @@
 }
 .footer input {
   border-radius: 4px;
+}
+
+/* Back to Top */
+.back-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
