@@ -1,186 +1,170 @@
-// Helper Get element ID
+// Helper: Get element by ID
 const $ = (id) => document.getElementById(id);
 
-// Toggle password
+// Toggle password visibility
 document.querySelectorAll(".toggle-password").forEach((icon) => {
   icon.addEventListener("click", () => {
-    const targetId = icon.getAttribute("data-target");
-    const input = $(targetId);
-
+    const input = $(icon.getAttribute("data-target"));
     if (input.type === "password") {
       input.type = "text";
-      icon.classList.remove("fa-eye");
-      icon.classList.add("fa-eye-slash");
+      icon.classList.replace("fa-eye", "fa-eye-slash");
     } else {
       input.type = "password";
-      icon.classList.remove("fa-eye-slash");
-      icon.classList.add("fa-eye");
+      icon.classList.replace("fa-eye-slash", "fa-eye");
     }
   });
 });
 
 document.querySelectorAll(".ctoggle-password").forEach((icon) => {
   icon.addEventListener("click", () => {
-    const targetId = icon.getAttribute("data-target");
-    const input = $(targetId);
-
+    const input = $(icon.getAttribute("data-target"));
     if (input.type === "password") {
       input.type = "text";
-      icon.classList.remove("fa-lock");
-      icon.classList.add("fa-unlock");
+      icon.classList.replace("fa-lock", "fa-unlock");
     } else {
       input.type = "password";
-      icon.classList.remove("fa-unlock");
-      icon.classList.add("fa-lock");
+      icon.classList.replace("fa-unlock", "fa-lock");
     }
   });
 });
 
-//Sign Up Validaction Started hear
-
-//Get Element By ID's
+// Get form elements
 const nameId = $("name"),
   emailId = $("email"),
   phoneId = $("phone"),
   passwordId = $("password"),
-  cPasswordId = $("confirmPassword"),
+  cPasswordId = $("cPassword"),
   signupFormId = $("signupForm"),
-  //Error id's
   nameErrorId = $("nameError"),
   emailErrorId = $("emailError"),
   phoneErrorId = $("phoneError"),
   passwordErrorId = $("passwordError"),
   cPasswordErrorId = $("cPasswordError");
 
-//Password strangth checking
-const meter = document.getElementById("strengthMeter"),
-  label = document.getElementById("strengthLabel");
+// Password strength meter elements
+const meter = $("strengthMeter"),
+  label = $("strengthLabel");
 
+// Password strength meter
 passwordId.addEventListener("input", () => {
   const v = passwordId.value;
   let s = 0;
+  if (v.length >= 8) s++;
   if (/[A-Z]/.test(v)) s++;
   if (/[0-9]/.test(v)) s++;
   if (/[^A-Za-z0-9]/.test(v)) s++;
-  if (v.length >= 6) s++;
+
   const w = [0, 25, 50, 75, 100],
     c = ["#ff3d3d", "#ff8a3d", "#ffd54d", "#9be26b", "#4cd964"],
     t = ["Too short", "Weak", "Okay", "Good", "Strong"];
+
   meter.style.width = w[s] + "%";
   meter.style.background = c[s];
   label.textContent = v ? t[s] : "";
   label.style.color = v ? c[s] : "red";
 });
 
-const nameValidactionCIdhecking = (e) => {
+// Validation functions
+function validateName() {
   const name = nameId.value.trim();
-  //name pattern
-  const namePattern = /^[A-Za-z\s]+$/;
+  const pattern = /^[A-Za-z\s]+$/;
 
-  if (!namePattern.test(name)) {
-    nameError.style.display = "inline-block";
-    nameError.innerHTML = "Name only contain alphabets & spaces!";
+  if (!pattern.test(name)) {
+    nameErrorId.style.display = "inline-block";
+    nameErrorId.textContent = "Name can only contain alphabets & spaces!";
   } else {
-    nameError.style.display = "none";
-    nameError.innerHTML = "";
+    nameErrorId.style.display = "none";
+    nameErrorId.textContent = "";
   }
-};
+}
 
-const emailValidactionChecking = (e) => {
+function validateEmail() {
   const email = emailId.value.trim();
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  if (!emailPattern.test(email)) {
+  if (!pattern.test(email)) {
     emailErrorId.style.display = "inline-block";
-    emailErrorId.innerHTML = "Invalid Format!";
+    emailErrorId.textContent = "Invalid email format!";
   } else {
     emailErrorId.style.display = "none";
-    emailErrorId.innerHTML = "";
+    emailErrorId.textContent = "";
   }
-};
+}
 
-const phoneValidactionChecking = (e) => {
-  let phone = phoneId.value.trim();
-  phone = phone.replace(/^0+/, "");
-  const phonePattern = /^[0-9]{10}$/;
+function validatePhone() {
+  let phone = phoneId.value.trim().replace(/^0+/, "");
+  const pattern = /^[0-9]{10}$/;
 
-  if (!phonePattern.test(phone)) {
+  if (!pattern.test(phone)) {
     phoneErrorId.style.display = "inline-block";
-    phoneErrorId.innerHTML = "Enter a valid 10-digit phone number!<";
+    phoneErrorId.textContent = "Enter a valid 10-digit phone number!";
   } else {
     phoneErrorId.style.display = "none";
-    phoneErrorId.innerHTML = "";
+    phoneErrorId.textContent = "";
   }
-};
+}
 
-const passwordValidactionChecking = (e) => {
-  const password = passwordId.value.trim(),
-    cPassword = cPasswordId.value.trim(),
-    lower = /[a-z]/,
+function validatePassword() {
+  const password = passwordId.value.trim();
+  const cPassword = cPasswordId.value.trim();
+  const lower = /[a-z]/,
     upper = /[A-Z]/,
     digit = /\d/,
     special = /[@$!%*?&]/;
 
   if (password.length < 8) {
     passwordErrorId.style.display = "inline-block";
-    passwordErrorId.innerHTML = "❌ Must be at least 8 characters!";
+    passwordErrorId.textContent = "❌ Must be at least 8 characters!";
   } else if (!lower.test(password)) {
     passwordErrorId.style.display = "inline-block";
-    passwordErrorId.innerHTML = "❌ Must include a lowercase letter!";
+    passwordErrorId.textContent = "❌ Must include a lowercase letter!";
   } else if (!upper.test(password)) {
     passwordErrorId.style.display = "inline-block";
-    passwordErrorId.innerHTML = "❌ Must include an uppercase letter!";
+    passwordErrorId.textContent = "❌ Must include an uppercase letter!";
   } else if (!digit.test(password)) {
     passwordErrorId.style.display = "inline-block";
-    passwordErrorId.innerHTML = "❌ Must include a number!";
+    passwordErrorId.textContent = "❌ Must include a number!";
   } else if (!special.test(password)) {
     passwordErrorId.style.display = "inline-block";
-    passwordErrorId.innerHTML =
+    passwordErrorId.textContent =
       "❌ Must include a special character (@, $, !, %, *, ?, &)";
   } else {
     passwordErrorId.style.display = "none";
-    passwordErrorId.innerHTML = "";
+    passwordErrorId.textContent = "";
   }
 
-  if (password != cPassword) {
+  // Confirm password check
+  if (password !== cPassword && cPassword !== "") {
     cPasswordErrorId.style.display = "inline-block";
-    cPasswordErrorId.innerHTML = "Passwords do not match";
+    cPasswordErrorId.textContent = "Passwords do not match";
   } else {
     cPasswordErrorId.style.display = "none";
-    cPasswordErrorId.innerHTML = "";
+    cPasswordErrorId.textContent = "";
   }
-};
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-  signupFormId.addEventListener("submit", (e) => {
-    nameValidactionChecking();
-    emailValidactionChecking();
-    phoneValidactionChecking();
-    passwordValidactionChecking();
+// Real-time validation
+nameId.addEventListener("input", validateName);
+emailId.addEventListener("input", validateEmail);
+phoneId.addEventListener("input", validatePhone);
+passwordId.addEventListener("input", validatePassword);
+cPasswordId.addEventListener("input", validatePassword);
 
-    if (
-      !nameId ||
-      !emailId ||
-      !phoneId ||
-      !passwordId ||
-      !cPasswordId ||
-      !nameErrorId ||
-      !emailErrorId ||
-      !phoneErrorId ||
-      !passwordErrorId ||
-      cPasswordErrorId
-    ) {
-      console.error("One or more elements not found ");
-    }
+// Form submit validation
+signupFormId.addEventListener("submit", (e) => {
+  validateName();
+  validateEmail();
+  validatePhone();
+  validatePassword();
 
-    if (
-      !nameErrorId.innerHTML ||
-      !emailErrorId.innerHTML ||
-      !phoneErrorId.innerHTML ||
-      !passwordErrorId.innerHTML ||
-      !cPasswordErrorId.innerHTML
-    ) {
-      e.preventDefault();
-    }
-  });
+  const hasErrors =
+    nameErrorId.textContent ||
+    emailErrorId.textContent ||
+    phoneErrorId.textContent ||
+    passwordErrorId.textContent ||
+    cPasswordErrorId.textContent;
+
+  if (hasErrors) {
+    e.preventDefault();
+  }
 });
