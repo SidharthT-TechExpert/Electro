@@ -6,7 +6,9 @@ const env = require("dotenv").config();
 // Home page Loader
 const loadHomePage = async (req, res) => {
   try {
-    res.render("home", { user: req?.user, cartCount: req.cartCount || 2 });
+    res
+      .status(HTTP_STATUS.OK)
+      .render("auth/home", { user: req?.user, cartCount: req.cartCount || 2 });
   } catch (error) {
     console.error("Error loading home page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -16,7 +18,7 @@ const loadHomePage = async (req, res) => {
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {
   try {
-    res.render("page-404", {
+    res.status(HTTP_STATUS.NOT_FOUND).render("auth/page-404", {
       user: req.user || { name: "Guest" },
       cartCount: req.cartCount || 2,
     });
@@ -28,7 +30,10 @@ const pageNotFound = async (req, res) => {
 // Sign Up Page Loader
 const loadSignUpPage = async (req, res) => {
   try {
-    res.render("signUp", { user: req?.user || null , cartCount: req?.cartCount || 2 });
+    res.status(HTTP_STATUS.OK).render("auth/signUp", {
+      user: req?.user || null,
+      cartCount: req?.cartCount || 2,
+    });
   } catch (error) {
     console.error("Error loading sign-up page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -38,7 +43,10 @@ const loadSignUpPage = async (req, res) => {
 // Log In Page Loader
 const loadLogInPage = async (req, res) => {
   try {
-    res.render("logIn", { user: req?.user, cartCount: req?.cartCount || 2 });
+    res.status(HTTP_STATUS.OK).render("auth/logIn", {
+      user: req?.user,
+      cartCount: req?.cartCount || 2,
+    });
   } catch (error) {
     console.error("Error loading log-in page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -48,7 +56,7 @@ const loadLogInPage = async (req, res) => {
 // Forget Password Page Loader
 const loadForgetPage = async (req, res) => {
   try {
-    res.render("forgetpass", {
+    res.status(HTTP_STATUS.OK).render("forgetPassword/forgetpass", {
       user: req?.user,
       cartCount: req?.cartCount || 2,
     });
@@ -60,35 +68,53 @@ const loadForgetPage = async (req, res) => {
 
 // OTP Generater
 const generateOtp = () => {
-  return Math.floor(10000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 //Email through OTP Send
 const sendVerificationEmail = async (email, OTP) => {
   try {
+    // Create reusable transporter
     const transport = nodemailer.createTransport({
       service: "gmail",
       port: 587,
-      secure: false,
-      requireTLS: true,
+      secure: false, // use true for port 465 (recommended for Gmail)
       auth: {
         user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD,
+        pass: process.env.NODEMAILER_PASSWORD, // App Password (no spaces!)
       },
     });
-    const info = await transport.sendMail({
-      form: process.env.NODEMAILER_EMAIL,
+
+    // Email content
+    const mailOptions = {
+      from: `"Electro Support ⚡" <${process.env.NODEMAILER_EMAIL}>`,
       to: email,
-      subject: "Verify your account",
-      text: `Your OTP is ${OTP} `,
-      html: `<b>Your OTP:${OTP}</b>`,
-    });
+      subject: "🔐 Verify Your Account - Electro",
+      text: `Your OTP is ${OTP}. It will expire in 10 minutes.`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;
+                    border:1px solid #ddd;border-radius:8px;background:#f9f9f9;">
+          <h2 style="color:#4caf50;">Welcome to Electro ⚡</h2>
+          <p>We received a request to verify your account.</p>
+          <p style="font-size:18px;">Your OTP is:</p>
+          <h1 style="color:#333;letter-spacing:3px;">${OTP}</h1>
+          <p>This OTP will expire in <b>10 minutes</b>.</p>
+          <hr style="margin:20px 0;">
+          <small>If you didn’t request this, you can safely ignore this email.</small>
+        </div>
+      `,
+    };
+
+    // Send email
+    const info = await transport.sendMail(mailOptions);
+
+    console.log(`✅ Email sent to ${email}: ${info.response}`);
     return info.accepted.length > 0;
   } catch (error) {
-    console.error("Error Sending email :", error);
-    res
+    console
       .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send("Internal Server Error!");
+      .error("❌ Error sending email:", error.message);
+    return false;
   }
 };
 
@@ -97,30 +123,50 @@ const signUp = async (req, res) => {
   const { name, email, phone, password, cPassword, rememberMe } = req.body;
   try {
     if (password != cPassword) {
-      return res.render("signUp", { message: "Password do not match!" });
+      return res.redirect("/signUp", { message: "Password do not match!" });
     }
     const findUser = await userSchema.findOne({ email });
 
     if (findUser) {
-      return res.render("signUp", {
-        message: "User with this email already exist",
-      });
+      req.flash(
+        "error",
+        "You are already our customer. Click on below button to login"
+      );
+
+      return res.redirect("/signUp");
     }
 
     const OTP = generateOtp();
     const emailSend = await sendVerificationEmail(email, OTP);
 
     if (!emailSend) {
-      return res.json("email-error");
+      return res.json({ error: "Failed to send email" });
     }
+
     req.session.userOtp = OTP;
     req.session.userData = { email, password, name, phone, rememberMe };
+    req.session.email = email;
 
-    //res.status(HTTP_STATUS.OK).render("Verify-otp");
-    console.log("OTP Sent ",OTP);
+    res.status(HTTP_STATUS.OK).render("auth/Verify-otp");
+    console.log("OTP Sent ", OTP);
   } catch (error) {
     console.error("SignUp Error :", error);
-    res.redirect("/pageNotFound");
+    res.status(HTTP_STATUS.NOT_FOUND).redirect("/pageNotFound");
+  }
+};
+
+// Verify page loader
+const verify_otp = async (req, res) => {
+  try {
+    res.render("auth/verify-Otp", {
+      user: { name: req?.user?.name || null },
+      cartCount: req?.user?.cartCount || 0,
+    });
+  } catch (error) {
+    console.error("Error Verify otp page loder : ", error);
+    res
+      .send(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .redirect("/verify-Otp", { message: "Internal Server error", error });
   }
 };
 
@@ -131,4 +177,5 @@ module.exports = {
   loadLogInPage,
   loadForgetPage,
   signUp,
+  verify_otp,
 };

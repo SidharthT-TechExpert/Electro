@@ -1,0 +1,168 @@
+/* Main Reset Container */
+.reset-container {
+  display: flex;
+  width: 780px;
+  height: 420px;
+  margin: 40px auto;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+  font-family: "Poppins", system-ui;
+}
+
+/* Left Side (OTP) */
+.reset-left {
+  flex: 1;
+  background: #111;
+  color: #fff;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.reset-left h2 {
+  font-size: 22px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.reset-left .subtitle {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+/* OTP Input Row */
+.rc-otp-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 14px 0 10px;
+}
+.rc-otp {
+  width: 46px;
+  height: 56px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  background: #f2f4ff;
+  color: #111;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+.rc-otp:focus {
+  border-color: #ff7a00;
+  outline: none;
+  background: #fff;
+}
+
+/* Timer */
+.rc-timer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 20px;
+}
+.rc-timer-label {
+  font-size: 13px;
+  color: #ddd;
+  min-width: 60px;
+}
+.rc-timer-bar {
+  flex: 1;
+  height: 6px;
+  background: #222;
+  border-radius: 6px;
+  overflow: hidden;
+}
+#timerFill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg,#ff7a00,#ff3d3d);
+}
+
+/* Error */
+.rc-error {
+  color: #ff6b6b;
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+/* Button */
+.rc-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  background: linear-gradient(90deg,#ff7a00,#ff3d3d);
+  transition: transform .2s, box-shadow .2s;
+}
+.rc-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(255,60,60,0.25);
+}
+
+/* Resend */
+.rc-resend {
+  display: inline-block;
+  margin-top: 14px;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+}
+.rc-resend:hover {
+  color: #ff3d3d;
+}
+
+/* Right Side (Promo) */
+.reset-right {
+  width: 320px;
+  background: linear-gradient(135deg,#ff512f,#dd2476);
+  color: #fff;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.reset-right h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.reset-right p {
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: rgba(255,255,255,0.95);
+}
+.promo-img {
+  width: 220px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* Responsive */
+@media(max-width: 900px) {
+  .reset-container {
+    flex-direction: column;
+    width: 92%;
+    height: auto;
+  }
+  .reset-left, .reset-right {
+    width: 100%;
+    height: auto;
+    padding: 20px;
+  }
+  .promo-img {
+    width: 180px;
+  }
+}
