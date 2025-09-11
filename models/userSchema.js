@@ -72,6 +72,11 @@ const userSchema = new Schema({
       ref: "User",
     },
   ],
+  rememberMe: {
+    type: Boolean,
+    default: false,
+    require: false,
+  },
   searchHistory: [
     {
       category: {
@@ -88,7 +93,6 @@ const userSchema = new Schema({
     },
   ],
 });
-
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;

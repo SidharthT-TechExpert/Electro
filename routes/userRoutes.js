@@ -9,5 +9,8 @@ router.get('/logIn', userController.loadLogInPage);
 router.get('/forgetPassword', userController.loadForgetPage);
 router.get('/', userController.loadHomePage);
 
+// Post Request
+router.post('/signUp', userController.signUp)
+
 
 module.exports = router;
