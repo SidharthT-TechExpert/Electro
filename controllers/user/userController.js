@@ -1,8 +1,11 @@
 const HTTP_STATUS = require("../../config/statusCodes.js");
+const userSchema = require('../../models/userSchema.js');
+
+
 // Home page Loader
 const loadHomePage = async (req, res) => {
   try {
-    res.render("home", { user: req?.user , cartCount : req.cartCount || 2});
+    res.render("home", { user: req?.user, cartCount: req.cartCount || 2 });
   } catch (error) {
     console.error("Error loading home page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -12,7 +15,10 @@ const loadHomePage = async (req, res) => {
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {
   try {
-    res.render("page-404", { user: req.user || { name: "Guest" }  , cartCount : req.cartCount || 2});
+    res.render("page-404", {
+      user: req.user || { name: "Guest" },
+      cartCount: req.cartCount || 2,
+    });
   } catch (error) {
     res.status(HTTP_STATUS.NOT_FOUND).redirect("/pageNotFound");
   }
@@ -21,15 +27,54 @@ const pageNotFound = async (req, res) => {
 // Sign Up Page Loader
 const loadSignUpPage = async (req, res) => {
   try {
-    res.render("signUp", { user: req?.user  , cartCount : req?.cartCount || 2});
+    res.render("signUp", { user: req?.user, cartCount: req?.cartCount || 2 });
   } catch (error) {
     console.error("Error loading sign-up page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
-}
+};
+
+// Log In Page Loader
+const loadLogInPage = async (req, res) => {
+  try {
+    res.render("logIn", { user: req?.user, cartCount: req?.cartCount || 2 });
+  } catch (error) {
+    console.error("Error loading log-in page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  }
+};
+
+// Forget Password Page Loader
+const loadForgetPage = async (req, res) => {
+  try {
+    res.render("forgetpass", {
+      user: req?.user,
+      cartCount: req?.cartCount || 2,
+    });
+  } catch (error) {
+    console.error("Error loading forget password page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  }
+};
+
+// SignUp
+const signUp = async (req, res) => {
+  const {name , email , phone , password , rememberMe} = req.body ;
+  try {
+    const newUser = new userSchema({name , email , phone , password , rememberMe})
+    await newUser.save();
+    return res.redirect('/');
+  } catch (error) {
+    console.error('Error for save User :',error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error!");
+  }
+};
 
 module.exports = {
   loadHomePage,
   pageNotFound,
-  loadSignUpPage
+  loadSignUpPage,
+  loadLogInPage,
+  loadForgetPage,
+  signUp,
 };

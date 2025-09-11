@@ -82,42 +82,7 @@
   align-items: center;
   font-size: 22px;
 }
-/* Store buttons (Google Play / App Store) */
-.store-btn {
-  border-radius: 8px;
-  border: 3px solid #fff;
-  transition: all 0.3s ease-in-out;
-  cursor: pointer;
-}
 
-/* Footer email input */
-.footer-input {
-  border-radius: 15px;       /* Rounded corners */
-  background-color: #161515;    /* Black background */
-  color: #fff;               /* White text */
-  border: 1px solid #444;    /* Subtle border */
-  padding: 10px 14px;
-  font-size: 14px;
-}
-
-/* Placeholder color */
-.footer-input::placeholder {
-  color: #d6d0d0;
-}
-
-/* Focus state */
-.footer-input:focus {
-  border-color: #fff;
-  box-shadow: none;
-  background-color: #111;
-  color: #fff;
-}
-
-/* Hover effect */
-.store-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
-}
 
 /* Footer */
 .footer h6,

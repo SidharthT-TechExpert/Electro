@@ -1,0 +1,91 @@
+/* === FOOTER === */
+.footer {
+  background: #0a0a0a;
+  color: #eee;
+}
+
+.footer h5,
+.footer h6 {
+  color: #ff4b2b;
+  font-weight: 600;
+}
+
+.footer-input {
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  flex: 1;
+}
+
+.btn-subscribe {
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  border: none;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 6px;
+}
+
+.btn-subscribe:hover {
+  opacity: 0.9;
+}
+
+/* Back to Top */
+#backToTop {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  color: #fff;
+  border-radius: 50%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  z-index: 999;
+  transition: all 0.3s ease;
+}
+
+#backToTop:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 65, 108, 0.6);
+}
+
+
+/* Store buttons (Google Play / App Store) */
+.store-btn {
+  border-radius: 8px;
+  border: 3px solid #fff;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+/* Footer email input */
+.footer-input {
+  border-radius: 15px;       /* Rounded corners */
+  background-color: #161515;    /* Black background */
+  color: #fff;               /* White text */
+  border: 1px solid #444;    /* Subtle border */
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+/* Placeholder color */
+.footer-input::placeholder {
+  color: #d6d0d0;
+}
+
+/* Focus state */
+.footer-input:focus {
+  border-color: #fff;
+  box-shadow: none;
+  background-color: #111;
+  color: #fff;
+}
+
+/* Hover effect */
+.store-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
