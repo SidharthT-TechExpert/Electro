@@ -58,13 +58,12 @@ const loadForgetPage = async (req, res) => {
 };
 
 // SignUp
-
 const signUp = async (req, res) => {
   const {name , email , phone , password , rememberMe} = req.body ;
   try {
     const newUser = new userSchema({name , email , phone , password , rememberMe})
     await newUser.save();
-    res.redirect('/');
+    return res.redirect('/');
   } catch (error) {
     console.error('Error for save User :',error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error!");
