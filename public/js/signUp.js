@@ -61,6 +61,20 @@ const emailValidactionChecking = (e) => {
   }
 };
 
+const phoneValidactionChecking = (e) => {
+  let phone = phoneId.value.trim();
+  phone = phone.replace(/^0+/, "");
+  const phonePattern = /^[0-9]{10}$/;
+
+  if (!phonePattern.test(phone)) {
+    phoneErrorId.style.display = "inline-block";
+    phoneErrorId.innerHTML = "Enter a valid 10-digit phone number!<";
+  } else {
+    phoneErrorId.style.display = "none";
+    phoneErrorId.innerHTML = "";
+  }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   signupFormId.addEventListener("submit", (e) => {
     nameValidactionChecking();
