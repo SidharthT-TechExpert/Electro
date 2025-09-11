@@ -28,8 +28,30 @@ const loadSignUpPage = async (req, res) => {
   }
 }
 
+// Log In Page Loader
+const loadLogInPage = async (req, res) => {
+  try {
+    res.render("logIn", { user: req?.user  , cartCount : req?.cartCount || 2});
+  } catch (error) {
+    console.error("Error loading log-in page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  }
+}
+
+// Forget Password Page Loader
+const loadForgetPage = async (req, res) => {
+   try {
+    res.render("forgetpass", { user: req?.user  , cartCount : req?.cartCount || 2});
+   } catch (error) {
+    console.error("Error loading forget password page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+   }
+}
+
 module.exports = {
   loadHomePage,
   pageNotFound,
-  loadSignUpPage
+  loadSignUpPage,
+  loadLogInPage,
+  loadForgetPage,
 };
