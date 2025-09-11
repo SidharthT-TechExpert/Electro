@@ -32,18 +32,22 @@
           </div>
 
           <div class="form-group">
-            <input type="password" name="password"  id="password" required>
+            <input type="password" name="password" id="password" required>
             <label for="password">Password</label>
             <i class="fas fa-eye toggle-password" data-target="password"></i>
             <span id="passwordError" class="signUp-error"></span>
           </div>
-
-          <div class="password-strength" id="passwordStrength">Password strength: -</div>
-
+          <div class="strength-wrap">
+            <div class="strength-bar">
+              <div id="strengthMeter"></div>
+            </div>
+            <div id="strengthLabel" class="strength-label"></div>
+          </div>
+          
           <div class="form-group signup-only">
-            <input type="password" name="cPassword" id="confirmPassword" required>
+            <input type="password" name="cPassword" id="cozPassword" required>
             <label for="confirmPassword">Confirm Password</label>
-            <i class="fas fa-lock"></i>
+            <i class="fas fa-lock ctoggle-password" data-target="cPassword" ></i>
             <span id="cPasswordError" class="signUp-error"></span>
           </div>
 
@@ -64,7 +68,8 @@
           <h3>Welcome to Electro</h3>
           <p>Exclusive deals await you. Join now & get <b>10% OFF</b> on your first order.</p>
           <img src="img/banner.jpeg" alt="Promo Banner">
-          <button type="submit" onclick="window.location.href='/logIn'" class="btn-login-toggle">Already have an account? Log In</button>
+          <button type="submit" onclick="window.location.href='/logIn'" class="btn-login-toggle">Already have an
+            account? Log In</button>
         </div>
       </div>
     </div>
