@@ -1,4 +1,4 @@
-// Helper: Get element by ID
+// Helper Get element by ID
 const $ = (id) => document.getElementById(id);
 
 // Toggle password visibility

@@ -4,6 +4,7 @@ const env = require('dotenv').config();
 const connectDB = require('./config/db');
 const path = require('path');
 const ejs = require('ejs');
+const session = require('express-session');
 const userRoutes = require('./routes/userRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
  
@@ -12,6 +13,16 @@ const app = express();
 // Middleware to parse JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+    secret:process.env.SESSION_SECRET,
+    resave:false,
+    saveUninitialized:true,
+    cookie:{
+        secure:false,
+        httpOnly:true,
+        maxAge:24*60*60*1000
+    }
+}))
 
 // Set EJS as the templating engine
 app.set('view engine', 'ejs');
