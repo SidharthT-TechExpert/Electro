@@ -21,38 +21,48 @@ document.querySelectorAll(".toggle-password").forEach((icon) => {
 
 //Get Element By ID's
 const nameId = $("name");
-const email = $("email");
-const phone = $("phone");
-const password = $("password");
-const cPassword = $("confirmPassword");
-const signupForm = $("signupForm");
+const emailId = $("email");
+const phoneId = $("phone");
+const passwordId = $("password");
+const cPasswordId = $("confirmPassword");
+const signupFormId = $("signupForm");
 
 //Error id's
-const nameError = $("nameError");
-const emailError = $("emailError");
-const phoneError = $("phoneError");
-const passwordError = $("passwordError");
-const cPasswordError = $("cPasswordError");
+const nameErrorId = $("nameError");
+const emailErrorId = $("emailError");
+const phoneErrorId = $("phoneError");
+const passwordErrorId = $("passwordError");
+const cPasswordErrorId = $("cPasswordError");
 
-const nameValidactionChecking = (e) => {
-  const name = nameId.value.trim() ;
+const nameValidactionCIdhecking = (e) => {
+  const name = nameId.value.trim();
   //name pattern
-  const namePattern = /^[A-Za-z\s]+$/
+  const namePattern = /^[A-Za-z\s]+$/;
 
-  if(name === ''){
-    nameError.style.display = 'inline-block';
-    nameError.innerHTML='Please Enter a valid name!'
-  }else if(!namePattern.test(name)){
-    nameError.style.display = 'inline-block';
-    nameError.innerHTML='Name only contain alphabets & spaces!'
-  }else {
-    nameError.style.display = 'none';
-    nameError.innerHTML='';
+  if (!namePattern.test(name)) {
+    nameError.style.display = "inline-block";
+    nameError.innerHTML = "Name only contain alphabets & spaces!";
+  } else {
+    nameError.style.display = "none";
+    nameError.innerHTML = "";
   }
-}
+};
+
+const emailValidactionChecking = (e) => {
+  const email = emailId.value.trim();
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  if (!emailPattern.test(email)) {
+    emailErrorId.style.display = "inline-block";
+    emailErrorId.innerHTML = "Invalid Format!";
+  } else {
+    emailErrorId.style.display = "none";
+    emailErrorId.innerHTML = "";
+  }
+};
 
 document.addEventListener("DOMContentLoaded", () => {
-  signupForm.addEventListener("submit", (e) => {
+  signupFormId.addEventListener("submit", (e) => {
     nameValidactionChecking();
     emailValidactionChecking();
     phoneValidactionChecking();
@@ -61,25 +71,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (
       !nameId ||
-      !email ||
-      !phone ||
-      !password ||
-      !cPassword ||
-      !nameError ||
-      !emailError ||
-      !phoneError ||
-      !passwordError ||
-      !cPasswordError
+      !emailId ||
+      !phoneId ||
+      !passwordId ||
+      !cPasswordId ||
+      !nameErrorId ||
+      !emailErrorId ||
+      !phoneErrorId ||
+      !passwordErrorId ||
+      !cPasswordErrorId
     ) {
       console.error("One or more elements not found ");
     }
 
     if (
-      !nameError.innerHTML ||
-      !emailError.innerHTML ||
-      !phoneError.innerHTML ||
-      !passwordError.innerHTML ||
-      !cPasswordError.innerHTML
+      !nameErrorId.innerHTML ||
+      !emailErrorId.innerHTML ||
+      !phoneErrorId.innerHTML ||
+      !passwordErrorId.innerHTML ||
+      !cPasswordErrorId.innerHTML
     ) {
       e.preventDefault();
     }
