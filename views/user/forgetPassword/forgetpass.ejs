@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="/CSS/forgetpass.css">
 <%- include('../partials/user/header') %>
+  <%- include("../partials/user/messages") %>
   <!-- ================= Reset Password ================= -->
   <div class="reset-container">
 
@@ -9,9 +10,11 @@
       <!-- Enter Email-->
       <div class="reset-step active" id="step-1">
         <h2>🔐 Reset Password</h2>
-        <p class="subtitle">Enter your <b>Email</b>to continue.</p>
-        <input id="identifier" class="rc-input" type="text" placeholder="Email or Phone number" />
-        <button class="rc-btn" id="toStep2">Next</button>
+        <form method="post" action="/forgetpass">
+          <p class="subtitle">Enter your <b>Email</b> to continue.</p>
+          <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email " />
+          <button class="rc-btn" type="submit" id="toStep2">Next</button>
+        </form>
       </div>
 
       <!-- OTP Verification -->

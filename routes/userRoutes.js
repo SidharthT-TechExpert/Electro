@@ -1,33 +1,35 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/user/userController.js");
 const passport = require("passport");
+const userController = require("../controllers/user/userController.js");
+const checkSession = require('../middlewares/session.js');
 
 // Home page route
-router.get("/pageNotFound", userController.pageNotFound);
-router.get("/signUp", userController.loadSignUpPage);
-router.get("/logIn", userController.loadLogInPage);
-router.get("/forgetPassword", userController.loadForgetPage);
-router.get("/verify-Otp", userController.verify_Otp);
+router.get("/pageNotFound",  userController.pageNotFound);
+router.get("/signUp", checkSession.checker, userController.loadSignUpPage);
+router.get("/logIn", checkSession.checker ,userController.loadLogInPage);
+router.get("/forgetPass", checkSession.checker , userController.loadForgetPage);
+router.get("/verify-Otp",checkSession.checker ,userController.verify_Otp);
 router.get("/", userController.loadHomePage);
-
-// in userRoutes.js (near other routes)
-router.get('/test-flash', (req, res) => {
-  req.flash('error_msg', 'Test flash: this should pop up on /logIn');
-  res.redirect('/logIn');
-});
 
 // Post Request
 router.post("/signUp", userController.signUp);
 router.post("/verify-Otp", userController.post_Verify_Otp);
 router.post("/resend-Otp", userController.resend_Otp);
+router.post("/login", userController.userLogIn);
+router.post("/forgetpass", userController.forgetPass);
 
+// For signUp with Google
 router.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
-router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signUp'}),(req,res)=>{
-  res.redirect('/');
-})
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/signUp" }),
+  (req, res) => {
+    res.redirect("/");
+  }
+);
 
 module.exports = router;
