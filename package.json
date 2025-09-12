@@ -21,6 +21,7 @@
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
     "mongose": "^0.0.2-security",
+    "nocache": "^4.0.0",
     "nodemailer": "^7.0.6",
     "nodemon": "^3.1.10",
     "passport": "^0.7.0",

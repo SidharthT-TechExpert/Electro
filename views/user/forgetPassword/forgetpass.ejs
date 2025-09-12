@@ -1,77 +1,90 @@
 <link rel="stylesheet" href="/CSS/forgetpass.css">
 <%- include('../partials/user/header') %>
   <%- include("../partials/user/messages") %>
-  <!-- ================= Reset Password ================= -->
-  <div class="reset-container">
+    <!-- ================= Reset Password ================= -->
+    <div class="reset-container">
 
-    <!-- LEFT PANEL -->
-    <div class="reset-left">
+      <!-- LEFT PANEL -->
+      <div class="reset-left">
 
-      <!-- Enter Email-->
-      <div class="reset-step active" id="step-1">
-        <h2>🔐 Reset Password</h2>
-        <form method="post" action="/forgetpass">
-          <p class="subtitle">Enter your <b>Email</b> to continue.</p>
-          <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email " />
-          <button class="rc-btn" type="submit" id="toStep2">Next</button>
-        </form>
-      </div>
-
-      <!-- OTP Verification -->
-      <div class="reset-step" id="step-2" aria-hidden="true">
-        <h2>📲 Verify OTP</h2>
-        <p class="subtitle">Enter the <b>6-digit</b> code sent to your email.</p>
-
-        <div class="rc-otp-row" id="otpRow">
-          <input maxlength="1" class="rc-otp" inputmode="numeric" />
-          <input maxlength="1" class="rc-otp" inputmode="numeric" />
-          <input maxlength="1" class="rc-otp" inputmode="numeric" />
-          <input maxlength="1" class="rc-otp" inputmode="numeric" />
-          <input maxlength="1" class="rc-otp" inputmode="numeric" />
-          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        <!-- Enter Email-->
+        <div class="reset-step active" id="step-1">
+          <h2>🔐 Reset Password</h2>
+          <form method="post" action="/forgetpass">
+            <p class="subtitle">Enter your <b>Email</b> to continue.</p>
+            <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email " />
+            <button class="rc-btn" type="submit" id="toStep2">Next</button>
+          </form>
         </div>
 
-        <div class="rc-timer-wrap">
-          <div class="rc-timer-label" id="timerText">⏳ 30s</div>
-          <div class="rc-timer-bar">
-            <div id="timerFill"></div>
+        <!-- OTP Verification -->
+        <div class="reset-step" id="step-2" aria-hidden="true">
+          <h2>📲 Verify OTP</h2>
+          <p class="subtitle">Enter the <b>6-digit</b> code sent to your email.</p>
+
+          <div class="rc-otp-row" id="otpRow">
+            <input maxlength="1" class="rc-otp" inputmode="numeric" />
+            <input maxlength="1" class="rc-otp" inputmode="numeric" />
+            <input maxlength="1" class="rc-otp" inputmode="numeric" />
+            <input maxlength="1" class="rc-otp" inputmode="numeric" />
+            <input maxlength="1" class="rc-otp" inputmode="numeric" />
+            <input maxlength="1" class="rc-otp" inputmode="numeric" />
           </div>
-        </div>
 
-        <p id="otpError" class="rc-error">❌ Invalid OTP. Please try again.</p>
-        <button class="rc-btn" id="verifyOtpBtn">Verify OTP</button>
-          <a style="color: rgb(68, 67, 67);" id="resendBtn" class="rc-resend">Resend Code</a>
-      </div>
-
-      <!-- Reset Password -->
-      <div class="reset-step" id="step-3" aria-hidden="true">
-        <h2>🔑 Create New Password</h2>
-        <p class="subtitle">Choose a strong password for your account.</p>
-
-        <input id="newPass" class="rc-input" type="password" placeholder="New password" />
-        <div class="strength-wrap">
-          <div class="strength-bar">
-            <div id="strengthMeter"></div>
+          <div class="rc-timer-wrap">
+            <div class="rc-timer-label" id="timerText">⏳ 30s</div>
+            <div class="rc-timer-bar">
+              <div id="timerFill"></div>
+            </div>
           </div>
-          <div id="strengthLabel" class="strength-label"></div>
+
+          <p id="otpError" class="rc-error">❌ Invalid OTP. Please try again.</p>
+          <button class="rc-btn" id="verifyOtpBtn">Verify OTP</button>
+          <button class="btn" style="color: rgb(68, 67, 67);background-color: #0f0f0f;" id="resendBtn"
+            class="rc-resend">Resend
+            Code</button>
         </div>
 
-        <input id="confirmPass" class="rc-input" type="password" placeholder="Confirm password" />
-        <p id="passError" class="rc-error">❌ Passwords do not match.</p>
+        <!-- Reset Password -->
+        <div class="reset-step" id="step-3" aria-hidden="true">
+          <h2>🔑 Create New Password</h2>
+          <form action="">
+            <p class="subtitle">Choose a strong password for your account.</p>
 
-        <button class="rc-btn" id="resetBtn">Update Password</button>
+            <div class="password-wrapper">
+              <input id="newPass" class="rc-input" type="password" placeholder="New password" />
+              <i class="fa fa-eye toggle-pass" data-target="newPass"></i>
+            </div>
+
+            <div class="strength-wrap">
+              <div class="strength-bar">
+                <div id="strengthMeter"></div>
+              </div>
+              <div id="strengthLabel" class="strength-label"></div>
+            </div>
+
+            <div class="password-wrapper">
+              <input id="confirmPass" class="rc-input" type="password" placeholder="Confirm password" />
+              <i class="fa fa-eye toggle-pass" data-target="confirmPass"></i>
+            </div>
+
+            <p id="passError" class="rc-error">❌ Passwords do not match.</p>
+
+            <button class="rc-btn" id="resetBtn">Update Password</button>
+          </form>
+        </div>
+
+
       </div>
 
+      <!-- RIGHT PANEL -->
+      <div class="reset-right">
+        <h3>Welcome Back!</h3>
+        <p>Access your account and enjoy exclusive <strong>member-only offers</strong>.</p>
+        <img src="/img/Banner2.jpg" alt="promo" class="promo-img" />
+      </div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="reset-right">
-      <h3>Welcome Back!</h3>
-      <p>Access your account and enjoy exclusive <strong>member-only offers</strong>.</p>
-      <img src="/img/Banner2.jpg" alt="promo" class="promo-img" />
-    </div>
-  </div>
 
-
-  <%- include('../partials/user/footer') %>
-    <script src="/js/forgetpass.js"></script>
+    <%- include('../partials/user/footer') %>
+      <script src="/js/forgetpass.js"></script>

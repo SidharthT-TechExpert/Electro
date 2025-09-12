@@ -209,7 +209,7 @@ const post_Verify_Otp = async (req, res) => {
       });
       await saveUserData.save();
       req.session.user = saveUserData._id;
-      req.flash('success_msg', "User SignUp Successfully");
+      req.flash("success_msg", "User SignUp Successfully");
       res.json({ success: true, redirectUrl: "/" });
     } else {
       res
@@ -267,11 +267,11 @@ const userLogIn = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await userSchema.findOne({email});
+    const user = await userSchema.findOne({ email });
 
     if (!user) {
       req.flash("error", "User not found!");
-      return res.redirect("/logIn");
+      return res.status(HTTP_STATUS.BAD_REQUEST).redirect("/logIn");
     }
 
     const match = await bcrypt.compare(password, user?.password);
@@ -282,7 +282,7 @@ const userLogIn = async (req, res) => {
     }
 
     req.session.user = user._id;
-    
+
     req.flash("success_msg", "Login successful!");
     return res.redirect("/");
   } catch (error) {
@@ -294,9 +294,110 @@ const userLogIn = async (req, res) => {
   }
 };
 
-const forgetPass = async (req,res) => {
-  
-}
+// Forget password - send OTP
+const forgetPass = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userSchema.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found. Please sign up.",
+      });
+    }
+
+    const OTP = generateOtp();
+    const emailSend = await sendVerificationEmail(email, OTP);
+
+    if (!emailSend) {
+      return res.json({
+        success: false,
+        message: "Failed to send email. Try again.",
+      });
+    }
+
+    req.session.userOtp = OTP;
+    req.session.email = email;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.json({ success: false, message: "Session error" });
+      }
+      console.log("OTP generated:", OTP);
+      res.json({ success: true, message: "OTP sent to your email" });
+    });
+  } catch (error) {
+    console.error("ForgetPass Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Verify OTP
+const passReset = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    if (otp == req.session.userOtp) {
+      return res.json({
+        success: true,
+        message: "OTP Verified Successfully",
+        redirectUrl: "/reset-password",
+      });
+    }
+    return res.json({
+      success: false,
+      message: "Invalid OTP. Please try again.",
+    });
+  } catch (error) {
+    console.error("OTP Validating Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+//Update Password 
+const updatePass = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const email = req.session.email;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Session expired. Please retry." });
+    }
+
+    // Hash the new password
+    const hashPass = await securePassword(password);
+
+    // Update the user
+    const user = await userSchema.findOneAndUpdate(
+      { email },
+      { $set: { password: hashPass } },
+      { new: true } // return updated document
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Update Password Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 
 module.exports = {
   loadHomePage,
@@ -310,4 +411,6 @@ module.exports = {
   resend_Otp,
   userLogIn,
   forgetPass,
+  passReset,
+  updatePass,
 };
