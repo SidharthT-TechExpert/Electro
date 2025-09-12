@@ -11,6 +11,12 @@ router.get("/forgetPassword", userController.loadForgetPage);
 router.get("/verify-Otp", userController.verify_Otp);
 router.get("/", userController.loadHomePage);
 
+// in userRoutes.js (near other routes)
+router.get('/test-flash', (req, res) => {
+  req.flash('error_msg', 'Test flash: this should pop up on /logIn');
+  res.redirect('/logIn');
+});
+
 // Post Request
 router.post("/signUp", userController.signUp);
 router.post("/verify-Otp", userController.post_Verify_Otp);

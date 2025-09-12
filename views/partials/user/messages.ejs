@@ -5,7 +5,8 @@
         icon: "success",
         title: "Success",
         text: "<%= msg %>",
-        timer: 2500
+        timer: 2500,
+        showConfirmButton: false
       });
     </script>
   <% }) %>
@@ -18,7 +19,8 @@
         icon: "error",
         title: "Error",
         text: "<%= msg %>",
-        timer: 2500
+        showConfirmButton: true,
+        timer: 5000
       });
     </script>
   <% }) %>
@@ -31,7 +33,8 @@
         icon: "error",
         title: "Error",
         text: "<%= msg %>",
-        timer: 2500
+        showConfirmButton: true,
+        timer: 5000
       });
     </script>
   <% }) %>
