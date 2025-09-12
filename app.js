@@ -6,8 +6,10 @@ const path = require("path");
 const ejs = require("ejs");
 const session = require("express-session");
 const flash = require("connect-flash");
+
 const userRoutes = require("./routes/userRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
+const passport = require('./config/passport.js');
 
 const app = express();
 
@@ -28,7 +30,6 @@ app.use(
 );
 
 app.use(flash())
-
 app.use((req, res, next) => {
   // req.flash returns an array; keep arrays so templates can iterate
   res.locals.success_msg = req.flash('success_msg') || [];
@@ -36,6 +37,10 @@ app.use((req, res, next) => {
   res.locals.error       = req.flash('error')       || []; // passport or other libs
   next();
 });
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 // Set EJS as the templating engine
 app.set("view engine", "ejs");

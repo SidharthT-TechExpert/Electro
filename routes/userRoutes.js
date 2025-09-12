@@ -1,20 +1,27 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const userController = require('../controllers/user/userController.js');
+const userController = require("../controllers/user/userController.js");
+const passport = require("passport");
 
 // Home page route
-router.get('/pageNotFound', userController.pageNotFound);
-router.get('/signUp', userController.loadSignUpPage);
-router.get('/logIn', userController.loadLogInPage);
-router.get('/forgetPassword', userController.loadForgetPage);
-router.get('/verify-Otp', userController.verify_Otp)
-router.get('/', userController.loadHomePage);
-
+router.get("/pageNotFound", userController.pageNotFound);
+router.get("/signUp", userController.loadSignUpPage);
+router.get("/logIn", userController.loadLogInPage);
+router.get("/forgetPassword", userController.loadForgetPage);
+router.get("/verify-Otp", userController.verify_Otp);
+router.get("/", userController.loadHomePage);
 
 // Post Request
-router.post('/signUp', userController.signUp)
-router.post('/verify-Otp', userController.post_Verify_Otp)
-router.post('/resend-Otp', userController.resend_Otp)
+router.post("/signUp", userController.signUp);
+router.post("/verify-Otp", userController.post_Verify_Otp);
+router.post("/resend-Otp", userController.resend_Otp);
 
+router.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signUp'}),(req,res)=>{
+  res.redirect('/');
+})
 
 module.exports = router;
