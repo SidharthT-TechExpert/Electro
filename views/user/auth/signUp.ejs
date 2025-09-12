@@ -1,80 +1,81 @@
 <link rel="stylesheet" href="/CSS/signUp.css">
 <%- include('../partials/user/header') %>
-<%- include('../partials/user/messages') %>
+  <%- include('../partials/user/messages') %>
 
-  <main class="signup-wrapper">
-    <div class="signup-container">
-      <!-- Left Form -->
-      <div class="signup-left">
-        <h2>Create Account</h2>
-        <p class="subtitle">Enter your details below</p>
+    <main class="signup-wrapper">
+      <div class="signup-container">
+        <!-- Left Form -->
+        <div class="signup-left">
+          <h2>Create Account</h2>
+          <p class="subtitle">Enter your details below</p>
 
-        <form id="signupForm" method="post" action="/signUp">
-              <div class="form-group">
-                <input type="text" name="name" id="name" required>
-                <label for="name">Name</label>
-                <i class="fas fa-user"></i>
-                <span id="nameError" class="signUp-error"></span>
+          <form id="signupForm" method="post" action="/signUp">
+            <div class="form-group">
+              <input type="text" name="name" id="name" required>
+              <label for="name">Name</label>
+              <i class="fas fa-user"></i>
+              <span id="nameError" class="signUp-error"></span>
+            </div>
+
+            <div class="form-group">
+              <input type="email" name="email" id="email" required>
+              <label for="email">Email</label>
+              <i class="fas fa-envelope"></i>
+              <span id="emailError" class="signUp-error"></span>
+            </div>
+
+            <div class="form-group">
+              <input type="text" name="phone" id="phone" required>
+              <label for="phone">Phone</label>
+              <i class="fas fa-envelope"></i>
+              <span id="phoneError" class="signUp-error"></span>
+            </div>
+
+            <div class="form-group">
+              <input type="password" name="password" id="password" required>
+              <label for="password">Password</label>
+              <i class="fas fa-eye toggle-password" data-target="password"></i>
+              <span id="passwordError" class="signUp-error"></span>
+            </div>
+            <div class="strength-wrap">
+              <div class="strength-bar">
+                <div id="strengthMeter"></div>
               </div>
+              <div id="strengthLabel" class="strength-label"></div>
+            </div>
 
-              <div class="form-group">
-                <input type="email" name="email" id="email" required>
-                <label for="email">Email</label>
-                <i class="fas fa-envelope"></i>
-                <span id="emailError" class="signUp-error"></span>
-              </div>
+            <div class="form-group signup-only">
+              <input type="password" name="cPassword" id="cPassword" required>
+              <label for="confirmPassword">Confirm Password</label>
+              <i class="fas fa-lock ctoggle-password" data-target="cPassword"></i>
+              <span id="cPasswordError" class="signUp-error"></span>
+            </div>
 
-              <div class="form-group">
-                <input type="text" name="phone" id="phone" required>
-                <label for="phone">Phone</label>
-                <i class="fas fa-envelope"></i>
-                <span id="phoneError" class="signUp-error"></span>
-              </div>
+            <div class="remember-me mb-3">
+              <label>
+                <input type="checkbox" name="rememberMe" id="rememberMe"> Remember Me
+              </label>
+            </div>
 
-              <div class="form-group">
-                <input type="password" name="password" id="password" required>
-                <label for="password">Password</label>
-                <i class="fas fa-eye toggle-password" data-target="password"></i>
-                <span id="passwordError" class="signUp-error"></span>
-              </div>
-              <div class="strength-wrap">
-                <div class="strength-bar">
-                  <div id="strengthMeter"></div>
-                </div>
-                <div id="strengthLabel" class="strength-label"></div>
-              </div>
+            <button type="submit" class="btn-main">Create Account</button>
+            <a href="/auth/google" style="text-align: center;" type="button" class="btn-google"><i
+                class="fab fa-google"></i> Sign up with Google</a>
+          </form>
+        </div>
 
-              <div class="form-group signup-only">
-                <input type="password" name="cPassword" id="cPassword" required>
-                <label for="confirmPassword">Confirm Password</label>
-                <i class="fas fa-lock ctoggle-password" data-target="cPassword"></i>
-                <span id="cPasswordError" class="signUp-error"></span>
-              </div>
-
-              <div class="remember-me mb-3">
-                <label>
-                  <input type="checkbox" name="rememberMe" id="rememberMe"> Remember Me
-                </label>
-              </div>
-
-              <button type="submit" class="btn-main">Create Account</button>
-              <button type="button" class="btn-google"><i class="fab fa-google"></i> Sign up with Google</button>
-        </form>
-      </div>
-
-      <!-- Right Promo -->
-      <div class="signup-right">
-        <div class="promo-card">
-          <h3>Welcome to Electro</h3>
-          <p>Exclusive deals await you. Join now & get <b>10% OFF</b> on your first order.</p>
-          <img src="img/banner.jpeg" alt="Promo Banner">
-          <button type="submit" onclick="window.location.href='/logIn'" class="btn-login-toggle">Already have an
-            account? Log In</button>
+        <!-- Right Promo -->
+        <div class="signup-right">
+          <div class="promo-card">
+            <h3>Welcome to Electro</h3>
+            <p>Exclusive deals await you. Join now & get <b>10% OFF</b> on your first order.</p>
+            <img src="img/banner.jpeg" alt="Promo Banner">
+            <button type="submit" onclick="window.location.href='/logIn'" class="btn-login-toggle">Already have an
+              account? Log In</button>
+          </div>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
 
 
-  <script src="/js/signUp.js"></script>
-  <%- include('../partials/user/footer') %>
+    <script src="/js/signUp.js"></script>
+    <%- include('../partials/user/footer') %>

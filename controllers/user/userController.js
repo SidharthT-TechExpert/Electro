@@ -72,19 +72,32 @@ const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-//Email through OTP Send
+// Email through OTP Send
 const sendVerificationEmail = async (email, OTP) => {
   try {
     // Create reusable transporter
     const transport = nodemailer.createTransport({
       service: "gmail",
-      port: 587,
-      secure: false, // use true for port 465 (recommended for Gmail)
       auth: {
         user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD, // App Password (no spaces!)
+        pass: process.env.NODEMAILER_PASSWORD, // <-- App Password here
       },
     });
+
+    // Verify SMTP connection before sending
+    transport.verify((error, success) => {
+      if (error) {
+        console.error("SMTP Error:", error);
+        console.log(
+          process.env.NODEMAILER_EMAIL,
+          process.env.NODEMAILER_PASSWORD
+        );
+      } else {
+        console.log("✅ Server is ready to take messages");
+      }
+    });
+
+    console.log("✅ SMTP Server is ready to take messages");
 
     // Email content
     const mailOptions = {
@@ -109,12 +122,10 @@ const sendVerificationEmail = async (email, OTP) => {
     // Send email
     const info = await transport.sendMail(mailOptions);
 
-    console.log(`✅ Email sent to ${email}: ${info.response}`);
+    console.log(`📩 Email sent to ${email}: ${info.response}`);
     return info.accepted.length > 0;
   } catch (error) {
-    console
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .error("❌ Error sending email:", error.message);
+    console.error("sendVerificationEmail Error:", error);
     return false;
   }
 };
@@ -151,7 +162,7 @@ const signUp = async (req, res) => {
     console.log("OTP Sent:", OTP);
   } catch (error) {
     console.error("SignUp Error:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("page-404", {
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("auth/page-404", {
       message: "Something went wrong. Please try again later.",
     });
   }
@@ -164,12 +175,15 @@ const verify_Otp = async (req, res) => {
     res.render("auth/verify-Otp", { user });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
-    res
-      .send(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .redirect("/verify-Otp", { message: "Internal Server error", error });
+    res.send(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: `Internal Server Error , Please Try Again! : ${error}`,
+    });
+    res.redirect("/veriry-Otp");
   }
 };
 
+//password convert to hashed formate
 const securePassword = async (password) => {
   try {
     return await bcrypt.hash(password, 10);
@@ -178,6 +192,7 @@ const securePassword = async (password) => {
   }
 };
 
+//checking OTP
 const post_Verify_Otp = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -194,6 +209,7 @@ const post_Verify_Otp = async (req, res) => {
       });
       await saveUserData.save();
       req.session.user = saveUserData._id;
+      req.flash("success_msg", "User SignUp Successfully");
       res.json({ success: true, redirectUrl: "/" });
     } else {
       res
@@ -209,6 +225,7 @@ const post_Verify_Otp = async (req, res) => {
   }
 };
 
+// Resend OTP
 const resend_Otp = async (req, res) => {
   try {
     const email = req.session.email;
@@ -238,11 +255,149 @@ const resend_Otp = async (req, res) => {
     }
   } catch (error) {
     console.log("Resending OTP Error :", error);
-    res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: "Internal Server Error , Please Try Again!" });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error , Please Try Again!",
+    });
   }
 };
+
+// checking to User valid user or not
+const userLogIn = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await userSchema.findOne({ email });
+
+    if (!user) {
+      req.flash("error", "User not found!");
+      return res.status(HTTP_STATUS.BAD_REQUEST).redirect("/logIn");
+    }
+
+    const match = await bcrypt.compare(password, user?.password);
+
+    if (!match) {
+      req.flash("error", "Invalid email or password");
+      return res.redirect("/logIn");
+    }
+
+    req.session.user = user._id;
+
+    req.flash("success_msg", "Login successful!");
+    return res.redirect("/");
+  } catch (error) {
+    console.log("user Login verification Error :", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error , Please Try Again!",
+    });
+  }
+};
+
+// Forget password - send OTP
+const forgetPass = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userSchema.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found. Please sign up.",
+      });
+    }
+
+    const OTP = generateOtp();
+    const emailSend = await sendVerificationEmail(email, OTP);
+
+    if (!emailSend) {
+      return res.json({
+        success: false,
+        message: "Failed to send email. Try again.",
+      });
+    }
+
+    req.session.userOtp = OTP;
+    req.session.email = email;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.json({ success: false, message: "Session error" });
+      }
+      console.log("OTP generated:", OTP);
+      res.json({ success: true, message: "OTP sent to your email" });
+    });
+  } catch (error) {
+    console.error("ForgetPass Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Verify OTP
+const passReset = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    if (otp == req.session.userOtp) {
+      return res.json({
+        success: true,
+        message: "OTP Verified Successfully",
+        redirectUrl: "/reset-password",
+      });
+    }
+    return res.json({
+      success: false,
+      message: "Invalid OTP. Please try again.",
+    });
+  } catch (error) {
+    console.error("OTP Validating Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+//Update Password 
+const updatePass = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const email = req.session.email;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Session expired. Please retry." });
+    }
+
+    // Hash the new password
+    const hashPass = await securePassword(password);
+
+    // Update the user
+    const user = await userSchema.findOneAndUpdate(
+      { email },
+      { $set: { password: hashPass } },
+      { new: true } // return updated document
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Update Password Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 
 module.exports = {
   loadHomePage,
@@ -254,4 +409,8 @@ module.exports = {
   verify_Otp,
   post_Verify_Otp,
   resend_Otp,
+  userLogIn,
+  forgetPass,
+  passReset,
+  updatePass,
 };

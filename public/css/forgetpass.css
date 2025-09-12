@@ -119,3 +119,21 @@
   .reset-right{ width:100%; height:260px; order:2; }
   .reset-left{ width:100%; order:1; min-height:320px; padding:22px; }
 }
+
+.password-wrapper {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.toggle-pass {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #666;
+}
+.toggle-pass:hover {
+  color: #333;
+}

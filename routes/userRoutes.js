@@ -1,20 +1,37 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const userController = require('../controllers/user/userController.js');
+const passport = require("passport");
+const userController = require("../controllers/user/userController.js");
+const checkSession = require('../middlewares/session.js');
 
 // Home page route
-router.get('/pageNotFound', userController.pageNotFound);
-router.get('/signUp', userController.loadSignUpPage);
-router.get('/logIn', userController.loadLogInPage);
-router.get('/forgetPassword', userController.loadForgetPage);
-router.get('/verify-Otp', userController.verify_Otp)
-router.get('/', userController.loadHomePage);
-
+router.get("/pageNotFound",  userController.pageNotFound);
+router.get("/signUp", checkSession.checker, userController.loadSignUpPage);
+router.get("/logIn", checkSession.checker ,userController.loadLogInPage);
+router.get("/forgetPass", checkSession.checker , userController.loadForgetPage);
+router.get("/verify-Otp",checkSession.checker ,userController.verify_Otp);
+router.get("/", userController.loadHomePage);
 
 // Post Request
-router.post('/signUp', userController.signUp)
-router.post('/verify-Otp', userController.post_Verify_Otp)
-router.post('/resend-Otp', userController.resend_Otp)
+router.post("/signUp", userController.signUp);
+router.post("/verify-Otp", userController.post_Verify_Otp);
+router.post("/resend-Otp", userController.resend_Otp);
+router.post("/login", userController.userLogIn);
+router.post("/forgetpass", userController.forgetPass);
+router.post("/passReset", userController.passReset);
+router.post("/update-password", userController.updatePass);
 
+// For signUp with Google
+router.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/signUp" }),
+  (req, res) => {
+    res.redirect("/");
+  }
+);
 
 module.exports = router;
