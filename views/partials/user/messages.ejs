@@ -1,0 +1,38 @@
+<% if (success_msg && success_msg.length) { %>
+  <% success_msg.forEach(msg => { %>
+    <script>
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "<%= msg %>",
+        timer: 2500
+      });
+    </script>
+  <% }) %>
+<% } %>
+
+<% if (error_msg && error_msg.length) { %>
+  <% error_msg.forEach(msg => { %>
+    <script>
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "<%= msg %>",
+        timer: 2500
+      });
+    </script>
+  <% }) %>
+<% } %>
+
+<% if (error && error.length) { %>
+  <% error.forEach(msg => { %>
+    <script>
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "<%= msg %>",
+        timer: 2500
+      });
+    </script>
+  <% }) %>
+<% } %>

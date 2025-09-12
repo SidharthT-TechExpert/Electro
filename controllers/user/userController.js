@@ -2,6 +2,7 @@ const HTTP_STATUS = require("../../config/statusCodes.js");
 const userSchema = require("../../models/userSchema.js");
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
+const bcrypt = require("bcrypt");
 
 // Home page Loader
 const loadHomePage = async (req, res) => {
@@ -122,51 +123,89 @@ const sendVerificationEmail = async (email, OTP) => {
 const signUp = async (req, res) => {
   const { name, email, phone, password, cPassword, rememberMe } = req.body;
   try {
-    if (password != cPassword) {
-      return res.redirect("/signUp", { message: "Password do not match!" });
+       if (password !== cPassword) {
+      req.flash("error", "Passwords do not match!");
+      return res.redirect("/signUp");  
     }
+
     const findUser = await userSchema.findOne({ email });
-
     if (findUser) {
-      req.flash(
-        "error",
-        "You are already our customer. Click on below button to login"
-      );
-
-      return res.redirect("/signUp");
+      req.flash("error_msg", "You are already our customer. Please login!");
+      return res.redirect("/logIn");   
     }
 
     const OTP = generateOtp();
     const emailSend = await sendVerificationEmail(email, OTP);
 
     if (!emailSend) {
-      return res.json({ error: "Failed to send email" });
+      req.flash("error_msg", "Failed to send email. Try again.");
+      return res.redirect("/signUp");
     }
 
     req.session.userOtp = OTP;
     req.session.userData = { email, password, name, phone, rememberMe };
     req.session.email = email;
 
+    // Render OTP verification page
     res.status(HTTP_STATUS.OK).render("auth/Verify-otp");
-    console.log("OTP Sent ", OTP);
+    console.log("OTP Sent:", OTP);
   } catch (error) {
-    console.error("SignUp Error :", error);
-    res.status(HTTP_STATUS.NOT_FOUND).redirect("/pageNotFound");
+    console.error("SignUp Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("page-404", {
+      message: "Something went wrong. Please try again later.",
+    });
   }
 };
 
 // Verify page loader
 const verify_otp = async (req, res) => {
   try {
-    res.render("auth/verify-Otp", {
-      user: { name: req?.user?.name || null },
-      cartCount: req?.user?.cartCount || 0,
-    });
+    const user = req.session?.user || null;
+    res.render("auth/verify-Otp", { user });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
     res
       .send(HTTP_STATUS.INTERNAL_SERVER_ERROR)
       .redirect("/verify-Otp", { message: "Internal Server error", error });
+  }
+};
+
+const securePassword = async (password) => {
+  try {
+    return await bcrypt.hash(password, 10);
+  } catch (error) {
+    console.log("Secure password Generating Error :", error);
+  }
+};
+
+const Post_verify_otp = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    console.log("User enterd otp :", otp);
+    if (otp === req.session.userOtp) {
+      const user = req.session.userData;
+      const passwordHashed = await securePassword(user.password);
+      const saveUserData = new userSchema({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        password: passwordHashed,
+        rememberMe: user.rememberMe === "on",
+      });
+      await saveUserData.save();
+      req.session.user = saveUserData._id;
+      res.json({ success: true, redirectUrl: "/" });
+    } else {
+      res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Your Enterd OTP Is Invalid!" });
+    }
+  } catch (error) {
+    console.log("Error occure in post verify otp :", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internel server Error Try again Later",
+    });
   }
 };
 
@@ -178,4 +217,5 @@ module.exports = {
   loadForgetPage,
   signUp,
   verify_otp,
+  Post_verify_otp,
 };

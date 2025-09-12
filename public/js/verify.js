@@ -3,34 +3,58 @@
         otpError = document.getElementById("otpError"),
         timerFill = document.getElementById("timerFill"),
         timerText = document.getElementById("timerText"),
-        resendBtn = document.getElementById("resendBtn");
+        resendBtn = document.getElementById("resendBtn"),
+        submitBtn = document.getElementById("verifyOtpBtn");
 
-  const DEMO_OTP = "123456"; // Replace with your actual OTP
   let timer = null,
-      DURATION = 30,
+      DURATION = 60,
       remaining = DURATION;
 
+  // --- Verify OTP AJAX ---
   function verifyOTP() {
     const otp = otpInputs.map(i => i.value).join("");
-    if (otp.length < 6) return; // Wait until all digits entered
-    if (otp !== DEMO_OTP) {
-      otpError.style.display = "block";
-      otpError.textContent = "❌ Invalid OTP. Try again.";
-      otpInputs.forEach(i => i.value = "");
-      otpInputs[0].focus();
-      return;
-    }
+    if (otp.length < 6) return; // wait for full input
     otpError.style.display = "none";
-    alert("✅ OTP Verified Successfully!");
+
+    $.ajax({
+      type: "POST",
+      url: "/verify-Otp",
+      data: { otp: otp },
+      success: function (response) {
+        if (response.success) {
+          Swal.fire({
+            icon: "success",
+            title: "OTP Verified Successfully",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = response.redirectUrl;
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: response.message,
+          });
+        }
+      },
+      error: function () {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid OTP ?",
+          text: "Please Try Again!",
+        });
+      },
+    });
+    return false;
   }
 
-  // --- OTP input behavior ---
+  // --- OTP Input Behavior ---
   otpInputs.forEach((input, i) => {
     input.addEventListener("input", e => {
       e.target.value = e.target.value.replace(/[^0-9]/g, "");
       if (e.target.value && i < otpInputs.length - 1) otpInputs[i + 1].focus();
 
-      // Auto-submit when 6 digits entered
       if (otpInputs.every(i => i.value)) verifyOTP();
     });
 
@@ -45,7 +69,6 @@
         if (otpInputs[j]) otpInputs[j].value = c;
       });
       otpInputs[Math.min(pasted.length - 1, otpInputs.length - 1)].focus();
-      // Auto-submit if all 6 digits pasted
       if (otpInputs.every(i => i.value)) verifyOTP();
     });
   });
@@ -71,13 +94,19 @@
     }, 1000);
   }
 
-  // --- Resend OTP ---
+  // --- Button click ---
+  submitBtn.addEventListener("click", e => {
+    e.preventDefault();
+    verifyOTP();
+  });
+
+  // --- Resend ---
   resendBtn.addEventListener("click", e => {
     e.preventDefault();
     otpInputs.forEach(i => i.value = "");
     otpInputs[0].focus();
     startTimer();
-    alert("OTP resent (demo)"); // Replace with API call
+    alert("OTP resent (demo)"); // replace with API call
   });
 
   // --- Init ---
