@@ -123,15 +123,15 @@ const sendVerificationEmail = async (email, OTP) => {
 const signUp = async (req, res) => {
   const { name, email, phone, password, cPassword, rememberMe } = req.body;
   try {
-       if (password !== cPassword) {
+    if (password !== cPassword) {
       req.flash("error", "Passwords do not match!");
-      return res.redirect("/signUp");  
+      return res.redirect("/signUp");
     }
 
     const findUser = await userSchema.findOne({ email });
     if (findUser) {
       req.flash("error_msg", "You are already our customer. Please login!");
-      return res.redirect("/logIn");   
+      return res.redirect("/logIn");
     }
 
     const OTP = generateOtp();
@@ -158,7 +158,7 @@ const signUp = async (req, res) => {
 };
 
 // Verify page loader
-const verify_otp = async (req, res) => {
+const verify_Otp = async (req, res) => {
   try {
     const user = req.session?.user || null;
     res.render("auth/verify-Otp", { user });
@@ -178,7 +178,7 @@ const securePassword = async (password) => {
   }
 };
 
-const Post_verify_otp = async (req, res) => {
+const post_Verify_Otp = async (req, res) => {
   try {
     const { otp } = req.body;
     console.log("User enterd otp :", otp);
@@ -209,6 +209,41 @@ const Post_verify_otp = async (req, res) => {
   }
 };
 
+const resend_Otp = async (req, res) => {
+  try {
+    const email = req.session.email;
+    console.log(email);
+
+    if (!email) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Email not found in session!" });
+    }
+
+    const OTP = generateOtp();
+    req.session.userOtp = OTP;
+
+    const emailSend = await sendVerificationEmail(email, OTP);
+
+    if (emailSend) {
+      console.log("Resend OTP :", OTP);
+      return res
+        .status(HTTP_STATUS.OK)
+        .json({ success: true, message: "OTP Resend Successfully" });
+    } else {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Failed to resend OTP , Please Try Again!",
+      });
+    }
+  } catch (error) {
+    console.log("Resending OTP Error :", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal Server Error , Please Try Again!" });
+  }
+};
+
 module.exports = {
   loadHomePage,
   pageNotFound,
@@ -216,6 +251,7 @@ module.exports = {
   loadLogInPage,
   loadForgetPage,
   signUp,
-  verify_otp,
-  Post_verify_otp,
+  verify_Otp,
+  post_Verify_Otp,
+  resend_Otp,
 };
