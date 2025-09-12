@@ -188,7 +188,7 @@ const Post_verify_otp = async (req, res) => {
       const saveUserData = new userSchema({
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone.trim().replace(/^0+/, ""),
         password: passwordHashed,
         rememberMe: user.rememberMe === "on",
       });

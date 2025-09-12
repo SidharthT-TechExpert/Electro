@@ -106,7 +106,7 @@
     otpInputs.forEach(i => i.value = "");
     otpInputs[0].focus();
     startTimer();
-    alert("OTP resent (demo)"); // replace with API call
+    
   });
 
   // --- Init ---
