@@ -7,11 +7,14 @@ router.get('/pageNotFound', userController.pageNotFound);
 router.get('/signUp', userController.loadSignUpPage);
 router.get('/logIn', userController.loadLogInPage);
 router.get('/forgetPassword', userController.loadForgetPage);
-router.get('/verify-Otp', userController.verify_otp)
+router.get('/verify-Otp', userController.verify_Otp)
 router.get('/', userController.loadHomePage);
+
 
 // Post Request
 router.post('/signUp', userController.signUp)
+router.post('/verify-Otp', userController.post_Verify_Otp)
+router.post('/resend-Otp', userController.resend_Otp)
 
 
 module.exports = router;

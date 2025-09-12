@@ -23,11 +23,11 @@
   <link href="lib/animate/animate.min.css" rel="stylesheet">
   <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
 
-
   <!-- Customized Bootstrap Stylesheet -->
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/header.css" rel="stylesheet">
   <link href="css/footer.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
 </head>
 
 <body>
@@ -78,32 +78,48 @@
             data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-user-circle"></i>
             <span>
-              <%- user?.name || "Guest" %>
+              <%- (typeof user !=="undefined" && user?.name) ? user.name : "Guest" %>
             </span>
             <i class="fas fa-chevron-down arrow-icon"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href=<%- user?.name ? "/profile" : "/signUp" %>><i class="fas fa-user"></i>
-                <%- user?.name ? "My Profile" : "SignUp" %>
-              </a></li>
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="fas fa-box"></i> Orders</a>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                href="<%- (typeof user !== 'undefined' && user?.name) ? '/profile' : '/signUp' %>">
+                <i class="fas fa-user"></i>
+                <%- (typeof user !=="undefined" && user?.name) ? "My Profile" : "SignUp" %>
+              </a>
             </li>
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="fas fa-heart"></i> Wishlist
-                (1)</a></li>
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="fas fa-wallet"></i>
-                Wallet</a></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <i class="fas fa-box"></i> Orders
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <i class="fas fa-heart"></i> Wishlist (1)
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <i class="fas fa-wallet"></i> Wallet
+              </a>
+            </li>
             <li>
               <hr class="dropdown-divider">
             </li>
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="fas fa-sign-out-alt"></i>
-                Logout</a></li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </li>
           </ul>
         </div>
 
         <!-- Cart -->
         <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">
           <i class="fas fa-shopping-cart"></i> Cart
-          <% if (cartCount && cartCount> 0) { %>
+          <% if (typeof cartCount !=="undefined" && cartCount> 0) { %>
             <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
               <%= cartCount %>
             </span>

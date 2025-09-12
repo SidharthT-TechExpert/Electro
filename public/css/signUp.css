@@ -187,7 +187,7 @@ body {
 /* Container */
 .signup-container {
   display: flex;
-  max-width: 850px;   /* reduced width */
+  max-width: 850px; /* reduced width */
   width: 100%;
   border-radius: 14px;
   overflow: hidden;
@@ -198,7 +198,7 @@ body {
 /* Left */
 .signup-left {
   flex: 1;
-  padding: 35px 25px;  /* reduced padding */
+  padding: 35px 25px; /* reduced padding */
   background: rgba(20, 20, 20, 0.95);
 }
 
@@ -219,7 +219,8 @@ body {
 }
 
 /* Buttons */
-.btn-main, .btn-google {
+.btn-main,
+.btn-google {
   padding: 10px;
   font-size: 14px;
   border-radius: 6px;
@@ -264,13 +265,37 @@ body {
 }
 
 /* Password strength */
-.strength-wrap { margin-bottom:8px; }
-.strength-bar { width:100%; height:8px; background:#202020; border-radius:6px; overflow:hidden; margin-bottom:8px; }
-#strengthMeter { height:100%; width:0%; background:#ff3d3d; transition:width .3s,background .3s; }
-.strength-label { font-size:12px; color:#bdbdbd; }
+.strength-wrap {
+  margin-bottom: 8px;
+}
+.strength-bar {
+  width: 100%;
+  height: 8px;
+  background: #202020;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+#strengthMeter {
+  height: 100%;
+  width: 0%;
+  background: #ff3d3d;
+  transition: width 0.3s, background 0.3s;
+}
+.strength-label {
+  font-size: 12px;
+  color: #bdbdbd;
+}
 
-.signUp-error{
+.signUp-error {
   color: red;
   font-size: 0.75rem;
   display: none;
+}
+
+.form-message {
+  margin-top: 10px;
+  color: red;
+  font-weight: 500;
+  text-align: center;
 }
