@@ -123,8 +123,10 @@
           <% if (typeof cartCount !=="undefined" && cartCount> 0) { %>
             <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
               <%= cartCount %>
+                <% } else { %>
+                 
+                  <% } %>
             </span>
-            <% } %>
         </a>
 
         <!-- Hamburger -->

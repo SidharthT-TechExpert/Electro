@@ -30,8 +30,15 @@ router.get(
   "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/signUp" }),
   (req, res) => {
+    // Store googleId in session explicitly
+    req.session.googleId = req.user.googleId;
+
+    // Optional: store full user id too
+    req.session.userId = req.user._id;
+
     res.redirect("/");
   }
 );
+
 
 module.exports = router;

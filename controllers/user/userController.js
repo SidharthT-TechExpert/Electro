@@ -4,12 +4,17 @@ const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 
+const checkSession = async (_id) => {
+  return _id ? await userSchema.findOne({ _id }) : null;
+};
+
 // Home page Loader
 const loadHomePage = async (req, res) => {
   try {
+    const user = await checkSession(req.session.userId);
     res
       .status(HTTP_STATUS.OK)
-      .render("auth/home", { user: req?.user, cartCount: req.cartCount || 2 });
+      .render("auth/home", { user, cartCount: req.cartCount || null });
   } catch (error) {
     console.error("Error loading home page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -19,10 +24,10 @@ const loadHomePage = async (req, res) => {
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {
   try {
-    res.status(HTTP_STATUS.NOT_FOUND).render("auth/page-404", {
-      user: req.user || { name: "Guest" },
-      cartCount: req.cartCount || 2,
-    });
+    const user = await checkSession(req.session?.userId);
+    res
+      .status(HTTP_STATUS.NOT_FOUND)
+      .render("auth/page-404", { user, cartCount: req.cartCount || null });
   } catch (error) {
     res.status(HTTP_STATUS.NOT_FOUND).redirect("/pageNotFound");
   }
@@ -171,7 +176,7 @@ const signUp = async (req, res) => {
 // Verify page loader
 const verify_Otp = async (req, res) => {
   try {
-    const user = req.session?.user || null;
+    const user = null;
     res.render("auth/verify-Otp", { user });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
@@ -209,17 +214,18 @@ const post_Verify_Otp = async (req, res) => {
 
       await saveUserData.save();
 
-      req.session.user = saveUserData._id;
+      req.session.userId = saveUserData._id;
 
       //  Handle rememberMe with session cookie
-      if (rememberMe === "true") {
-        req.session.cookie.maxAge = 24 * 60 * 60 * 1000; 
+      if (req.session.userData.rememberMe === "true") {
+        req.session.cookie.maxAge = 24 * 60 * 60 * 1000;
       } else {
         req.session.cookie.expires = false; // browser close
       }
 
       req.flash("success_msg", "User SignUp Successfully");
       res.json({ success: true, redirectUrl: "/" });
+      req.session.userData = null;
     } else {
       res
         .status(HTTP_STATUS.BAD_REQUEST)
@@ -302,7 +308,7 @@ const userLogIn = async (req, res) => {
       req.session.cookie.expires = false; // browser close
     }
 
-    req.session.user = user._id;
+    req.session.userId = user._id;
     req.flash("success_msg", "Login successful!");
     return res.redirect("/");
   } catch (error) {
@@ -354,7 +360,7 @@ const forgetPass = async (req, res) => {
   }
 };
 
-// Verify OTP
+// OTP Verify forgetPass
 const passReset = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -385,7 +391,7 @@ const updatePass = async (req, res) => {
 
     if (!email) {
       return res
-        .status(400)
+        .status(HTTP_STATUS.BAD_REQUEST)
         .json({ success: false, message: "Session expired. Please retry." });
     }
 
@@ -401,12 +407,12 @@ const updatePass = async (req, res) => {
 
     if (!user) {
       return res
-        .status(404)
+        .status(HTTP_STATUS.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
     res
-      .status(200)
+      .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Password updated successfully" });
   } catch (error) {
     console.error("Update Password Error:", error);
