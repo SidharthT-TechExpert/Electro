@@ -51,7 +51,7 @@ const loadLogInPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("auth/logIn", {
       user: req?.user,
-      cartCount: req?.cartCount || 2,
+      cartCount: req?.cartCount || 0,
     });
   } catch (error) {
     console.error("Error loading log-in page:", error);
@@ -420,6 +420,23 @@ const updatePass = async (req, res) => {
   }
 };
 
+const logOut = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if(err){
+        console.log("Session destruction error :",err);
+        req.flash('error_msg', "Internal Server Error , please try again later !")
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect('/pageNotFound');
+      } 
+     return res.redirect('/');
+    })
+  } catch (error) {
+    console.log("Logout Error :",error);
+    req.flash('error_msg',"Internal Server Error , please try again later !");
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect('/pageNotFound');
+  }
+};
+
 module.exports = {
   loadHomePage,
   pageNotFound,
@@ -434,4 +451,5 @@ module.exports = {
   forgetPass,
   passReset,
   updatePass,
+  logOut,
 };

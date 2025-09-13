@@ -91,7 +91,6 @@
 
 <!-- Template Javascript -->
 <script src="js/main.js"></script>
-<script src="js/header.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const userBtn = document.querySelector(".user-btn");
@@ -123,6 +122,23 @@
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+
+  const logout = function () {
+    Swal.fire({
+      title: "🚪 Logout",
+      text: "Are you sure you want to logout?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#004d61",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location='/logOut';
+      }
+    });
+  };
+
 </script>
 </body>
 
