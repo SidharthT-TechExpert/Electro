@@ -16,7 +16,7 @@ router.get("/", userController.loadHomePage);
 router.post("/signUp", userController.signUp);
 router.post("/verify-Otp", userController.post_Verify_Otp);
 router.post("/resend-Otp", userController.resend_Otp);
-router.post("/login", userController.userLogIn);
+router.post("/logIn", userController.userLogIn);
 router.post("/forgetpass", userController.forgetPass);
 router.post("/passReset", userController.passReset);
 router.post("/update-password", userController.updatePass);

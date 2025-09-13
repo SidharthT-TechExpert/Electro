@@ -205,10 +205,19 @@ const post_Verify_Otp = async (req, res) => {
         email: user.email,
         phone: user.phone.trim().replace(/^0+/, ""),
         password: passwordHashed,
-        rememberMe: user.rememberMe === "on",
       });
+
       await saveUserData.save();
+
       req.session.user = saveUserData._id;
+
+      //  Handle rememberMe with session cookie
+      if (rememberMe === "true") {
+        req.session.cookie.maxAge = 24 * 60 * 60 * 1000; 
+      } else {
+        req.session.cookie.expires = false; // browser close
+      }
+
       req.flash("success_msg", "User SignUp Successfully");
       res.json({ success: true, redirectUrl: "/" });
     } else {
@@ -262,35 +271,44 @@ const resend_Otp = async (req, res) => {
   }
 };
 
-// checking to User valid user or not
 const userLogIn = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
-    const user = await userSchema.findOne({ email });
+    // Find user with password field
+    const user = await userSchema.findOne({ email }).select("+password");
 
     if (!user) {
       req.flash("error", "User not found!");
-      return res.status(HTTP_STATUS.BAD_REQUEST).redirect("/logIn");
+      return res.status(400).redirect("/logIn");
     }
 
-    const match = await bcrypt.compare(password, user?.password);
+    if (user.googleId) {
+      req.flash("error", "User signed up with Google!");
+      return res.status(404).redirect("/logIn");
+    }
+
+    const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-      req.flash("error", "Invalid email or password");
-      return res.redirect("/logIn");
+      req.flash("error", "Invalid credentials");
+      return res.status(401).redirect("/logIn");
+    }
+
+    //  Handle rememberMe with session cookie
+    if (rememberMe === "true") {
+      req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 30 days
+    } else {
+      req.session.cookie.expires = false; // browser close
     }
 
     req.session.user = user._id;
-
     req.flash("success_msg", "Login successful!");
     return res.redirect("/");
   } catch (error) {
     console.log("user Login verification Error :", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Internal Server Error , Please Try Again!",
-    });
+    req.flash("error", "Internal Server Error, Please Try Again!");
+    return res.redirect("/logIn");
   }
 };
 
@@ -359,7 +377,7 @@ const passReset = async (req, res) => {
   }
 };
 
-//Update Password 
+//Update Password
 const updatePass = async (req, res) => {
   try {
     const { password } = req.body;
@@ -392,12 +410,9 @@ const updatePass = async (req, res) => {
       .json({ success: true, message: "Password updated successfully" });
   } catch (error) {
     console.error("Update Password Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 
 module.exports = {
   loadHomePage,
