@@ -138,40 +138,56 @@ const sendVerificationEmail = async (email, OTP) => {
 // SignUp
 const signUp = async (req, res) => {
   const { name, email, phone, password, cPassword, rememberMe } = req.body;
+
   try {
+    // Check password match
     if (password !== cPassword) {
-      req.flash("error", "Passwords do not match!");
-      return res.redirect("/signUp");
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Passwords do not match!" });
     }
 
+    // Check if user already exists
     const findUser = await userSchema.findOne({ email });
     if (findUser) {
-      req.flash("error_msg", "You are already our customer. Please login!");
-      return res.redirect("/logIn");
+      return res
+        .status(HTTP_STATUS.CONFLICT)
+        .json({
+          success: false,
+          message: "You are already our customer. Please login!",
+        });
     }
 
+    // Generate OTP & send email
     const OTP = generateOtp();
     const emailSend = await sendVerificationEmail(email, OTP);
 
     if (!emailSend) {
-      req.flash("error_msg", "Failed to send email. Try again.");
-      return res.redirect("/signUp");
+      return res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "Failed to send email. Try again." });
     }
 
+    // Store OTP & user data in session
     req.session.userOtp = OTP;
     req.session.userData = { email, password, name, phone, rememberMe };
-    req.session.email = email;
 
-    // Render OTP verification page
-    res.status(HTTP_STATUS.OK).render("auth/Verify-otp");
     console.log("OTP Sent:", OTP);
+
+    // ✅ Final response — only one
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "OTP sent successfully! Please verify.",
+    });
   } catch (error) {
     console.error("SignUp Error:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("auth/page-404", {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
       message: "Something went wrong. Please try again later.",
     });
   }
-};
+}; 
+
 
 // Verify page loader
 const verify_Otp = async (req, res) => {
@@ -423,17 +439,22 @@ const updatePass = async (req, res) => {
 const logOut = async (req, res) => {
   try {
     req.session.destroy((err) => {
-      if(err){
-        console.log("Session destruction error :",err);
-        req.flash('error_msg', "Internal Server Error , please try again later !")
-        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect('/pageNotFound');
-      } 
-     return res.redirect('/');
-    })
+      if (err) {
+        console.log("Session destruction error :", err);
+        req.flash(
+          "error_msg",
+          "Internal Server Error , please try again later !"
+        );
+        return res
+          .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+          .redirect("/pageNotFound");
+      }
+      return res.redirect("/");
+    });
   } catch (error) {
-    console.log("Logout Error :",error);
-    req.flash('error_msg',"Internal Server Error , please try again later !");
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect('/pageNotFound');
+    console.log("Logout Error :", error);
+    req.flash("error_msg", "Internal Server Error , please try again later !");
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
   }
 };
 
