@@ -8,27 +8,29 @@
           <h2>Log in to Electro</h2>
           <p class="subtitle">Enter your details below</p>
 
-          <form id="loginForm" method="post" action="/logIn">
+          <form id="loginForm">
             <div class="form-group">
               <input type="text" name="email" id="email" required>
               <label for="email">Email Address</label>
               <i class="fas fa-envelope"></i>
+              <span id="emailError" class="login-error"></span>
             </div>
 
             <div class="form-group">
               <input type="password" name="password" id="password" required>
               <label for="password">Password</label>
               <i class="fas fa-eye toggle-password" data-target="password"></i>
+              <span id="passwordError" class="login-error"></span>
             </div>
 
             <!-- Remember + Forgot -->
             <div class="options">
-              <label><input type="checkbox" name="RememberMe"> Remember Me</label>
+              <label><input id="rememberMe" type="checkbox" name="RememberMe"> Remember Me</label>
               <a href="/forgetPass">Forget Password?</a>
             </div>
-            
+
             <!-- Buttons -->
-            <button type="submit" class="btn-main">Log In</button>
+            <button id="submit" class="btn-main">Log In</button>
             <a href="/auth/google" type="button" class="btn-google">
               <i class="fab fa-google"></i> Sign in with Google
             </a>

@@ -150,12 +150,10 @@ const signUp = async (req, res) => {
     // Check if user already exists
     const findUser = await userSchema.findOne({ email });
     if (findUser) {
-      return res
-        .status(HTTP_STATUS.CONFLICT)
-        .json({
-          success: false,
-          message: "You are already our customer. Please login!",
-        });
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: "You are already our customer. Please login!",
+      });
     }
 
     // Generate OTP & send email
@@ -186,8 +184,7 @@ const signUp = async (req, res) => {
       message: "Something went wrong. Please try again later.",
     });
   }
-}; 
-
+};
 
 // Verify page loader
 const verify_Otp = async (req, res) => {
@@ -293,6 +290,7 @@ const resend_Otp = async (req, res) => {
   }
 };
 
+// Login verification step 
 const userLogIn = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -301,38 +299,45 @@ const userLogIn = async (req, res) => {
     const user = await userSchema.findOne({ email }).select("+password");
 
     if (!user) {
-      req.flash("error", "User not found!");
-      return res.status(400).redirect("/logIn");
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "User not found!" });
     }
 
-    if (user.googleId) {
-      req.flash("error", "User signed up with Google!");
-      return res.status(404).redirect("/logIn");
+    if (!user.password) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Try to login with Google!" });
     }
 
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-      req.flash("error", "Invalid credentials");
-      return res.status(401).redirect("/logIn");
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    //  Handle rememberMe with session cookie
+    // Handle rememberMe with session cookie
     if (rememberMe === "true") {
-      req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 30 days
+      req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
     } else {
-      req.session.cookie.expires = false; // browser close
+      req.session.cookie.expires = false; // expires on browser close
     }
 
     req.session.userId = user._id;
-    req.flash("success_msg", "Login successful!");
-    return res.redirect("/");
+
+    return res
+      .status(HTTP_STATUS.OK)
+      .json({ success: true, message: "Login successful" });
   } catch (error) {
     console.log("user Login verification Error :", error);
-    req.flash("error", "Internal Server Error, Please Try Again!");
-    return res.redirect("/logIn");
+    return res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal Server Error, Please Try Again!" });
   }
 };
+
 
 // Forget password - send OTP
 const forgetPass = async (req, res) => {
