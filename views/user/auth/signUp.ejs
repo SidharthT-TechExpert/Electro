@@ -9,7 +9,6 @@
           <h2>Create Account</h2>
           <p class="subtitle">Enter your details below</p>
 
-          <form id="signupForm" method="post" action="/signUp">
             <div class="form-group">
               <input type="text" name="name" id="name" required>
               <label for="name">Name</label>
@@ -57,10 +56,9 @@
               </label>
             </div>
 
-            <button type="submit" class="btn-main">Create Account</button>
+            <button id="submit" class="btn-main">Create Account</button>
             <a href="/auth/google" style="text-align: center;" type="button" class="btn-google"><i
                 class="fab fa-google"></i> Sign up with Google</a>
-          </form>
         </div>
 
         <!-- Right Promo -->
@@ -75,7 +73,6 @@
         </div>
       </div>
     </main>
-
 
     <script src="/js/signUp.js"></script>
     <%- include('../partials/user/footer') %>

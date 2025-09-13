@@ -4,12 +4,17 @@ const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 
+const checkSession = async (_id) => {
+  return _id ? await userSchema.findOne({ _id }) : null;
+};
+
 // Home page Loader
 const loadHomePage = async (req, res) => {
   try {
+    const user = await checkSession(req.session.userId);
     res
       .status(HTTP_STATUS.OK)
-      .render("auth/home", { user: req?.user, cartCount: req.cartCount || 2 });
+      .render("auth/home", { user, cartCount: req.cartCount || null });
   } catch (error) {
     console.error("Error loading home page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -19,10 +24,10 @@ const loadHomePage = async (req, res) => {
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {
   try {
-    res.status(HTTP_STATUS.NOT_FOUND).render("auth/page-404", {
-      user: req.user || { name: "Guest" },
-      cartCount: req.cartCount || 2,
-    });
+    const user = await checkSession(req.session?.userId);
+    res
+      .status(HTTP_STATUS.NOT_FOUND)
+      .render("auth/page-404", { user, cartCount: req.cartCount || null });
   } catch (error) {
     res.status(HTTP_STATUS.NOT_FOUND).redirect("/pageNotFound");
   }
@@ -46,7 +51,7 @@ const loadLogInPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("auth/logIn", {
       user: req?.user,
-      cartCount: req?.cartCount || 2,
+      cartCount: req?.cartCount || 0,
     });
   } catch (error) {
     console.error("Error loading log-in page:", error);
@@ -133,36 +138,49 @@ const sendVerificationEmail = async (email, OTP) => {
 // SignUp
 const signUp = async (req, res) => {
   const { name, email, phone, password, cPassword, rememberMe } = req.body;
+
   try {
+    // Check password match
     if (password !== cPassword) {
-      req.flash("error", "Passwords do not match!");
-      return res.redirect("/signUp");
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Passwords do not match!" });
     }
 
+    // Check if user already exists
     const findUser = await userSchema.findOne({ email });
     if (findUser) {
-      req.flash("error_msg", "You are already our customer. Please login!");
-      return res.redirect("/logIn");
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: "You are already our customer. Please login!",
+      });
     }
 
+    // Generate OTP & send email
     const OTP = generateOtp();
     const emailSend = await sendVerificationEmail(email, OTP);
 
     if (!emailSend) {
-      req.flash("error_msg", "Failed to send email. Try again.");
-      return res.redirect("/signUp");
+      return res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "Failed to send email. Try again." });
     }
 
+    // Store OTP & user data in session
     req.session.userOtp = OTP;
     req.session.userData = { email, password, name, phone, rememberMe };
-    req.session.email = email;
 
-    // Render OTP verification page
-    res.status(HTTP_STATUS.OK).render("auth/Verify-otp");
     console.log("OTP Sent:", OTP);
+
+    // ✅ Final response — only one
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "OTP sent successfully! Please verify.",
+    });
   } catch (error) {
     console.error("SignUp Error:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("auth/page-404", {
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
       message: "Something went wrong. Please try again later.",
     });
   }
@@ -171,7 +189,7 @@ const signUp = async (req, res) => {
 // Verify page loader
 const verify_Otp = async (req, res) => {
   try {
-    const user = req.session?.user || null;
+    const user = null;
     res.render("auth/verify-Otp", { user });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
@@ -205,12 +223,22 @@ const post_Verify_Otp = async (req, res) => {
         email: user.email,
         phone: user.phone.trim().replace(/^0+/, ""),
         password: passwordHashed,
-        rememberMe: user.rememberMe === "on",
       });
+
       await saveUserData.save();
-      req.session.user = saveUserData._id;
+
+      req.session.userId = saveUserData._id;
+
+      //  Handle rememberMe with session cookie
+      if (req.session.userData.rememberMe === "true") {
+        req.session.cookie.maxAge = 24 * 60 * 60 * 1000;
+      } else {
+        req.session.cookie.expires = false; // browser close
+      }
+
       req.flash("success_msg", "User SignUp Successfully");
       res.json({ success: true, redirectUrl: "/" });
+      req.session.userData = null;
     } else {
       res
         .status(HTTP_STATUS.BAD_REQUEST)
@@ -262,37 +290,54 @@ const resend_Otp = async (req, res) => {
   }
 };
 
-// checking to User valid user or not
+// Login verification step 
 const userLogIn = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
-    const user = await userSchema.findOne({ email });
+    // Find user with password field
+    const user = await userSchema.findOne({ email }).select("+password");
 
     if (!user) {
-      req.flash("error", "User not found!");
-      return res.status(HTTP_STATUS.BAD_REQUEST).redirect("/logIn");
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "User not found!" });
     }
 
-    const match = await bcrypt.compare(password, user?.password);
+    if (!user.password) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Try to login with Google!" });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-      req.flash("error", "Invalid email or password");
-      return res.redirect("/logIn");
+      return res
+        .status(HTTP_STATUS.UNAUTHORIZED)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    req.session.user = user._id;
+    // Handle rememberMe with session cookie
+    if (rememberMe === "true") {
+      req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
+    } else {
+      req.session.cookie.expires = false; // expires on browser close
+    }
 
-    req.flash("success_msg", "Login successful!");
-    return res.redirect("/");
+    req.session.userId = user._id;
+
+    return res
+      .status(HTTP_STATUS.OK)
+      .json({ success: true, message: "Login successful" });
   } catch (error) {
     console.log("user Login verification Error :", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Internal Server Error , Please Try Again!",
-    });
+    return res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal Server Error, Please Try Again!" });
   }
 };
+
 
 // Forget password - send OTP
 const forgetPass = async (req, res) => {
@@ -336,7 +381,7 @@ const forgetPass = async (req, res) => {
   }
 };
 
-// Verify OTP
+// OTP Verify forgetPass
 const passReset = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -359,7 +404,7 @@ const passReset = async (req, res) => {
   }
 };
 
-//Update Password 
+//Update Password
 const updatePass = async (req, res) => {
   try {
     const { password } = req.body;
@@ -367,7 +412,7 @@ const updatePass = async (req, res) => {
 
     if (!email) {
       return res
-        .status(400)
+        .status(HTTP_STATUS.BAD_REQUEST)
         .json({ success: false, message: "Session expired. Please retry." });
     }
 
@@ -383,21 +428,40 @@ const updatePass = async (req, res) => {
 
     if (!user) {
       return res
-        .status(404)
+        .status(HTTP_STATUS.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
     res
-      .status(200)
+      .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Password updated successfully" });
   } catch (error) {
     console.error("Update Password Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
+const logOut = async (req, res) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) {
+        console.log("Session destruction error :", err);
+        req.flash(
+          "error_msg",
+          "Internal Server Error , please try again later !"
+        );
+        return res
+          .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+          .redirect("/pageNotFound");
+      }
+      return res.redirect("/");
+    });
+  } catch (error) {
+    console.log("Logout Error :", error);
+    req.flash("error_msg", "Internal Server Error , please try again later !");
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
+  }
+};
 
 module.exports = {
   loadHomePage,
@@ -413,4 +477,5 @@ module.exports = {
   forgetPass,
   passReset,
   updatePass,
+  logOut,
 };

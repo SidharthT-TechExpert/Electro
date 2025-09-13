@@ -72,65 +72,97 @@
 
       <!-- Right Controls -->
       <div class="d-flex align-items-center gap-3">
+        <% if(typeof user !=="undefined" && user?.name ){ %>
+          <!-- User Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-user-circle"></i>
+              <span>
+                <%= user?.name %>
+              </span>
+              <i class="fas fa-chevron-down arrow-icon"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/myProfile">
+                  <i class="fas fa-user"></i>
+                  My Profile
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                  <i class="fas fa-box"></i> Orders
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                  <i class="fas fa-heart"></i> Wishlist (1)
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                  <i class="fas fa-wallet"></i> Wallet
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li>
+                <a onclick="logout()" class="dropdown-item d-flex align-items-center gap-2" >
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
+            </ul>
+          </div>
 
-        <!-- User Dropdown -->
-        <div class="dropdown">
-          <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
-            data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-user-circle"></i>
-            <span>
-              <%- (typeof user !=="undefined" && user?.name) ? user.name : "Guest" %>
-            </span>
-            <i class="fas fa-chevron-down arrow-icon"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2"
-                href="<%- (typeof user !== 'undefined' && user?.name) ? '/profile' : '/signUp' %>">
-                <i class="fas fa-user"></i>
-                <%- (typeof user !=="undefined" && user?.name) ? "My Profile" : "SignUp" %>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                <i class="fas fa-box"></i> Orders
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                <i class="fas fa-heart"></i> Wishlist (1)
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                <i class="fas fa-wallet"></i> Wallet
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                <i class="fas fa-sign-out-alt"></i> Logout
-              </a>
-            </li>
-          </ul>
-        </div>
+          <!-- Cart -->
+          <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">
+            <i class="fas fa-shopping-cart"></i> Cart
+            <% if (typeof cartCount !=="undefined" && cartCount> 0) { %>
+              <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                <%= cartCount %>
+                  <% } else { %>
 
-        <!-- Cart -->
-        <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">
-          <i class="fas fa-shopping-cart"></i> Cart
-          <% if (typeof cartCount !=="undefined" && cartCount> 0) { %>
-            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
-              <%= cartCount %>
-            </span>
-            <% } %>
-        </a>
+                    <% } %>
+              </span>
+          </a>
 
-        <!-- Hamburger -->
-        <button class="btn btn-outline-secondary">
-          <i class="fas fa-bars"></i>
-        </button>
+          <% } else {%>
+            <!-- User Dropdown -->
+            <div class="dropdown">
+              <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user-circle"></i>
+                <span>
+                  SignUp
+                </span>
+                <i class="fas fa-chevron-down arrow-icon"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="/signUp">
+                    <i class="bi bi-person-plus"></i>
+                    SignUp
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="/logIn">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    LogIn
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <%}%>
+
+
+
+              <!-- Hamburger -->
+              <button class="btn btn-outline-secondary">
+                <i class="fas fa-bars"></i>
+              </button>
       </div>
     </div>
   </header>
