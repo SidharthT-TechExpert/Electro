@@ -7,8 +7,8 @@ const session = require("../middlewares/session");
 
 // Example admin route
 routes.get("/login", session.isAdmin, adminController.loadLogin);
-routes.get("/forgot-password", session.isAdmin, adminController.loadForgetPage);
-routes.get("/dashboard", adminController.loadForgetPage);
+routes.get("/forgot-password", session.isAdmin , adminController.loadForgetPage);
+routes.get("/dashboard",session.isChecker , adminController.loadDashBoardPage);
 routes.get("/", session.isAdmin, adminController.loadLogin);
 
 routes.post("/forgetPass", adminController.forgetPass);

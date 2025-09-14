@@ -1,0 +1,61 @@
+<!-- Header -->
+<header class="electro-header d-flex align-items-center justify-content-between px-3">
+  <!-- Left Section -->
+  <div class="d-flex align-items-center header-left">
+    <!-- Sidebar Toggle -->
+    <button id="btn-toggle-sidebar" class="btn btn-ghost me-3 d-lg-none" aria-label="Toggle sidebar">
+      <i class="ri-menu-line fs-4"></i>
+    </button>
+
+    <!-- Brand -->
+    <a class="d-flex align-items-center text-decoration-none brand-link" href="/admin/dashboard">
+      <svg class="brand-icon me-2" width="30" height="30" viewBox="0 0 48 48" aria-hidden>
+        <circle cx="24" cy="24" r="22" fill="#4F46E5"></circle>
+        <text x="50%" y="55%" text-anchor="middle" font-size="22" fill="#fff" font-family="Arial, sans-serif">E</text>
+      </svg>
+      <span class="fw-bold fs-5 d-none d-md-inline">Electro</span>
+    </a>
+  </div>
+
+  <!-- Center Section: Search Bar -->
+  <div class="header-center flex-grow-1 d-none d-md-flex justify-content-center">
+    <form class="search-bar d-flex w-50">
+      <input type="text" class="form-control youtube-input" placeholder="Search" />
+      <button type="submit" class="btn youtube-btn">
+        <i class="ri-search-line"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Right Section -->
+  <div class="d-flex align-items-center header-right">
+    <button id="btn-theme-toggle" class="btn btn-ghost me-2">
+      <i class="ri-sun-line fs-5"></i>
+    </button>
+    <button class="btn btn-ghost me-2 position-relative">
+      <i class="ri-notification-3-line fs-5"></i>
+      <span class="badge bg-danger position-absolute top-0 start-100 translate-middle p-1 rounded-circle"></span>
+    </button>
+
+    <!-- Profile Dropdown -->
+    <div class="dropdown">
+      <a href="#" class="d-flex align-items-center" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <img src="/img/admin/shiyonaSidharth.png" alt="Profile" class="rounded-circle profile-img" width="36" height="36" />
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
+        <li><a class="dropdown-item" href="/admin/profile"><i class="ri-user-line me-2"></i> Profile</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="/admin/logout"><i class="ri-logout-box-line me-2"></i> Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/admin/Home/header.js"></script>
+</body>
+
+</html>

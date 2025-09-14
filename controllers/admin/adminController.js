@@ -20,6 +20,21 @@ const loadForgetPage = async (req, res) => {
   }
 };
 
+const loadDashBoardPage = async (req, res) => {
+  try {
+    res.status(HTTP_STATUS.OK).render("Home/dashboard", {
+      user: "Sidharth",
+      activePage: "dashboard",
+      pageTitle: "Dashboard",
+      brandInitial :'Brand',
+      brandName :"Electro"
+    });
+  } catch (error) {
+    console.error("Error loading forget password page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  }
+};
+
 // OTP Generater
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -141,12 +156,10 @@ const OTP_Verify = async (req, res) => {
 
     // If session expired
     if (!req.session.adminOTP || !req.session.adminEmail) {
-      return res
-        .status(HTTP_STATUS.UNAUTHORIZED)
-        .json({
-          success: false,
-          message: "⏳ Session expired. Please try again later.",
-        });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        success: false,
+        message: "⏳ Session expired. Please try again later.",
+      });
     }
 
     if (otp == req.session.adminOTP) {
@@ -314,23 +327,20 @@ const userLogIn = async (req, res) => {
     }
 
     req.session.adminId = user._id;
-    req.session.adminOTP = '';
-    req.session.adminEmail='';
+    req.session.adminOTP = "";
+    req.session.adminEmail = "";
 
     return res
       .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Login successful" });
-
+      
   } catch (error) {
-    
     console.log("user Login verification Error :", error);
 
-    return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({
-        success: false,
-        message: "Internal Server Error, Please Try Again!",
-      });
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error, Please Try Again!",
+    });
   }
 };
 
@@ -342,4 +352,5 @@ module.exports = {
   resend_Otp,
   updatePass,
   userLogIn,
+  loadDashBoardPage,
 };

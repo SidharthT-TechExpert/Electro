@@ -17,8 +17,15 @@ const isAdmin = (req, res, next) => {
   else next();
 };
 
+const isChecker = (req, res, next) => {
+  if (req.session.adminId || req.session.adminGooleId)
+    next()
+  else res.redirect('/admin');
+};
+
 module.exports = {
   checker,
   logOut,
   isAdmin,
+  isChecker,
 };
