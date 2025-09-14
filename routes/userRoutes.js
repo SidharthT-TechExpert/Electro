@@ -3,7 +3,7 @@ const routes = express.Router();
 const passport = require("passport");
 const userController = require("../controllers/user/userController.js");
 const checkSession = require("../middlewares/session.js");
-const Swal = require('sweetalert2');
+const Swal = require("sweetalert2");
 
 // Home page route
 routes.get("/pageNotFound", userController.pageNotFound);
@@ -32,14 +32,12 @@ routes.get(
 routes.get(
   "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/signUp" }),
-  (req, res) => {
-    req.session.googleId = req.user.googleId;
+  async (req, res) => {
     req.session.userId = req.user._id;
 
     // Add query param to indicate success
     res.redirect("/?auth=success");
   }
 );
-
 
 module.exports = routes;
