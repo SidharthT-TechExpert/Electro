@@ -333,7 +333,7 @@ const userLogIn = async (req, res) => {
     return res
       .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Login successful" });
-      
+
   } catch (error) {
     console.log("user Login verification Error :", error);
 
@@ -341,6 +341,19 @@ const userLogIn = async (req, res) => {
       success: false,
       message: "Internal Server Error, Please Try Again!",
     });
+  }
+};
+
+// Admin LogOut 
+const logOut = async (req, res) => {
+  try {
+    console.log('LogOut!');
+    req.session.adminId = null 
+    res.redirect('/admin');
+  } catch (error) {
+    console.log("Logout Error :", error);
+    req.flash("error_msg", "Internal Server Error , please try again later !");
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
   }
 };
 
@@ -353,4 +366,5 @@ module.exports = {
   updatePass,
   userLogIn,
   loadDashBoardPage,
+  logOut,
 };

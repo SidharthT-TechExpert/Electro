@@ -37,8 +37,8 @@ const pageNotFound = async (req, res) => {
 const loadSignUpPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("auth/signUp", {
-      user: req?.user || null,
-      cartCount: req?.cartCount || 2,
+      user: null,
+      cartCount: null ,
     });
   } catch (error) {
     console.error("Error loading sign-up page:", error);
@@ -50,8 +50,8 @@ const loadSignUpPage = async (req, res) => {
 const loadLogInPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("auth/logIn", {
-      user: req?.user,
-      cartCount: req?.cartCount || 0,
+      user: null,
+      cartCount: null,
     });
   } catch (error) {
     console.error("Error loading log-in page:", error);
@@ -63,8 +63,8 @@ const loadLogInPage = async (req, res) => {
 const loadForgetPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("forgetPassword/forgetpass", {
-      user: req?.user,
-      cartCount: req?.cartCount || null,
+      user:null,
+      cartCount: null,
     });
   } catch (error) {
     console.error("Error loading forget password page:", error);
@@ -189,8 +189,7 @@ const signUp = async (req, res) => {
 // Verify page loader
 const verify_Otp = async (req, res) => {
   try {
-    const user = null;
-    res.render("auth/verify-Otp", { user });
+    res.render("auth/verify-Otp", { user : null , cartCount:null });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
     res.send(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -449,19 +448,8 @@ const updatePass = async (req, res) => {
 
 const logOut = async (req, res) => {
   try {
-    req.session.userId.destroy((err) => {
-      if (err) {
-        console.log("Session destruction error :", err);
-        req.flash(
-          "error_msg",
-          "Internal Server Error , please try again later !"
-        );
-        return res
-          .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-          .redirect("/pageNotFound");
-      }
-      return res.redirect("/");
-    });
+    req.session.userId = null ;
+     res.redirect('/');
   } catch (error) {
     console.log("Logout Error :", error);
     req.flash("error_msg", "Internal Server Error , please try again later !");

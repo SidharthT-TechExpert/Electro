@@ -1,5 +1,5 @@
 const checker = (req, res, next) => {
-  if (req.session && (req.session.userId||req.session.googleId)) res.redirect("/");
+  if (req.session && req.session.userId) res.redirect("/");
   else next();
 };
 
@@ -12,13 +12,13 @@ const logOut = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (req.session.adminId || req.session.adminGooleId)
+  if (req.session.adminId)
     res.redirect("/admin/dashboard");
   else next();
 };
 
 const isChecker = (req, res, next) => {
-  if (req.session.adminId || req.session.adminGooleId)
+  if (req.session.adminId)
     next()
   else res.redirect('/admin');
 };

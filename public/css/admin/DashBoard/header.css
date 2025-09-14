@@ -400,11 +400,18 @@ body.dark-mode .dropdown-divider {
 body.dark-mode .dropdown-item {
   color: var(--text-color);
 }
+
 body.dark-mode .dropdown-item:hover {
   background: rgba(79, 70, 229, 0.15); /* accent hover */
   color: var(--accent);
 }
 
+#logout{
+   color:red
+}
 
-
-
+#logout:hover{
+   background-color: red;
+   color:white;
+   border-radius: 0px 0px 10px 10px;
+}

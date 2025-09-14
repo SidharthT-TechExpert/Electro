@@ -10,6 +10,7 @@ routes.get("/login", session.isAdmin, adminController.loadLogin);
 routes.get("/forgot-password", session.isAdmin , adminController.loadForgetPage);
 routes.get("/dashboard",session.isChecker , adminController.loadDashBoardPage);
 routes.get("/", session.isAdmin, adminController.loadLogin);
+routes.get("/logOut", session.isChecker , adminController.logOut);
 
 routes.post("/forgetPass", adminController.forgetPass);
 routes.post("/passReset", adminController.OTP_Verify);
@@ -28,9 +29,8 @@ routes.get(
   passport.authenticate("google-admin", { failureRedirect: "/admin/login" }),
   (req, res) => {
     if (req.user && req.user.isAdmin) {
-      req.session.adminGoogleId = req.user.googleId;
       req.session.adminId = req.user._id;
-      res.redirect("/admin/dashboard?auth=success");
+      res.redirect("/admin/?auth=success");
     } else {
       res.redirect("/?error=unauthorized");
     }
