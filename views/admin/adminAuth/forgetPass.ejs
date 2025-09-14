@@ -1,0 +1,93 @@
+<link rel="stylesheet" href="/CSS/admin/forgetPass.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<!-- Header Start -->
+<%- include("../partials/user/messages") %>
+
+<!-- ================= Reset Password ================= -->
+<div class="reset-container">
+
+  <!-- LEFT PANEL -->
+  <div class="reset-left">
+
+    <!-- Enter Email-->
+    <div class="reset-step active" id="step-1">
+      <h2>🔐 Reset Password</h2>
+      <p class="subtitle">Enter your <b>Email</b> to continue.</p>
+      <form id="emailForm">
+        <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email" />
+        <button type="submit" class="rc-btn" id="toStep2">Next</button>
+      </form>
+    </div>
+
+    <!-- OTP Verification -->
+    <div class="reset-step" id="step-2" aria-hidden="true">
+      <h2>📲 Verify OTP</h2>
+      <p class="subtitle">Enter the <b>6-digit</b> code sent to your email.</p>
+
+      <div class="rc-otp-row" id="otpRow">
+        <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        <input maxlength="1" class="rc-otp" inputmode="numeric" />
+      </div>
+
+      <div class="rc-timer-wrap">
+        <div class="rc-timer-label" id="timerText">⏳ 30s</div>
+        <div class="rc-timer-bar">
+          <div id="timerFill"></div>
+        </div>
+      </div>
+
+      <p id="otpError" class="rc-error" style="display:none;">❌ Invalid OTP. Please try again.</p>
+      <button class="rc-btn" id="verifyOtpBtn">Verify OTP</button>
+      <button class="rc-resend" id="resendBtn" style="display:none;">Resend Code</button>
+    </div>
+
+    <!-- Reset Password -->
+    <div class="reset-step" id="step-3" aria-hidden="true">
+      <h2>🔑 Create New Password</h2>
+      <form id="resetForm">
+        <p class="subtitle">Choose a strong password for your account.</p>
+
+        <div class="password-wrapper">
+          <input id="newPass" class="rc-input" type="password" placeholder="New password" />
+          <i class="fa fa-eye toggle-pass" data-target="newPass"></i>
+        </div>
+
+        <div class="strength-wrap">
+          <div class="strength-bar">
+            <div id="strengthMeter"></div>
+          </div>
+          <div id="strengthLabel" class="strength-label"></div>
+        </div>
+
+        <div class="password-wrapper">
+          <input id="confirmPass" class="rc-input" type="password" placeholder="Confirm password" />
+          <i class="fa fa-eye toggle-pass" data-target="confirmPass"></i>
+        </div>
+
+        <p id="passError" class="rc-error" style="display:none;">❌ Passwords do not match.</p>
+
+        <button class="rc-btn" id="resetBtn">Update Password</button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="reset-right">
+    <h3>Welcome Back!</h3>
+    <p>Access your account and enjoy exclusive <strong>member-only offers</strong>.</p>
+    <img src="/img/Banner2.jpg" alt="promo" class="promo-img" />
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/js/admin/forget.js"></script>

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Electro Admin</title>
+
+  <!-- icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- main admin css -->
+  <link rel="stylesheet" href="/css/admin/layout.css">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="admin-header">
+    <div class="header-left">
+      <button id="sidebarToggle" class="menu-toggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+      <span class="logo">Electro</span>
+    </div>
+
+    <div class="header-center">
+      <div class="search-box">
+        <input type="search" placeholder="Search here..." aria-label="Search">
+        <button aria-label="Search"><i class="fas fa-search"></i></button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="header-icon" id="notifBtn" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="badge">3</span>
+      </div>
+
+      <div class="profile" id="profileBtn">
+        <img src="/images/admin-avatar.png" alt="Admin">
+        <span class="profile-name">Admin</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <span class="brand-mini"><i class="fas fa-bolt"></i></span>
+      <span class="brand-full">Electro</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="menu-title">MAIN MENU</p>
+      <ul>
+        <li><a class="active" href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i><span> Dashboard</span></a></li>
+        <li><a href="/admin/products"><i class="fas fa-box"></i><span> Product</span></a></li>
+        <li><a href="/admin/orders"><i class="fas fa-shopping-cart"></i><span> Order Management</span></a></li>
+        <li><a href="/admin/customers"><i class="fas fa-users"></i><span> Customers</span></a></li>
+        <li><a href="/admin/coupons"><i class="fas fa-tags"></i><span> Coupon Code</span></a></li>
+        <li><a href="/admin/categories"><i class="fas fa-layer-group"></i><span> Categories</span></a></li>
+        <li><a href="/admin/transactions"><i class="fas fa-exchange-alt"></i><span> Transaction</span></a></li>
+        <li><a href="/admin/brands"><i class="fas fa-star"></i><span> Brand</span></a></li>
+      </ul>
+
+      <p class="menu-title">PRODUCTS</p>
+      <ul>
+        <li><a href="/admin/products/add"><i class="fas fa-plus-circle"></i><span> Add Products</span></a></li>
+        <li><a href="/admin/products/list"><i class="fas fa-list"></i><span> Product List</span></a></li>
+        <li><a href="/admin/sales"><i class="fas fa-chart-line"></i><span> Sales</span></a></li>
+      </ul>
+
+      <p class="menu-title">ADMIN</p>
+      <ul>
+        <li><a href="/admin/manage"><i class="fas fa-user-shield"></i><span> Manage Admins</span></a></li>
+        <li><a href="/admin/roles"><i class="fas fa-users-cog"></i><span> Admin Roles</span></a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <!-- Page header: aligned with header height so it looks in-line -->
+    <div class="page-header">
+      <h1 class="page-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %></h1>
+      <!-- optional small breadcrumb or controls -->
+      <div class="page-actions">
+        <button class="btn small">Generate Report</button>
+      </div>
+    </div>
+
+    <!-- actual page body -->
+    <section class="page-body">
+      <%- body %>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="admin-footer">
+    <div>© <%= new Date().getFullYear() %> Electro Admin Panel. All Rights Reserved.</div>
+  </footer>
+
+  <!-- Inline JS for toggle & minimal dropdown behavior -->
+  <script>
+    (function () {
+      const toggle = document.getElementById('sidebarToggle');
+      const sidebar = document.getElementById('sidebar');
+      const main = document.querySelector('.main-content');
+
+      toggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        main.classList.toggle('collapsed');
+      });
+
+      // optional tiny profile/notification click toggles (you can expand)
+      document.getElementById('notifBtn').addEventListener('click', () => {
+        alert('Notifications (you can implement dropdown here)');
+      });
+      document.getElementById('profileBtn').addEventListener('click', () => {
+        alert('Profile menu (implement dropdown or link to profile/logout).');
+      });
+    })();
+  </script>
+</body>
+</html>

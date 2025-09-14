@@ -14,10 +14,9 @@ document.querySelectorAll(".toggle-password").forEach((icon) => {
   });
 });
 
-// Get form elements
+// Elements
 const emailId = getId("email"),
   passwordId = getId("password"),
-  loginFormId = getId("loginForm"),
   emailErrorId = getId("emailError"),
   passwordErrorId = getId("passwordError"),
   rememberMeId = getId("rememberMe");
@@ -33,7 +32,6 @@ function validateEmail() {
     return false;
   } else {
     emailErrorId.style.display = "none";
-    emailErrorId.textContent = "";
     return true;
   }
 }
@@ -50,15 +48,14 @@ function validatePassword() {
   return true;
 }
 
-// Real-time validation
+// Realtime validation
 emailId.addEventListener("input", validateEmail);
 passwordId.addEventListener("input", validatePassword);
 
-// Submit handler
+// Submit
 getId("submit").addEventListener("click", (e) => {
   e.preventDefault();
 
-  // Run validations
   const valid = validateEmail() && validatePassword();
   if (!valid) {
     Swal.fire({
@@ -76,48 +73,38 @@ getId("submit").addEventListener("click", (e) => {
   // AJAX request
   $.ajax({
     type: "POST",
-    url: "/logIn",
+    url: "/admin/logIn",
     data: { email, password, rememberMe },
     success: function (response) {
       if (response.success) {
         Swal.fire({
           icon: "success",
-          title: "Login Successful!",
-          text: response.message,
+          title: "Welcome Admin!",
+          text: "Redirecting to dashboard...",
           showConfirmButton: false,
           timer: 2000,
         }).then(() => {
-          window.location.href = "/";
+          window.location.href = "/admin/dashboard";
         });
-      } else if (response.authType === "google") {
+      } else if (res.status === 401 || response.isAdmin === false) {
         Swal.fire({
-          icon: "info",
-          title: "Login Failed!",
-          text: response.message,
-          showConfirmButton: true,
+          icon: "error",
+          title: "Unauthorized",
+          text:
+            response.message || "You are not allowed to perform this action.",
         }).then(() => {
-          Swal.fire({
-            icon: "question",
-            title: "Redirect to Google Login?",
-            text: "Do you want to continue with Google?",
-            showConfirmButton: true,
-            showCancelButton: true,
-          }).then((res) => {
-            if (res.isConfirmed) {
-              window.location.href = "/auth/google";
-            }
-          });
+          window.location.href = "/"; // redirect non-admin to user area
         });
       } else {
         Swal.fire({
           icon: "error",
-          title: "Error",
+          title: "Login Failed",
           text: response.message,
         });
       }
     },
     error: function (xhr) {
-      let msg = "Failed to log in. Please try again later!";
+      let msg = "Server error. Please try again!";
       if (xhr.responseJSON && xhr.responseJSON.message) {
         msg = xhr.responseJSON.message;
       }
