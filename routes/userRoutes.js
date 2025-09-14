@@ -23,7 +23,7 @@ routes.post("/forgetpass", userController.forgetPass);
 routes.post("/passReset", userController.passReset);
 routes.post("/update-password", userController.updatePass);
 
-// For signUp with Google
+// For signUp/SignIn with Google
 routes.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })

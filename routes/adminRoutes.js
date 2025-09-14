@@ -1,13 +1,15 @@
-const express = require('express');
+const express = require("express");
 const routes = express.Router();
-const adminController = require('../controllers/admin/adminController');
-const passport = require('passport');
+const adminController = require("../controllers/admin/adminController");
+const passport = require("passport");
+
+const session = require("../middlewares/session");
 
 // Example admin route
-routes.get("/login", adminController.loadLogin);
-routes.get("/forgot-password", adminController.loadForgetPage);
-routes.get("/", adminController.loadLogin);
-
+routes.get("/login", session.isAdmin, adminController.loadLogin);
+routes.get("/forgot-password", session.isAdmin, adminController.loadForgetPage);
+routes.get("/dashboard", adminController.loadForgetPage);
+routes.get("/", session.isAdmin, adminController.loadLogin);
 
 routes.post("/forgetPass", adminController.forgetPass);
 routes.post("/passReset", adminController.OTP_Verify);
@@ -15,27 +17,24 @@ routes.post("/resend-Otp", adminController.resend_Otp);
 routes.post("/update-password", adminController.updatePass);
 routes.post("/logIn", adminController.userLogIn);
 
-
-// For signUp with Google
+// Admin Google Login
 routes.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google-admin", { scope: ["profile", "email"] })
 );
+
 routes.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signUp" }),
+  passport.authenticate("google-admin", { failureRedirect: "/admin/login" }),
   (req, res) => {
-    if(req.user.isAdmin){
-      // Store googleId in session explicitly
-    req.session.googleId = req.user.googleId;
-    // Store full user id too
-    req.session.userId = req.user._id;
-    res.redirect("/admin/dashBoard?auth=success");
-    }else{
-      res.redirect("/")
+    if (req.user && req.user.isAdmin) {
+      req.session.adminGoogleId = req.user.googleId;
+      req.session.adminId = req.user._id;
+      res.redirect("/admin/dashboard?auth=success");
+    } else {
+      res.redirect("/?error=unauthorized");
     }
   }
 );
-
 
 module.exports = routes;

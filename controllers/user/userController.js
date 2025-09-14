@@ -449,7 +449,7 @@ const updatePass = async (req, res) => {
 
 const logOut = async (req, res) => {
   try {
-    req.session.destroy((err) => {
+    req.session.userId.destroy((err) => {
       if (err) {
         console.log("Session destruction error :", err);
         req.flash(
