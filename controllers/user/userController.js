@@ -64,7 +64,7 @@ const loadForgetPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("forgetPassword/forgetpass", {
       user: req?.user,
-      cartCount: req?.cartCount || 2,
+      cartCount: req?.cartCount || null,
     });
   } catch (error) {
     console.error("Error loading forget password page:", error);
@@ -305,9 +305,13 @@ const userLogIn = async (req, res) => {
     }
 
     if (!user.password) {
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ success: false, message: "Try to login with Google!" });
+      if (user.googleId) {
+        return res.json({
+          success: false,
+          authType: "google",
+          message: "You signed up with Google. Please continue with Google login.",
+        });
+      }
     }
 
     const match = await bcrypt.compare(password, user.password);
@@ -330,6 +334,7 @@ const userLogIn = async (req, res) => {
     return res
       .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Login successful" });
+
   } catch (error) {
     console.log("user Login verification Error :", error);
     return res
@@ -337,6 +342,7 @@ const userLogIn = async (req, res) => {
       .json({ success: false, message: "Internal Server Error, Please Try Again!" });
   }
 };
+
 
 
 // Forget password - send OTP
@@ -443,7 +449,7 @@ const updatePass = async (req, res) => {
 
 const logOut = async (req, res) => {
   try {
-    req.session.destroy((err) => {
+    req.session.userId.destroy((err) => {
       if (err) {
         console.log("Session destruction error :", err);
         req.flash(

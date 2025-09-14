@@ -1,0 +1,58 @@
+<link rel="stylesheet" href="/css/admin/login.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<%- include("../../partials/user/messages") %>
+
+  <div class="admin-login-wrapper">
+    <div class="admin-login-container">
+
+      <!-- Left Panel -->
+      <div class="admin-login-left">
+        <h2>👨‍💼 Admin Login</h2>
+        <p class="subtitle">Enter your credentials to access the Admin Dashboard</p>
+
+        <form id="adminLoginForm">
+          <!-- Email -->
+          <div class="form-group">
+            <input type="email" id="email" name="email" required />
+            <label for="email">Admin Email</label>
+            <i class="fas fa-envelope"></i>
+            <small id="emailError" class="login-error"></small>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <input type="password" id="password" name="password" required />
+            <label for="password">Password</label>
+            <i class="fas fa-eye toggle-password" data-target="password"></i>
+            <small id="passwordError" class="login-error"></small>
+          </div>
+
+          <!-- Remember Me + Forgot -->
+          <div class="options">
+            <label><input type="checkbox" id="rememberMe" /> Remember Me</label>
+            <a href="/admin/forgot-password">Forgot Password?</a>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" id="submit" class="btn-admin">Login</button>
+        </form>
+        <a href="/admin/auth/google" type="button" class="btn-google">
+          <i class="fab fa-google"></i> Sign in with Google
+        </a>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="admin-login-right">
+        <h3>Welcome Back, Admin!</h3>
+        <p>Manage users, products, orders and settings with ease.</p>
+        <img src="/images/admin-dashboard.png" alt="Admin Panel" />
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="/js/admin/login.js"></script>

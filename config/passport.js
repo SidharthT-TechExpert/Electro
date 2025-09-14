@@ -46,6 +46,35 @@ passport.use(
   )
 );
 
+// ---------- Admin Google Strategy ----------
+passport.use(
+  "google-admin",
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/admin/auth/google/callback"
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await userSchema.findOne({ googleId: profile.id });
+
+        if (!user) {
+          return done(null, false, { message: "Not authorized as admin" });
+        }
+
+        if (!user.isAdmin) {
+          return done(null, false, { message: "User is not an admin" });
+        }
+
+        return done(null, user);
+      } catch (err) {
+        return done(err, null);
+      }
+    }
+  )
+);
+
 // Sessions
 passport.serializeUser((user, done) => {
   done(null, user.id);
@@ -57,5 +86,6 @@ passport.deserializeUser((id, done) => {
     .then((user) => done(null, user))
     .catch((err) => done(err, null));
 });
+
 
 module.exports = passport;
