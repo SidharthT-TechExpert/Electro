@@ -54,7 +54,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/admin/auth/google/callback"
+      callbackURL: "http://localhost:3000/admin/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -76,15 +76,25 @@ passport.use(
   )
 );
 
-// Sessions
+// ✅ Serialize user: store only what you need in the session
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  done(null, {
+    id: user.id,
+    role: user.isAdmin ? "admin" : "user",
+  });
 });
 
-passport.deserializeUser((id, done) => {
+// ✅ Deserialize user: fetch fresh data from DB + attach role
+passport.deserializeUser((obj, done) => {
   userSchema
-    .findById(id)
-    .then((user) => done(null, user))
+    .findById(obj.id)
+    .then((user) => {
+      if (!user) return done(null, false);
+
+      // Attach role from serialized object
+      user.role = obj.role;
+      done(null, user);
+    })
     .catch((err) => done(err, null));
 });
 

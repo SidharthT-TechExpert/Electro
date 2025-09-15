@@ -5,13 +5,14 @@ const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 
 const checkSession = async (_id) => {
-  return _id ? await userSchema.findOne({ _id }) : null;
+  return _id ? await userSchema.findById(_id) : null;
 };
 
 // Home page Loader
 const loadHomePage = async (req, res) => {
   try {
-    const user = await checkSession(req.session.userId||req.session.adminId);
+    const user = await checkSession(req.session.userId);
+
     res
       .status(HTTP_STATUS.OK)
       .render("auth/home", { user, cartCount: req.cartCount || null });
@@ -38,7 +39,7 @@ const loadSignUpPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("auth/signUp", {
       user: null,
-      cartCount: null ,
+      cartCount: null,
     });
   } catch (error) {
     console.error("Error loading sign-up page:", error);
@@ -63,7 +64,7 @@ const loadLogInPage = async (req, res) => {
 const loadForgetPage = async (req, res) => {
   try {
     res.status(HTTP_STATUS.OK).render("forgetPassword/forgetpass", {
-      user:null,
+      user: null,
       cartCount: null,
     });
   } catch (error) {
@@ -189,7 +190,7 @@ const signUp = async (req, res) => {
 // Verify page loader
 const verify_Otp = async (req, res) => {
   try {
-    res.render("auth/verify-Otp", { user : null , cartCount:null });
+    res.render("auth/verify-Otp", { user: null, cartCount: null });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
     res.send(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -289,7 +290,7 @@ const resend_Otp = async (req, res) => {
   }
 };
 
-// Login verification step 
+// Login verification step
 const userLogIn = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -308,7 +309,8 @@ const userLogIn = async (req, res) => {
         return res.json({
           success: false,
           authType: "google",
-          message: "You signed up with Google. Please continue with Google login.",
+          message:
+            "You signed up with Google. Please continue with Google login.",
         });
       }
     }
@@ -324,7 +326,7 @@ const userLogIn = async (req, res) => {
     // Handle rememberMe with session cookie
     if (rememberMe === "true") {
       req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
-    } else {
+    } else { 
       req.session.cookie.expires = false; // expires on browser close
     }
 
@@ -333,16 +335,16 @@ const userLogIn = async (req, res) => {
     return res
       .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Login successful" });
-
   } catch (error) {
     console.log("user Login verification Error :", error);
     return res
       .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({ success: false, message: "Internal Server Error, Please Try Again!" });
+      .json({
+        success: false,
+        message: "Internal Server Error, Please Try Again!",
+      });
   }
 };
-
-
 
 // Forget password - send OTP
 const forgetPass = async (req, res) => {
@@ -448,8 +450,8 @@ const updatePass = async (req, res) => {
 
 const logOut = async (req, res) => {
   try {
-    req.session.userId = null ;
-     res.redirect('/');
+    req.session.userId = null;
+    res.redirect("/");
   } catch (error) {
     console.log("Logout Error :", error);
     req.flash("error_msg", "Internal Server Error , please try again later !");

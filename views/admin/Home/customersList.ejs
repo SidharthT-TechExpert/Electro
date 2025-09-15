@@ -1,0 +1,130 @@
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+
+<link rel="stylesheet" href="/css/admin/DashBoard/header.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
+<%- include("../../partials/admin/sidebar") %>
+  <%- include("../../partials/admin/header",{ pageTitle: 'Dashboard' }) %>
+    <%- include("../../partials/user/messages") %>
+
+
+      <main class="main-content">
+        <div class="content-header">
+          <h2>Customer Management</h2>
+
+          <div class="actions">
+            <!-- Search -->
+            <div class="search-bar">
+              <input type="text" placeholder="Search customers..." id="searchInput">
+              <button><i class="fas fa-search"></i></button>
+            </div>
+
+            <!-- Filter -->
+            <select id="statusFilter" class="filter-select">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="blocked">Blocked</option>
+            </select>
+
+            <!-- Refresh -->
+            <button class="btn-icon" onclick="location.reload()">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+
+            <!-- Add customer
+            <button class="btn-primary">
+              <i class="fas fa-user-plus"></i> Add Customer
+            </button> -->
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% customers.forEach((customer, index)=> { %>
+                <tr>
+                  <td>
+                    <%= index + 1 %>
+                  </td>
+                  <td>
+                    <%= customer.email %>
+                  </td>
+                  <td>
+                    <%= customer.phone || "N/A" %>
+                  </td>
+                  <td>
+                    <span class="status-badge-<%= customer.id %>">
+                      <% if(customer?.isBlocked){ %>
+                        <span class="badge badge-danger">Blocked</span>
+                        <% } else { %>
+                          <span class="badge badge-success">Active</span>
+                          <% } %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if(customer?.isBlocked){ %>
+                      <button data-id="<%= customer.id %>" onclick="Blocked('<%= customer.id %>',true ,this)"
+                        class="btn-success"><i class="fas fa-unlock"></i>
+                        Unblock</button>
+                      <% } else { %>
+                        <button data-id="<%= customer.id %>" onclick="Blocked('<%= customer.id %>',false , this)"
+                          class="btn-danger"><i class="fas fa-ban"></i> Block</button>
+                        <% } %>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <!-- Prev button -->
+          <% if (currentPage> 1) { %>
+            <a href="?page=<%= currentPage - 1 %>&search=<%= search %>">
+              <button>Prev</button>
+            </a>
+            <% } else { %>
+              <button disabled>Prev</button>
+              <% } %>
+
+                <!-- Page numbers -->
+                <% for (let i=1; i <=totalPages; i++) { %>
+                  <% if (currentPage===i) { %>
+                    <button class="active">
+                      <%= i %>
+                    </button>
+                    <% } else { %>
+                      <a href="?page=<%= i %>&search=<%= search %>">
+                        <button>
+                          <%= i %>
+                        </button>
+                      </a>
+                      <% } %>
+                        <% } %>
+
+                          <!-- Next button -->
+                          <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %>&search=<%= search %>">
+                              <button>Next</button>
+                            </a>
+                            <% } else { %>
+                              <button disabled>Next</button>
+                              <% } %>
+        </div>
+
+      </main>
+
+      <script src="/js/admin/Home/customer.js"></script>

@@ -4,6 +4,10 @@ const env = require("dotenv").config();
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 
+const checkSession = async (_id) => {
+  return _id ? await userSchema.findById(_id) : null;
+};
+
 const loadLogin = async (req, res) => {
   try {
     res.render("adminAuth/login");
@@ -26,8 +30,8 @@ const loadDashBoardPage = async (req, res) => {
       user: "Sidharth",
       activePage: "dashboard",
       pageTitle: "Dashboard",
-      brandInitial :'Brand',
-      brandName :"Electro"
+      brandInitial: "Brand",
+      brandName: "Electro",
     });
   } catch (error) {
     console.error("Error loading forget password page:", error);
@@ -333,7 +337,6 @@ const userLogIn = async (req, res) => {
     return res
       .status(HTTP_STATUS.OK)
       .json({ success: true, message: "Login successful" });
-
   } catch (error) {
     console.log("user Login verification Error :", error);
 
@@ -344,16 +347,30 @@ const userLogIn = async (req, res) => {
   }
 };
 
-// Admin LogOut 
+// Admin LogOut
 const logOut = async (req, res) => {
   try {
-    console.log('LogOut!');
-    req.session.adminId = null 
-    res.redirect('/admin');
+    console.log("LogOut!");
+    delete req.session.adminId;
+    res.redirect("/admin");
   } catch (error) {
     console.log("Logout Error :", error);
     req.flash("error_msg", "Internal Server Error , please try again later !");
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
+  }
+};
+
+// 404 Page Not Found
+const pageNotFound = async (req, res) => {
+  try {
+    console.log("Page not found");
+    const user = await checkSession(req.session?.adminId);
+    res
+      .status(HTTP_STATUS.NOT_FOUND)
+      .render("Home/page-404", { user, activePage: true });
+  } catch (error) {
+    console.log("PageNotFound Error:", error);
+    res.status(HTTP_STATUS.NOT_FOUND).redirect("/admin/pageNotFound");
   }
 };
 
@@ -367,4 +384,5 @@ module.exports = {
   userLogIn,
   loadDashBoardPage,
   logOut,
+  pageNotFound,
 };

@@ -104,7 +104,7 @@
                 <hr class="dropdown-divider">
               </li>
               <li>
-                <a onclick="logout()" class="dropdown-item d-flex align-items-center gap-2" >
+                <a onclick="logout()" class="dropdown-item d-flex align-items-center gap-2">
                   <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
               </li>
@@ -154,10 +154,75 @@
 
 
 
-              <!-- Hamburger -->
-              <button class="btn btn-outline-secondary">
-                <i class="fas fa-bars"></i>
-              </button>
+              <!-- Notification Dropdown -->
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-bell"></i>
+                  <!-- Notification Count -->
+                  <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                    3
+                  </span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2">
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                      <i class="fas fa-bell text-warning"></i>
+                      New order placed
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                      <i class="fas fa-box text-primary"></i>
+                      Order #2345 shipped
+                    </a>
+                  </li>
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+                  <li>
+                    <a class="dropdown-item text-center small text-muted" href="#">
+                      View all notifications
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Customer Contact Dropdown -->
+              <div class="dropdown ms-2">
+                <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-headset"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2">
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="tel:+1800123456">
+                      <i class="fas fa-phone-alt text-success"></i>
+                      Call Us
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="mailto:support@electro.com">
+                      <i class="fas fa-envelope text-primary"></i>
+                      Email Support
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="/chat">
+                      <i class="fas fa-comments text-info"></i>
+                      Live Chat
+                    </a>
+                  </li>
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+                  <li>
+                    <span class="dropdown-item-text small text-muted">
+                      24 × 7 Customer Support
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+
       </div>
     </div>
   </header>
