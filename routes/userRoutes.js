@@ -26,17 +26,19 @@ routes.post("/update-password", userController.updatePass);
 // For signUp/SignIn with Google
 routes.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google-user", { scope: ["profile", "email"] })
 );
 
+// User Google login
 routes.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/signUp" }),
-  async (req, res) => {
-    req.session.userId = req.user._id;
-
-    // Add query param to indicate success
-    res.redirect("/?auth=success");
+  passport.authenticate("google-user", { failureRedirect: "/signUp" }),
+  (req, res) => {
+    if (req.user) {
+      req.session.userId = req.user._id;
+      return res.redirect("/?auth=success");
+    }
+    res.redirect("/signUp?error=unauthorized");
   }
 );
 

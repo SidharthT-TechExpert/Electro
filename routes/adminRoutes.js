@@ -24,16 +24,16 @@ routes.get(
   passport.authenticate("google-admin", { scope: ["profile", "email"] })
 );
 
+// Admin Google login
 routes.get(
   "/auth/google/callback",
   passport.authenticate("google-admin", { failureRedirect: "/admin/login" }),
   (req, res) => {
     if (req.user && req.user.isAdmin) {
       req.session.adminId = req.user._id;
-      res.redirect("/admin/?auth=success");
-    } else {
-      res.redirect("/?error=unauthorized");
+      return res.redirect("/admin/dashboard?auth=success");
     }
+    res.redirect("/admin/login?error=unauthorized");
   }
 );
 
