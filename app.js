@@ -5,13 +5,14 @@ const path = require("path");
 const ejs = require("ejs");
 const session = require("express-session");
 const flash = require("connect-flash");
-const nocache = require("nocache"); 
-
+const nocache = require("nocache");
 
 const userRoutes = require("./routes/userRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
 const connectDB = require("./config/db");
 const passport = require("./config/passport.js");
+const userSession = require("./middlewares/userSession.js");
+const adminSession = require("./middlewares/adminSession.js");
 
 const app = express();
 
@@ -19,14 +20,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
-  })
-);
+// Apply user session to user routes
+app.use("/", userSession, passport.initialize(), passport.session());
+
+// Apply admin session to admin routes
+app.use("/admin", adminSession, passport.initialize(), passport.session());
 
 // Prevent caching
 app.use(nocache());
@@ -41,10 +39,6 @@ app.use((req, res, next) => {
   res.locals.error = req.flash("error");
   next();
 });
-
-// Passport
-app.use(passport.initialize());
-app.use(passport.session());
 
 // -------------------- Views & Static -------------------- //
 app.set("view engine", "ejs");

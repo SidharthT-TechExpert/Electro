@@ -11,7 +11,7 @@ const checkSession = async (_id) => {
 // Home page Loader
 const loadHomePage = async (req, res) => {
   try {
-    const user = await checkSession(req.session.userId);
+    const user = await checkSession(req.session.userId||req.session.adminId);
     res
       .status(HTTP_STATUS.OK)
       .render("auth/home", { user, cartCount: req.cartCount || null });

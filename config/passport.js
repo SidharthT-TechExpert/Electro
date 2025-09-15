@@ -4,6 +4,7 @@ const userSchema = require("../models/userSchema");
 require("dotenv").config();
 
 passport.use(
+  "google-user",
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
@@ -86,6 +87,5 @@ passport.deserializeUser((id, done) => {
     .then((user) => done(null, user))
     .catch((err) => done(err, null));
 });
-
 
 module.exports = passport;
