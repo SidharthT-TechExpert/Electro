@@ -33,6 +33,16 @@ header .form-control:focus {
   box-shadow: none;
 }
 
+/* Ensure dropdowns appear above all page content */
+header .dropdown-menu {
+  position: absolute;
+  top: 100%;   /* directly under the trigger button */
+  right: 0;    /* align to right of profile image */
+  z-index: 2000; /* higher than header (1050) and body */
+  margin-top: 8px; /* small gap */
+}
+
+
 /* ------------------------------
    User Dropdown Button
 ------------------------------ */
@@ -58,6 +68,7 @@ header .user-btn.show .arrow-icon {
 /* ------------------------------
    Dark Dropdown Menu
 ------------------------------ */
+
 .dropdown-dark {
   background: #2c2c2c;
   border-radius: 8px;
@@ -116,4 +127,32 @@ header .btn-outline-secondary .badge {
 }
 .top-info-bar a:hover {
   text-decoration: underline;
+}
+
+/* Ensure top-info-bar is above the main header */
+.top-info-bar {
+  position: relative;
+  z-index: 1200; /* higher than .main-header */
+}
+
+/* Ensure dropdown menu is visible */
+.top-info-bar .dropdown-menu {
+  z-index: 1250;
+}
+
+
+/* Notification badge */
+.btn .badge {
+  font-size: 0.65rem;
+  padding: 4px 6px;
+  line-height: 1;
+  min-width: 18px;
+  text-align: center;
+  border-radius: 50%;
+}
+
+/* Make dropdown items cleaner */
+.dropdown-menu .dropdown-item i {
+  width: 18px;
+  text-align: center;
 }

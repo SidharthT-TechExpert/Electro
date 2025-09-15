@@ -1,0 +1,161 @@
+/* ---------------- Main Layout ---------------- */
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: 20px;
+  transition: margin-left .25s ease;
+}
+.electro-sidebar.collapsed ~ .main-content {
+  margin-left: var(--sidebar-collapsed);
+}
+
+/* ---------------- Header (Title + Controls) ---------------- */
+.content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.content-header h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Search Bar */
+.search-bar {
+  display: flex;
+  border: 1px solid var(--muted-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.search-bar input {
+  padding: 6px 10px;
+  border: none;
+  outline: none;
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+.search-bar button {
+  padding: 6px 10px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Filter dropdown */
+.filter-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--muted-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  min-width: 120px;
+}
+
+/* Buttons */
+.btn-icon {
+  border: none;
+  background: var(--card-bg);
+  color: var(--text-color);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-icon:hover { background: rgba(0,0,0,0.08); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-primary:hover { opacity: 0.9; }
+
+.btn-success, .btn-danger {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 500;
+}
+.btn-success { background: #16a34a; }
+.btn-danger { background: #dc2626; }
+.btn-success:hover { background: #15803d; }
+.btn-danger:hover { background: #b91c1c; }
+
+/* ---------------- Table ---------------- */
+.table-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Header inverse colors */
+body.dark .table thead th {
+  background: #f3f4f6;
+  color: #111827;
+}
+body.light .table thead th {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+/* Table rows */
+.table tbody td {
+  padding: 12px;
+}
+body.dark .table tbody tr {
+  background: #111827;
+  color: #f9fafb;
+}
+body.dark .table tbody tr:nth-child(even) { background: #1e293b; }
+body.dark .table tbody tr:hover { background: #374151; }
+
+body.light .table tbody tr {
+  background: #ffffff;
+  color: #111827;
+}
+body.light .table tbody tr:nth-child(even) { background: #f9fafb; }
+body.light .table tbody tr:hover { background: #e5e7eb; }
+
+/* Status Badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.badge-danger { background: #dc2626; color: #fff; }
+.badge-success { background: #16a34a; color: #fff; }
+
+/* ---------------- Pagination ---------------- */
+.pagination {
+  display: flex;
+  gap: 6px;
+  margin-top: 15px;
+  justify-content: flex-end;
+}
+.pagination button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+}
+.pagination button.active {
+  background: var(--accent);
+  color: #fff;
+}
+.pagination button:hover { opacity: 0.9; }

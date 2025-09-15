@@ -1,16 +1,16 @@
-// Electro Shop Application
 const express = require("express");
 const env = require("dotenv").config();
 const path = require("path");
 const ejs = require("ejs");
-const session = require("express-session");
 const flash = require("connect-flash");
 const nocache = require("nocache");
+const passport = require("./config/passport.js");
 
 const userRoutes = require("./routes/userRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
 const connectDB = require("./config/db");
-const passport = require("./config/passport.js");
+
+// Session middlewares
 const userSession = require("./middlewares/userSession.js");
 const adminSession = require("./middlewares/adminSession.js");
 
@@ -20,16 +20,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply user session to user routes
-app.use("/", userSession, passport.initialize(), passport.session());
-
-// Apply admin session to admin routes
-app.use("/admin", adminSession, passport.initialize(), passport.session());
-
 // Prevent caching
 app.use(nocache());
 
-// Flash messages
+// -------------------- Sessions  -------------------- //
+// Apply sessions per scope
+app.use("/", userSession);
+app.use("/admin", adminSession);
+
+// -------------------- Flash -------------------- //
 app.use(flash());
 
 // Expose flash messages to EJS views
@@ -50,10 +49,14 @@ app.set("views", [
 
 app.use(express.static(path.join(__dirname, "public")));
 
+// -------------------- Passport -------------------- //
+app.use(passport.initialize());
+app.use(passport.session());
+
 // -------------------- Routes -------------------- //
 app.use("/", userRoutes);
 app.use("/admin", adminRoutes);
-
+ 
 // -------------------- Start Server -------------------- //
 connectDB().then(() => {
   app.listen(process.env.PORT, () => {
