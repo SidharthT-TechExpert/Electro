@@ -6,48 +6,102 @@
 <link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
 <link rel="stylesheet" href="/css/admin/DashBoard/category.css">
 
-
 <%- include("../../partials/admin/sidebar") %>
   <%- include("../../partials/admin/header") %>
     <%- include("../../partials/user/messages") %>
 
-    
-    <div class="main-content">
-        <%- include("../../partials/admin/subHeader",{ pageTitle:"Categories" }) %>
-  <div class="page-header">
-    <a href="/admin/categories/add" class="btn btn-primary">+ Add Category</a>
-  </div>
+      <div class="main-content">
 
-  <div class="table-wrapper">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Category Name</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% categories.forEach((cat, i) => { %>
-          <tr>
-            <td><%= i+1 %></td>
-            <td><%= cat.name %></td>
-            <td>
-              <% if (cat.status === "listed") { %>
-                <span class="badge badge-success">Listed</span>
-              <% } else { %>
-                <span class="badge badge-danger">Unlisted</span>
-              <% } %>
-            </td>
-            <td>
-              <a href="/admin/categories/view/<%= cat._id %>" class="btn-action btn-view"><i class="fa fa-eye"></i></a>
-              <a href="/admin/categories/edit/<%= cat._id %>" class="btn-action btn-edit"><i class="fa fa-edit"></i></a>
-              <a href="/admin/categories/delete/<%= cat._id %>" class="btn-action btn-delete"><i class="fa fa-trash"></i></a>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-</div>
-<%- include("../../partials/admin/pageNavigation") %>
+        <div class="content-header">
+          <h2>Categories</h2>
+
+          <div class="search-actions">
+            <form action="/admin/categories" method="get" class="search-form">
+              <!-- Search -->
+              <div class="search-bar">
+                <input autocomplete="none" type="text" name="search" placeholder="Search Categories..."
+                  value="<%= search || '' %>" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+              </div>
+
+              <!-- Filter -->
+<select name="status" id="statusFilter" class="filter-select" onchange="this.form.submit()">
+  <option value="all" <%= status==='all' ? 'selected' : '' %>>All</option>
+  <option value="listed" <%= status==='listed' ? 'selected' : '' %>>Listed</option>
+  <option value="unlisted" <%= status==='unlisted' ? 'selected' : '' %>>Unlisted</option>
+</select>
+
+
+              <!-- Refresh -->
+              <button type="button" class="btn-icon" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+
+            </form>
+          </div>
+        </div>
+        <div class="page-header mb-3">
+          <a href="/admin/categories/add" class="btn btn-primary">+ Add Category</a>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Category Name</th>
+                <th>Category Description</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% categories.forEach((cat, i)=> { %>
+                <tr>
+                  <td>
+                    <%= i + 1 %>
+                  </td>
+                  <td>
+                    <%= cat.name %>
+                  </td>
+                  <td>
+                    <%= cat.description %>
+                  </td>
+
+<td>
+  <% if ((cat.status || "").toLowerCase().trim() === "listed") { %>
+    <span class="badge bg-success">Listed</span>
+  <% } else { %>
+    <span class="badge bg-danger">Unlisted</span>
+  <% } %>
+</td>
+
+
+                  <td class="d-flex gap-2">
+                    <a style="text-decoration: none;" href="/admin/categories/view/<%= cat._id %>"
+                      class="btn-action btn-view" data-bs-toggle="tooltip" data-bs-placement="top"
+                      title="View Category">
+                      <i class="fa fa-eye"></i>
+                    </a>
+
+                    <a style="text-decoration: none;" href="/admin/categories/edit/<%= cat._id %>"
+                      class="btn-action btn-edit" data-bs-toggle="tooltip" data-bs-placement="top"
+                      title="Edit Category">
+                      <i class="fa fa-edit"></i>
+                    </a>
+
+                    <a style="text-decoration: none;" href="/admin/categories/delete/<%= cat._id %>"
+                      class="btn-action btn-delete" data-bs-toggle="tooltip" data-bs-placement="top"
+                      title="Delete Category">
+                      <i class="fa fa-trash"></i>
+                    </a>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+
+          </table>
+        </div>
+
+        <%- include("../../partials/admin/pageNavigation") %>
+      </div>

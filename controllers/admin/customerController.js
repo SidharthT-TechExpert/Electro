@@ -1,12 +1,6 @@
 const HTTP_STATUS = require("../../config/statusCodes");
 const userSchema = require("../../models/userSchema");
-const env = require("dotenv").config();
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
 
-const checkSession = async (_id) => {
-  return _id ? await userSchema.findById(_id) : null;
-};
 
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -82,51 +76,8 @@ const customerBlock = async (req, res) => {
   }
 };
 
-const categories = async ( req,res) => {
-    try {
-    const limit = 10;
-    const page = parseInt(req.query.page) || 1;
-    const search = escapeRegex(req.query.search || "");
-    const status = req.query.status || "all";
-
-    // // Base query
-    let query = {
-      isAdmin: false,
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-      ],
-    };
-
-    // // Apply status filter
-    // if (status === "active") query.isBlocked = false;
-    // if (status === "blocked") query.isBlocked = true;
-
-    // // Fetch paginated customers
-    const categories  = await userSchema
-      .find(query)
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .exec();
-
-    // // Count for pagination
-    const count = await userSchema.countDocuments(query);
-
-    res.render("Home/category", {
-      categories ,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-      search: req.query.search || "",
-      status, // ✅ pass to frontend
-    });
-  } catch (error) { 
-    console.error(error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
-  }
-}
 
 module.exports = {
   customer,
   customerBlock,
-  categories
 };

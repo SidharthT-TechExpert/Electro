@@ -2,6 +2,7 @@ const express = require("express");
 const routes = express.Router();
 const adminController = require("../controllers/admin/adminController");
 const customerController = require("../controllers/admin/customerController");
+const categorieController = require('../controllers/admin/categorieController.js')
 const passport = require("passport");
 
 const session = require("../middlewares/session");
@@ -28,7 +29,10 @@ routes.get("/pageNotFound", session.isChecker, adminController.pageNotFound);
 // Customer Management
 routes.get("/customers", customerController.customer);
 routes.put("/customersBlock",customerController.customerBlock);
-routes.get("/categories", customerController.categories);
+
+// Categories Management
+routes.get("/categories", categorieController.categories);
+routes.get("/orders", categorieController.categories);
 
 // Admin Google Login
 routes.get(

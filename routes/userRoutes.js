@@ -12,7 +12,7 @@ routes
   .route('/signUp')
      .get(checkSession.isAuth, userController.loadSignUpPage)
      .post(userController.signUp);
-      
+       
 routes
   .route('/logIn')
      .get( userController.loadLogInPage)
