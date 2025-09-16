@@ -49,22 +49,6 @@
   font-size: 14px;
 }
 
-/* Badges */
-.badge {
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.badge-success {
-  background: #22c55e;
-  color: #fff;
-}
-.badge-danger {
-  background: #ef4444;
-  color: #fff;
-}
-
 /* Action buttons */
 .btn-action {
   display: block;
@@ -118,3 +102,7 @@
   bottom: 2px !important;   /* ✅ arrow hugs button */
 }
 
+/* Always keep SweetAlert on top of navbar/sidebar */
+.swal2-container {
+  z-index: 99999 !important;
+}

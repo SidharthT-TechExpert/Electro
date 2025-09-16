@@ -20,6 +20,7 @@ const categorySchema = new Schema({
     enum: ["listed", "unlisted"],
     lowercase: true, 
     trim: true,
+    default:'listed',
   },
   categoryOffer: {
     type: Number,

@@ -10,7 +10,7 @@ const Blocked = (id, isBlocked) => {
   }).then((result) => {
     if (result.isConfirmed) {
       $.ajax({
-        type: "PUT",
+        type: "PATCH",
         url: `/admin/customersBlock?_id=${id}&isBlocked=${!isBlocked}`,
         success: function (response) {
           if (response.success) {

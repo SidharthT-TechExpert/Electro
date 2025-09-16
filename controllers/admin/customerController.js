@@ -1,14 +1,13 @@
 const HTTP_STATUS = require("../../config/statusCodes");
 const userSchema = require("../../models/userSchema");
 
-
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 const customer = async (req, res) => {
   try {
-    const limit = 10;
+    const limit = 8;
     const page = parseInt(req.query.page) || 1;
     const search = escapeRegex(req.query.search || "");
     const status = req.query.status || "all";
@@ -44,7 +43,7 @@ const customer = async (req, res) => {
       status, // ✅ pass to frontend
     });
   } catch (error) {
-    console.error(error);
+    console.error(error); 
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
@@ -53,8 +52,9 @@ const customerBlock = async (req, res) => {
   try {
     const { _id, isBlocked } = req.query;
     const user = await userSchema.findByIdAndUpdate(
-      { _id },
-      { $set: { isBlocked: isBlocked === "true" } }
+       _id ,
+      { $set: { isBlocked: isBlocked === "true" } },
+      { new: true }
     );
 
     if (!user) {
@@ -75,7 +75,6 @@ const customerBlock = async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
-
 
 module.exports = {
   customer,
