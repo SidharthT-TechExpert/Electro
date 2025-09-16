@@ -1,12 +1,5 @@
 const HTTP_STATUS = require("../../config/statusCodes");
 const userSchema = require("../../models/userSchema");
-const env = require("dotenv").config();
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
-
-const checkSession = async (_id) => {
-  return _id ? await userSchema.findById(_id) : null;
-};
 
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -14,17 +7,23 @@ function escapeRegex(s = "") {
 
 const customer = async (req, res) => {
   try {
-    const limit = 10;
+    const limit = 8;
     const page = parseInt(req.query.page) || 1;
-    const search = escapeRegex(req.query.search) || "";
+    const search = escapeRegex(req.query.search || "");
+    const status = req.query.status || "all";
 
-    const query = {
+    // Base query
+    let query = {
       isAdmin: false,
       $or: [
-        { name: { $regex: ".*" + search + ".*", $options: "i" } },
-        { email: { $regex: ".*" + search + ".*", $options: "i" } },
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
       ],
     };
+
+    // Apply status filter
+    if (status === "active") query.isBlocked = false;
+    if (status === "blocked") query.isBlocked = true;
 
     // Fetch paginated customers
     const customers = await userSchema
@@ -33,17 +32,18 @@ const customer = async (req, res) => {
       .skip((page - 1) * limit)
       .exec();
 
-    // Count total documents for pagination
+    // Count for pagination
     const count = await userSchema.countDocuments(query);
 
     res.render("Home/customersList", {
       customers,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
-      search,
+      search: req.query.search || "",
+      status, // ✅ pass to frontend
     });
   } catch (error) {
-    console.error(error);
+    console.error(error); 
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
@@ -51,13 +51,16 @@ const customer = async (req, res) => {
 const customerBlock = async (req, res) => {
   try {
     const { _id, isBlocked } = req.query;
-   const user = await userSchema.findByIdAndUpdate(
-      { _id },
-      { $set: { isBlocked: isBlocked === "true" } }
+    const user = await userSchema.findByIdAndUpdate(
+       _id ,
+      { $set: { isBlocked: isBlocked === "true" } },
+      { new: true }
     );
 
-     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.json({

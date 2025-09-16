@@ -15,6 +15,13 @@ const categorySchema = new Schema({
     type: Boolean,
     default: true,
   },
+  status: {
+    type: String,
+    enum: ["listed", "unlisted"],
+    lowercase: true, 
+    trim: true,
+    default:'listed',
+  },
   categoryOffer: {
     type: Number,
     default: 0,

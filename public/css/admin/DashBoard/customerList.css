@@ -20,18 +20,27 @@
   font-size: 1.4rem;
   font-weight: 700;
 }
-.actions {
+
+/* Search + Filter + Refresh wrapper */
+.search-actions {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
+}
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Search Bar */
 .search-bar {
   display: flex;
+  align-items: center;
   border: 1px solid var(--muted-color);
   border-radius: 6px;
   overflow: hidden;
+  height: 38px;
 }
 .search-bar input {
   padding: 6px 10px;
@@ -39,13 +48,15 @@
   outline: none;
   background: var(--card-bg);
   color: var(--text-color);
+  height: 100%;
 }
 .search-bar button {
-  padding: 6px 10px;
+  padding: 0 12px;
   border: none;
   background: var(--accent);
   color: #fff;
   cursor: pointer;
+  height: 100%;
 }
 
 /* Filter dropdown */
@@ -57,6 +68,7 @@
   color: var(--text-color);
   cursor: pointer;
   min-width: 120px;
+  height: 38px;
 }
 
 /* Buttons */
@@ -64,9 +76,13 @@
   border: none;
   background: var(--card-bg);
   color: var(--text-color);
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn-icon:hover { background: rgba(0,0,0,0.08); }
 
@@ -99,6 +115,10 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.table-wrapper table {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 /* Header inverse colors */
@@ -139,23 +159,38 @@ body.light .table tbody tr:hover { background: #e5e7eb; }
 .badge-danger { background: #dc2626; color: #fff; }
 .badge-success { background: #16a34a; color: #fff; }
 
-/* ---------------- Pagination ---------------- */
-.pagination {
-  display: flex;
-  gap: 6px;
-  margin-top: 15px;
-  justify-content: flex-end;
-}
-.pagination button {
-  padding: 6px 12px;
-  border-radius: 6px;
+/* General no-data row styling */
+.no-data td {
+  text-align: center;
+  padding: 2rem;
   border: none;
-  background: var(--card-bg);
-  color: var(--text-color);
-  cursor: pointer;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
-.pagination button.active {
-  background: var(--accent);
-  color: #fff;
+.no-data .icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
 }
-.pagination button:hover { opacity: 0.9; }
+.no-data .title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+.no-data .subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Light mode */
+body.light-mode .no-data td {
+  color: #444;
+  background-color: #f9f9f9;
+}
+body.light-mode .no-data .icon { color: #888; }
+
+/* Dark mode */
+body.dark-mode .no-data td {
+  color: #ddd;
+  background-color: #2a2a2a;
+}
+body.dark-mode .no-data .icon { color: #aaa; }

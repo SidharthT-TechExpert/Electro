@@ -415,3 +415,24 @@ body.dark-mode .dropdown-item:hover {
    color:white;
    border-radius: 0px 0px 10px 10px;
 }
+
+/* Sidebar sublinks */
+.electro-sidebar .nav-sublink {
+  display: block;
+  padding: 8px 12px;
+  color: #ccc;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.electro-sidebar .nav-sublink:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* Active sublink */
+.electro-sidebar .nav-sublink.active {
+  background: #4f46e5; /* same as main active */
+  color: #fff;
+  font-weight: 600;
+}
