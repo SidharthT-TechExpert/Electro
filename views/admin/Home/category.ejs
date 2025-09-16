@@ -1,0 +1,53 @@
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<link rel="stylesheet" href="/css/admin/DashBoard/header.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/category.css">
+
+
+<%- include("../../partials/admin/sidebar") %>
+  <%- include("../../partials/admin/header") %>
+    <%- include("../../partials/user/messages") %>
+
+    
+    <div class="main-content">
+        <%- include("../../partials/admin/subHeader",{ pageTitle:"Categories" }) %>
+  <div class="page-header">
+    <a href="/admin/categories/add" class="btn btn-primary">+ Add Category</a>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Category Name</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% categories.forEach((cat, i) => { %>
+          <tr>
+            <td><%= i+1 %></td>
+            <td><%= cat.name %></td>
+            <td>
+              <% if (cat.status === "listed") { %>
+                <span class="badge badge-success">Listed</span>
+              <% } else { %>
+                <span class="badge badge-danger">Unlisted</span>
+              <% } %>
+            </td>
+            <td>
+              <a href="/admin/categories/view/<%= cat._id %>" class="btn-action btn-view"><i class="fa fa-eye"></i></a>
+              <a href="/admin/categories/edit/<%= cat._id %>" class="btn-action btn-edit"><i class="fa fa-edit"></i></a>
+              <a href="/admin/categories/delete/<%= cat._id %>" class="btn-action btn-delete"><i class="fa fa-trash"></i></a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+</div>
+<%- include("../../partials/admin/pageNavigation") %>

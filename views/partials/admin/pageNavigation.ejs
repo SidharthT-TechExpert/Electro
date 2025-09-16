@@ -1,0 +1,33 @@
+<link rel="stylesheet" href="/css/admin/DashBoard/pageNavigation.css">
+
+<!-- Pagination -->
+<div class="pagination">
+  <!-- Prev button -->
+  <% if (currentPage > 1) { %>
+    <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>">
+      <button class="nav-btn">Prev</button>
+    </a>
+  <% } else { %>
+    <button class="nav-btn" disabled>Prev</button>
+  <% } %>
+
+  <!-- Page numbers -->
+  <% for (let i = 1; i <= totalPages; i++) { %>
+    <% if (currentPage === i) { %>
+      <button class="page-btn active"><%= i %></button>
+    <% } else { %>
+      <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>">
+        <button class="page-btn"><%= i %></button>
+      </a>
+    <% } %>
+  <% } %>
+
+  <!-- Next button -->
+  <% if (currentPage < totalPages) { %>
+    <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>">
+      <button class="nav-btn">Next</button>
+    </a>
+  <% } else { %>
+    <button class="nav-btn" disabled>Next</button>
+  <% } %>
+</div>

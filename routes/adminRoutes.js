@@ -28,6 +28,7 @@ routes.get("/pageNotFound", session.isChecker, adminController.pageNotFound);
 // Customer Management
 routes.get("/customers", customerController.customer);
 routes.put("/customersBlock",customerController.customerBlock);
+routes.get("/categories", customerController.categories);
 
 // Admin Google Login
 routes.get(

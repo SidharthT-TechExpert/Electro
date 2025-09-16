@@ -1,0 +1,90 @@
+
+
+/* Page header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.page-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+}
+.page-header .btn-primary {
+  background: #4f46e5;
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
+.page-header .btn-primary:hover {
+  background: #4338ca;
+}
+
+/* Table */
+.table-wrapper {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table thead th {
+  background: #1e293b;
+  color: #fff;
+  text-align: left;
+  padding: 12px;
+  font-size: 14px;
+}
+.table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+/* Badges */
+.badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-success {
+  background: #22c55e;
+  color: #fff;
+}
+.badge-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* Action buttons */
+.btn-action {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin: 0 2px;
+  font-size: 14px;
+  color: #fff;
+  transition: 0.3s;
+}
+.btn-view {
+  background: #22c55e;
+}
+.btn-edit {
+  background: #1e293b;
+}
+.btn-delete {
+  background: #ef4444;
+}
+.btn-action:hover {
+  opacity: 0.85;
+}
+

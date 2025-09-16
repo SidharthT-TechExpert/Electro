@@ -1,0 +1,29 @@
+<link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
+
+<div class="content-header">
+  <h2><%= pageTitle %></h2>
+
+  <div class="search-actions">
+    <form action="/admin/customers" method="get" class="search-form">
+
+      <!-- Search -->
+      <div class="search-bar">
+        <input type="text" name="search" placeholder="Search customers..." value="<%= search || '' %>" id="searchInput">
+        <button type="submit"><i class="fas fa-search"></i></button>
+      </div>
+
+      <!-- Filter -->
+      <select name="status" id="statusFilter" class="filter-select" onchange="this.form.submit()">
+        <option value="all" <%=status==='all' ? 'selected' : '' %>>All</option>
+        <option value="active" <%=status==='active' ? 'selected' : '' %>>Active</option>
+        <option value="blocked" <%=status==='blocked' ? 'selected' : '' %>>Blocked</option>
+      </select>
+
+      <!-- Refresh -->
+      <button type="button" class="btn-icon" onclick="location.reload()">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+
+    </form>
+  </div>
+</div>
