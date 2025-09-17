@@ -1,5 +1,7 @@
 const brandSchema = require("../../models/brandSchema");
 const HTTP_STATUS = require("../../config/statusCodes");
+const fs = require("fs");
+const path = require("path");
 
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -21,8 +23,8 @@ const getBranchPage = async (req, res) => {
     };
 
     // Apply status filter
-    if (status === "listed") query.status = "listed";
-    if (status === "unlisted") query.status = "unlisted";
+    if (status === "active") query.status = "active";
+    if (status === "blocked") query.status = "blocked";
 
     // Fetch paginated categories
     const brandData = await brandSchema
@@ -53,7 +55,6 @@ const addBrands = async (req, res) => {
     const { name } = req.body;
     const logo = req.file;
 
-
     if (!name || !logo) {
       // ❌ delete the uploaded file since it's not needed
       fs.unlinkSync(
@@ -69,6 +70,9 @@ const addBrands = async (req, res) => {
     // Fetch paginated categories
     const exist = await brandSchema.findOne({ name: name.trim() });
     if (exist) {
+      fs.unlinkSync(
+        path.join(__dirname, "../public/uploads/brands", logo.filename)
+      );
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: "Brand already exists!",
@@ -97,7 +101,42 @@ const addBrands = async (req, res) => {
   }
 };
 
+const deleteBrand = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const brand = await brandSchema.findByIdAndDelete(id);
+    if (!brand) {
+      return res.status(404).json({
+        success: false,
+        message: "Brand not found",
+      });
+    }
+
+    // brand.logo looks like "/uploads/brands/filename.png"
+    const filePath = path.join(__dirname, "../../public", brand.logo);
+
+    // delete file if exists
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    res.json({
+      success: true,
+      message: "Brand deleted successfully!",
+      id,
+    });
+  } catch (error) {
+    console.error("Delete Brand Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
 module.exports = {
   getBranchPage,
   addBrands,
+  deleteBrand,
 };

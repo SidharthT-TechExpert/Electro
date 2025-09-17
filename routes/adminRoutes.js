@@ -48,7 +48,8 @@ routes.patch("/categories/toggle-status/:id", categorieController.unList);
 routes
   .route("/brands")
   .get(brandController.getBranchPage)
-  .post(upload.single("logo"), brandController.addBrands);
+  .post(upload.single("logo"), brandController.addBrands)
+  .delete(brandController.deleteBrand);
   
 routes.get("/orders", categorieController.categories);
 

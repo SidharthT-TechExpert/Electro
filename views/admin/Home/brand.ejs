@@ -264,4 +264,48 @@
       }
     });
   }
+
+  function deleteBrand(id) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This will permanently delete the Brand.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!"
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                type: "DELETE",
+                url: `/admin/brands`,
+                data:{id},
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({
+                      icon: "success",
+                      title: response.message,
+                      showConfirmButton: false,
+                      timer: 1500
+                    });
+                    // ✅ remove row from table instantly
+                    document.querySelector(`a[onclick="deleteBrand('${id}')"]`)
+                      .closest("tr")
+                      .remove();
+                  } else {
+                    Swal.fire("Error", response.message, "error");
+                  }
+                },
+                error: function () {
+                  Swal.fire({
+                    icon: "error",
+                    title: "Server Error",
+                    text: "Please try again later!",
+                  });
+                },
+              });
+            }
+          });
+        }
+
 </script>
