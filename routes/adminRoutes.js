@@ -4,10 +4,11 @@ const adminController = require("../controllers/admin/adminController");
 const customerController = require("../controllers/admin/customerController");
 const categorieController = require("../controllers/admin/categorieController.js");
 const brandController = require("../controllers/admin/brandController.js");
+const productController = require('../controllers/admin/productController.js')
 const session = require("../middlewares/session");
 
 const passport = require("passport");
-const upload = require("../helpers/multer.js"); 
+const upload = require("../helpers/multer.js");
 // Login Menagement admin
 routes
   .route("/login")
@@ -48,8 +49,19 @@ routes.patch("/categories/toggle-status/:id", categorieController.unList);
 routes
   .route("/brands")
   .get(brandController.getBranchPage)
-  .post(upload.single("logo"), brandController.addBrands);
+  .post(upload.single("logo"), brandController.addBrands)
+  .delete(brandController.deleteBrand)
+  .patch(brandController.Ablock);
   
+  routes.patch("/brands/:id", upload.single("logo"), brandController.updateBrand);
+  
+  // Product Management
+  routes
+    .route("/products")
+    .get(productController.getProductsPage)
+    .post(productController.addProduct)
+
+
 routes.get("/orders", categorieController.categories);
 
 // Admin Google Login

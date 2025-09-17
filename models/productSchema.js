@@ -3,30 +3,36 @@ const { Schema } = mongoose;
 
 const productSchema = new Schema(
   {
-    productName: {
+    name: {
       type: String,
       required: true,
     },
     description: {
       type: String,
-      required: true,
+      required: false,
     },
     brand: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref:'brands',
       required: true,
     },
     category: {
       type: Schema.Types.ObjectId,
-      ref: "Category",
+      ref: "category",
       required: true,
     },
-    regularPrice: {
+    price: {
       type: Number,
       required: true,
+    },
+    stock:{
+      type:Number,
+      require:false,
+      default:0
     },
     salePrice: {
       type: Number,
-      required: true,
+      required: false,
     },
     productOffer: {
       type: Number,
@@ -38,11 +44,11 @@ const productSchema = new Schema(
     },
     color: {
       type: String,
-      required: true,
+      required: false,
     },
-    productImages: {
+    Images: {
       type: [String],
-      required: true,
+      required: false,
     },
     isBlocked: {
       type: Boolean,
@@ -50,9 +56,9 @@ const productSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Available", "Out of Stock", "Discontinued"],
+      enum: ["In Stock", "Out of Stock", "Not Listed"],
       required: true,
-      default: "Available",
+      default: "In Stock",
     },
   },
   { timestamps: true }

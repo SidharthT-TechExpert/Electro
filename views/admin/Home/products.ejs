@@ -1,0 +1,303 @@
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<link rel="stylesheet" href="/css/admin/DashBoard/header.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/category.css">
+
+<%- include("../../partials/admin/sidebar") %>
+  <%- include("../../partials/admin/header") %>
+    <%- include("../../partials/user/messages") %>
+
+      <div class="main-content">
+
+        <!-- Page Header -->
+        <div class="content-header">
+          <h2>Products</h2>
+
+          <div class="search-actions">
+            <form action="/admin/products" method="get" class="search-form">
+              <!-- Search -->
+              <div class="search-bar">
+                <input autocomplete="off" type="text" name="search" placeholder="Search Products..."
+                  value="<%= search || '' %>" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+              </div>
+
+              <!-- Filter by Stock -->
+              <select name="status" id="statusFilter" class="filter-select" onchange="this.form.submit()">
+                <option value="all" <%=status==='all' ? 'selected' : '' %>>All</option>
+                <option value="In Stock" <%=status==='In Stock' ? 'selected' : '' %>>In Stock</option>
+                <option value="Out of Stock" <%=status==='Out of Stock' ? 'selected' : '' %>>Out of Stock</option>
+                <option value="Not Listed" <%=status==='Not Listed' ? 'selected' : '' %>>Not Listed</option>
+              </select>
+
+              <!-- Refresh -->
+              <button type="button" class="btn-icon" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Add Product Button -->
+        <div class="page-header mb-3">
+          <a onclick="addProductModal()" class="btn btn-primary"><i class="fa fa-plus"></i> Add Product</a>
+        </div>
+
+        <!-- Products Table -->
+        <div class="table-wrapper">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% productData.forEach((product, i)=> { %>
+                <tr class="product-row" >
+                  <td>
+                    <%= i + 1 %>
+                  </td>
+
+                  <!-- Product -->
+                  <td class="product-name">
+                    <%= product.name %>
+                  </td>
+
+                  <!-- Price -->
+                  <td class="product-name">
+                    <%= product.price.toFixed(2) %>
+                  </td>
+
+
+                  <!-- Stock -->
+                  <td class="product-name">
+                    <%= product.stock %>
+                  </td>
+
+                  <!-- Brand -->
+                  <td class="product-brand">
+                    <img src="<%= product.brand.logo %>" alt="<%= product.brand.name %> Logo" class="brand-logo"
+                      onerror="this.src='/images/logo-placeholder.png'">
+                    <%= product.brand ? product.brand.name : 'Unbranded' %>
+                  </td>
+
+                  <!-- Category -->
+                  <td class="product-category">
+                    <%= product.category ? product.category.name : 'Uncategorized' %>
+                  </td>
+
+                  <!-- Status -->
+                  <td class="status-badge-<%= product._id %>">
+                    <% if ((product.status || "" ).toLowerCase()==="in stock" ) { %>
+                      <span class="badge bg-success">In Stock</span>
+                      <% } else if ((product.status || "" ).toLowerCase()==="out of stock" ) { %>
+                        <span class="badge bg-warning text-dark">Out of Stock</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary">Not Listed</span>
+                          <% } %>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <%- include("../../partials/admin/pageNavigation") %>
+      </div>
+
+      <script>
+        /* Add Product Modal */
+        function addProductModal() {
+          Swal.fire({
+            title: "➕ Add New Product",
+            html: `
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Product Name</label>
+        <input type="text" id="swal-input-name" class="form-control" placeholder="Enter product name">
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Price of Product</label>
+        <input type="number" id="swal-input-price" class="form-control" placeholder="Enter product price">
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Brand</label>
+        <select id="swal-input-brand" class="form-control">
+          <% brands.forEach(b => { %>
+            <option value="<%= b._id %>">
+                <%= b.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Category</label>
+        <select id="swal-input-category" class="form-control">
+          <% categories.forEach(c => { %>
+            <option value="<%= c._id %>"><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Stock Status</label>
+        <select id="swal-input-status" class="form-control">
+          <option value="In Stock">In Stock</option>
+          <option value="Out of Stock">Out of Stock</option>
+          <option value="Not Listed">Not Listed</option>
+        </select>
+      </div>
+    `,
+            showCancelButton: true,
+            confirmButtonText: "Add Product",
+            preConfirm: () => {
+              const name = document.getElementById("swal-input-name").value.trim();
+              const brand = document.getElementById("swal-input-brand").value;
+              const category = document.getElementById("swal-input-category").value;
+              const status = document.getElementById("swal-input-status").value;
+              const price = document.getElementById("swal-input-price").value.trim();
+              if (!name || !brand || !category || !status || !price) {
+                Swal.showValidationMessage("⚠️ Product name,brand,category and status is required!");
+                return false;
+              }
+              return { name, brand, category, status, price };
+            }
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const { name, brand, category, status, price } = result.value;
+              $.ajax({
+                type: "POST",
+                url: "/admin/products",
+                data: { name, brand, category, status, price },
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({ icon: "success", title: "Product Added!", timer: 1500, showConfirmButton: false })
+                      .then(() => location.reload());
+                  } else {
+                    Swal.fire("Error", response.message, "error");
+                  }
+                }
+              });
+            }
+          });
+        }
+
+        /* Edit Product Modal */
+        function editProduct(id) {
+          const row = document.querySelector(`a[onclick*="${id}"]`).closest("tr");
+          const currentName = row.querySelector(".product-name").innerText;
+          const currentBrand = row.querySelector(".product-brand").innerText;
+          const currentCategory = row.querySelector(".product-category").innerText;
+          const currentStatus = row.querySelector(".status-badge-" + id).innerText.trim();
+
+          Swal.fire({
+            title: `<h2><i class="fas fa-edit"></i> Edit Product</h2>`,
+            html: `
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Product Name</label>
+        <input type="text" id="swal-edit-name" class="form-control" value="${currentName}">
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Brand</label>
+        <select id="swal-edit-brand" class="form-control">
+          <% brands.forEach(b => { %>
+            <option value="<%= b._id %>" ${currentBrand === b.name ? "selected" : ""}><%= b.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Category</label>
+        <select id="swal-edit-category" class="form-control">
+          <% categories.forEach(c => { %>
+            <option value="<%= c._id %>" ${currentCategory === c.name ? "selected" : ""}><%= c.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold">Stock Status</label>
+        <select id="swal-edit-status" class="form-control">
+          <option value="In Stock" ${currentStatus === "In Stock" ? "selected" : ""}>In Stock</option>
+          <option value="Out of Stock" ${currentStatus === "Out of Stock" ? "selected" : ""}>Out of Stock</option>
+          <option value="Not Listed" ${currentStatus === "Not Listed" ? "selected" : ""}>Not Listed</option>
+        </select>
+      </div>
+    `,
+            showCancelButton: true,
+            confirmButtonText: "Update Product",
+            preConfirm: () => {
+              const name = document.getElementById("swal-edit-name").value.trim();
+              const brand = document.getElementById("swal-edit-brand").value;
+              const category = document.getElementById("swal-edit-category").value;
+              const status = document.getElementById("swal-edit-status").value;
+
+              if (!name) {
+                Swal.showValidationMessage("⚠️ Product name is required!");
+                return false;
+              }
+              return { name, brand, category, status };
+            }
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const { name, brand, category, status } = result.value;
+              $.ajax({
+                type: "PATCH",
+                url: `/admin/products/${id}`,
+                data: { name, brand, category, status },
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({
+                      toast: true, position: "top-end", icon: "success",
+                      title: "Product updated successfully!", timer: 2000, showConfirmButton: false
+                    });
+                    row.querySelector(".product-name").innerText = response.product.name;
+                    row.querySelector(".product-brand").innerText = response.product.brand.name;
+                    row.querySelector(".product-category").innerText = response.product.category.name;
+                    const badgeCell = row.querySelector(`.status-badge-${id}`);
+                    if (response.product.status.toLowerCase() === "in stock") {
+                      badgeCell.innerHTML = '<span class="badge bg-success">In Stock</span>';
+                    } else if (response.product.status.toLowerCase() === "out of stock") {
+                      badgeCell.innerHTML = '<span class="badge bg-warning text-dark">Out of Stock</span>';
+                    } else {
+                      badgeCell.innerHTML = '<span class="badge bg-secondary">Not Listed</span>';
+                    }
+                  }
+                }
+              });
+            }
+          });
+        }
+
+        /* Delete Product Modal */
+        function deleteProduct(id) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This will permanently delete the Product.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!"
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                type: "DELETE",
+                url: `/admin/products`,
+                data: { id },
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({ icon: "success", title: response.message, timer: 1500, showConfirmButton: false });
+                    document.querySelector(`a[onclick="deleteProduct('${id}')"]`).closest("tr").remove();
+                  }
+                }
+              });
+            }
+          });
+        }
+
+      </script>

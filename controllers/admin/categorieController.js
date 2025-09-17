@@ -69,7 +69,6 @@ const unList = async (req, res) => {
       message: `Category ${status} successfully!`,
       status: update.status,
     });
-
   } catch (error) {
     console.error("Customer Block Error :", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
@@ -165,7 +164,7 @@ const updateCategory = async (req, res) => {
     res.json({
       success: true,
       message: "Category updated successfully!",
-      category: update, 
+      category: update,
     });
   } catch (error) {
     console.error("Update Category Error:", error);
@@ -175,7 +174,6 @@ const updateCategory = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   categories,

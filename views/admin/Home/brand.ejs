@@ -42,7 +42,7 @@
 
   <!-- Add Brand Button -->
   <div class="page-header mb-3">
-    <a onclick="addBrandModal()" class="btn btn-primary">+ Add Brand</a>
+    <a onclick="addBrandModal()" class="btn btn-primary"><i class="ri-add-line sub-icon"></i> Add Brand</a>
   </div>
 
   <!-- Brands Table -->
@@ -93,9 +93,12 @@
         </a>
 
         <!-- Edit -->
-        <a class="btn-action btn-edit" onclick="editBrand('<%= brand._id %>', '<%= brand.name %>')" title="Edit Brand">
-          <i class="fa fa-edit"></i>
+        <a class="btn-action btn-edit"
+           onclick="editBrand('<%= brand._id %>')"
+           title="Edit Brand">
+         <i class="fa fa-edit"></i>
         </a>
+
 
         <!-- Delete -->
         <a class="btn-action btn-delete" onclick="deleteBrand('<%= brand._id %>')" title="Delete Brand">
@@ -113,155 +116,4 @@
 </div>
 
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".toggle-btn").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        const id = this.dataset.id;
-        const currentStatus = this.dataset.status;
-        const isListed = (currentStatus || "").toLowerCase() === "active";
-        const newStatus = isListed ? "blocked" : "active";
-
-        Swal.fire({
-          icon: "warning",
-          title: "Are you sure?",
-          text: isListed
-            ? "This will unlist the category. It will no longer be visible to users."
-            : "This will list the category. It will be visible to users.",
-          showCancelButton: true,
-          confirmButtonText: isListed ? "Yes, Unlist!" : "Yes, List!",
-          cancelButtonText: "Cancel",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $.ajax({
-              type: "PATCH",
-              url: `/admin/categories/toggle-status/${id}`,
-              data: { status: newStatus },
-              success: function (response) {
-                if (response.success) {
-                  Swal.fire({
-                    icon: "success",
-                    title: response.message,
-                    showConfirmButton: false,
-                    timer: 1500,
-                  });
-
-                  // ✅ Update badge
-                  const badgeCell = document.querySelector(`.status-badge-${id}`);
-                  badgeCell.innerHTML =
-                    response.status.toLowerCase() === "listed"
-                      ? '<span class="badge bg-success">Listed</span>'
-                      : '<span class="badge bg-danger">Unlisted</span>';
-
-                  // ✅ Update button
-                  btn.dataset.status = response.status;
-                  btn.setAttribute(
-                    "title",
-                    response.status.toLowerCase() === "listed"
-                      ? "Unlist Category"
-                      : "List Category"
-                  );
-                  btn.innerHTML =
-                    response.status.toLowerCase() === "listed"
-                      ? '<i class="fa fa-eye-slash"></i>'
-                      : '<i class="fa fa-eye"></i>';
-                } else {
-                  Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: response.message,
-                  });
-                }
-              },
-              error: function () {
-                Swal.fire({
-                  icon: "error",
-                  title: "Server Error",
-                  text: "Please try again!",
-                });
-              },
-            });
-          }
-        });
-      });
-    });
-  });
-
-  /* Add Brand Modal */
-  function addBrandModal() {
-    Swal.fire({
-      title: "➕ Add New Brand",
-      html: `
-        <div class="mb-3 text-start">
-          <label for="swal-input-name" class="form-label fw-bold">Brand Name</label>
-          <input type="text" id="swal-input-name" class="form-control" placeholder="Enter brand name">
-        </div>
-        <div class="mb-3 text-start">
-          <label for="swal-input-logo" class="form-label fw-bold">Brand Logo</label>
-          <input type="file" id="swal-input-logo" class="form-control" accept="image/*">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: "Add Brand",
-      cancelButtonText: "Cancel",
-      customClass: {
-        popup: "swal-wide",
-        confirmButton: "btn btn-primary",
-        cancelButton: "btn btn-secondary me-2"
-      },
-      buttonsStyling: false,
-      preConfirm: () => {
-        const name = document.getElementById("swal-input-name").value.trim();
-        const file = document.getElementById("swal-input-logo").files[0];
-
-        if (!name) {
-          Swal.showValidationMessage("⚠️ Brand name is required!");
-          return false;
-        }
-        if (!file) {
-          Swal.showValidationMessage("⚠️ Brand logo is required!");
-          return false;
-        }
-
-        return { name, file };
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const { name, file } = result.value;
-
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("logo", file);
-
-        $.ajax({
-          type: "POST",
-          url: "/admin/brands",
-          data: formData,
-          processData: false,
-          contentType: false,
-          success: function (response) {
-            if (response.success) {
-              Swal.fire({
-                icon: "success",
-                title: "Brand Added!",
-                text: response.message,
-                timer: 1500,
-                showConfirmButton: false,
-              }).then(() => location.reload());
-            }  else {
-              Swal.fire("Error", response.message, "error");
-            }
-          },
-          error: function (xhr) {
-            let msg = "Something went wrong!";
-           if (xhr.responseJSON && xhr.responseJSON.message) {
-             msg = xhr.responseJSON.message; // ✅ get backend message
-           }
-           Swal.fire("Error", msg, "error");
-         },
-        });
-      }
-    });
-  }
-</script>
+<script src="/js/admin/Home/brand.js"></script>
