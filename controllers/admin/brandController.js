@@ -53,9 +53,13 @@ const addBrands = async (req, res) => {
     const { name } = req.body;
     const logo = req.file;
 
-    console.log(name)
 
     if (!name || !logo) {
+      // ❌ delete the uploaded file since it's not needed
+      fs.unlinkSync(
+        path.join(__dirname, "../public/uploads/brands", logo.filename)
+      );
+
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: "Brand name and logo are required",
@@ -74,7 +78,7 @@ const addBrands = async (req, res) => {
     // ✅ Create new brand
     const newBrand = new brandSchema({
       name: name.trim(),
-      logo:`/uploads/brands/${logo.filename}`,
+      logo: `/uploads/brands/${logo.filename}`,
     });
 
     await newBrand.save();
@@ -84,7 +88,6 @@ const addBrands = async (req, res) => {
       message: "Brand created successfully",
       brand: newBrand,
     });
-
   } catch (error) {
     console.log("Get Branch Page Error :", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({

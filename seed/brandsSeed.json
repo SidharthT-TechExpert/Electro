@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Apple",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Samsung",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Sony",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/22/Sony_logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "LG",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2e/LG_logo_%282015%29.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Dell",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/48/Dell_Logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "HP",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/3a/HP_logo_2012.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Lenovo",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Lenovo_logo_2015.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Asus",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2e/AsusTek_logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Microsoft",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Xiaomi",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/29/Xiaomi_logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "OnePlus",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4d/OnePlus_logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Oppo",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5a/OPPO_Logo_2019.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Vivo",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/6/69/Vivo_logo_2019.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Realme",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Realme_logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Canon",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Canon_logo.svg",
+    "status": "Active"
+  },
+  {
+    "name": "Nikon",
+    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Nikon_Logo.svg",
+    "status": "Active"
+  }
+]

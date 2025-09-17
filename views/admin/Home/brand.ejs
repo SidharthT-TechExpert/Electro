@@ -248,17 +248,17 @@
                 timer: 1500,
                 showConfirmButton: false,
               }).then(() => location.reload());
-            } else {
+            }  else {
               Swal.fire("Error", response.message, "error");
             }
           },
-         error: function () {
-               Swal.fire({
-                 icon: "error",
-                 title: "Server Error",
-                 text: "Please try again later!",
-                });
-            },
+          error: function (xhr) {
+            let msg = "Something went wrong!";
+           if (xhr.responseJSON && xhr.responseJSON.message) {
+             msg = xhr.responseJSON.message; // ✅ get backend message
+           }
+           Swal.fire("Error", msg, "error");
+         },
         });
       }
     });
