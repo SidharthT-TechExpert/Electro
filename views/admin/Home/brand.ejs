@@ -94,7 +94,7 @@
 
         <!-- Edit -->
         <a class="btn-action btn-edit"
-           onclick="editBrand('<%= brand._id %>', `<%= brand.name %>`, `<%= brand.logo %>`)"
+           onclick="editBrand('<%= brand._id %>')"
            title="Edit Brand">
          <i class="fa fa-edit"></i>
         </a>
@@ -117,6 +117,7 @@
 
 
 <script>
+  /* Active Block Modal */      
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".toggle-btn").forEach((btn) => {
       btn.addEventListener("click", function () {
@@ -267,7 +268,7 @@
       }
     });
   }
-
+  /* Delete Brand Modal */
   function deleteBrand(id) {
           Swal.fire({
             title: "Are you sure?",
@@ -310,8 +311,13 @@
             }
           });
         }
+  /* Edit Brand Modal */
+  function editBrand(id) {
+  // ✅ Get latest values from DOM row
+  const row = document.querySelector(`a[onclick*="${id}"]`).closest("tr");
+  const currentName = row.querySelector(".brand-name").innerText;
+  const currentLogo = row.querySelector(".brand-logo").src;
 
-  function editBrand(id, name, logo) {
   Swal.fire({
     title: `<h2 style="font-weight:700; font-size:22px; color:#1e293b; display:flex; align-items:center; gap:8px;">
       <i class="fas fa-edit" style="color:#6366f1;"></i> Edit Brand
@@ -320,13 +326,13 @@
       <div class="mb-3 text-start">
         <label for="swal-edit-name" class="form-label fw-bold">Brand Name</label>
         <input type="text" id="swal-edit-name" class="form-control" 
-               placeholder="Enter brand name" value="${name}">
+               placeholder="Enter brand name" value="${currentName}">
       </div>
       <div class="mb-3 text-start">
         <label for="swal-edit-logo" class="form-label fw-bold">Brand Logo</label>
         <input type="file" id="swal-edit-logo" class="form-control" accept="image/*">
         <div class="mt-2">
-          <img src="${logo}" alt="${name} Logo" 
+          <img src="${currentLogo}" alt="${currentName} Logo" 
                style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:1px solid #ccc;" />
           <small class="text-muted d-block">Leave empty if you don’t want to change the logo.</small>
         </div>
@@ -349,14 +355,12 @@
     preConfirm: () => {
       const name = document.getElementById("swal-edit-name").value.trim();
       const file = document.getElementById("swal-edit-logo").files[0];
-      
-      console.log(name);
-      
+
       if (!name) {
         Swal.showValidationMessage("⚠️ Brand name is required!");
         return false;
       }
-      
+
       return { name, file };
     }
   }).then((result) => {
@@ -366,7 +370,7 @@
       const formData = new FormData();
       formData.append("name", name);
       if (file) {
-        formData.append("logo", file); // only append if user selected new logo
+        formData.append("logo", file);
       }
 
       $.ajax({
@@ -384,7 +388,13 @@
               title: "Brand updated successfully!",
               showConfirmButton: false,
               timer: 2000
-            }).then(() => location.reload());
+            });
+
+            // ✅ Update DOM with new values
+            row.querySelector(".brand-name").innerText = response.brand.name;
+            if (response.brand.logo) {
+              row.querySelector(".brand-logo").src = response.brand.logo;
+            }
           } else {
             Swal.fire("Error", response.message, "error");
           }
