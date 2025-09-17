@@ -135,8 +135,37 @@ const deleteBrand = async (req, res) => {
   }
 };
 
+const Ablock = async (req, res) => {
+  try {
+    const { id , status } = req.body;
+    
+    const update = await brandSchema.findByIdAndUpdate(
+      id,
+      { $set: { status } },
+      { new: true }
+    );
+
+    if (!update) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Brand not found" });
+    }
+
+    res.json({
+      success: true,
+      message: `Brand ${status} successfully!`,
+      status: update.status,
+    });
+
+  } catch (error) {
+    console.error("Customer Block Error :", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+};
+
 module.exports = {
   getBranchPage,
   addBrands,
   deleteBrand,
+  Ablock,
 };

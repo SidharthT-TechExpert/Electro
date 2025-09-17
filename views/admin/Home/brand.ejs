@@ -126,17 +126,17 @@
           icon: "warning",
           title: "Are you sure?",
           text: isListed
-            ? "This will unlist the category. It will no longer be visible to users."
-            : "This will list the category. It will be visible to users.",
+            ? "This will block the brand. It will no longer be visible to users."
+            : "This will activate the brand. It will be visible to users.",
           showCancelButton: true,
-          confirmButtonText: isListed ? "Yes, Unlist!" : "Yes, List!",
+          confirmButtonText: isListed ? "Yes, Block!" : "Yes, Activate!",
           cancelButtonText: "Cancel",
         }).then((result) => {
           if (result.isConfirmed) {
             $.ajax({
               type: "PATCH",
-              url: `/admin/categories/toggle-status/${id}`,
-              data: { status: newStatus },
+              url: `/admin/brands`,
+              data: { status: newStatus , id },
               success: function (response) {
                 if (response.success) {
                   Swal.fire({
@@ -149,20 +149,20 @@
                   // ✅ Update badge
                   const badgeCell = document.querySelector(`.status-badge-${id}`);
                   badgeCell.innerHTML =
-                    response.status.toLowerCase() === "listed"
-                      ? '<span class="badge bg-success">Listed</span>'
-                      : '<span class="badge bg-danger">Unlisted</span>';
+                    response.status.toLowerCase() === "active"
+                      ? '<span class="badge bg-success">active</span>'
+                      : '<span class="badge bg-danger">blocked</span>';
 
                   // ✅ Update button
                   btn.dataset.status = response.status;
                   btn.setAttribute(
                     "title",
-                    response.status.toLowerCase() === "listed"
-                      ? "Unlist Category"
-                      : "List Category"
+                    response.status.toLowerCase() === "active"
+                      ? "block Brand"
+                      : "active Brand"
                   );
                   btn.innerHTML =
-                    response.status.toLowerCase() === "listed"
+                    response.status.toLowerCase() === "active"
                       ? '<i class="fa fa-eye-slash"></i>'
                       : '<i class="fa fa-eye"></i>';
                 } else {

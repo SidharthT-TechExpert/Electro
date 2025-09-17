@@ -49,7 +49,8 @@ routes
   .route("/brands")
   .get(brandController.getBranchPage)
   .post(upload.single("logo"), brandController.addBrands)
-  .delete(brandController.deleteBrand);
+  .delete(brandController.deleteBrand)
+  .patch(brandController.Ablock)
   
 routes.get("/orders", categorieController.categories);
 
