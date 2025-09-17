@@ -1,25 +1,26 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const brandSchema = new Schema({
-  brandName: {
-    type: String,
-    required: true,
-    unique: true,
+const brandSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    logo: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["active", "blocked"],
+      default: "active",
+    },
   },
-  brandImage: {
-    type: [String],
-    required: true,
-  },
-  isBlocked: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 
-const Brand = mongoose.model("brand", brandSchema);
+const Brand = mongoose.model("brands", brandSchema);
 module.exports = Brand;

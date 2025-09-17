@@ -3,10 +3,11 @@ const routes = express.Router();
 const adminController = require("../controllers/admin/adminController");
 const customerController = require("../controllers/admin/customerController");
 const categorieController = require("../controllers/admin/categorieController.js");
-const passport = require("passport");
-
+const brandController = require("../controllers/admin/brandController.js");
 const session = require("../middlewares/session");
 
+const passport = require("passport");
+const upload = require("../helpers/multer.js"); 
 // Login Menagement admin
 routes
   .route("/login")
@@ -36,13 +37,19 @@ routes
   .get(categorieController.categories)
   .post(categorieController.addCategorie);
 
-routes.route("/categories/:id")
-      .delete(categorieController.deleteCategorie)
-      .patch(categorieController.updateCategory);
-      
+routes
+  .route("/categories/:id")
+  .delete(categorieController.deleteCategorie)
+  .patch(categorieController.updateCategory);
+
 routes.patch("/categories/toggle-status/:id", categorieController.unList);
 
-
+// Brand Management
+routes
+  .route("/brands")
+  .get(brandController.getBranchPage)
+  .post(upload.single("logo"), brandController.addBrands);
+  
 routes.get("/orders", categorieController.categories);
 
 // Admin Google Login
