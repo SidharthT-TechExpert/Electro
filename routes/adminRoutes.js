@@ -59,6 +59,7 @@ routes
   routes
     .route("/products")
     .get(productController.getProductsPage)
+    .post(productController.addProduct)
 
 
 routes.get("/orders", categorieController.categories);

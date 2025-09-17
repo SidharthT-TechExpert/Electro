@@ -115,3 +115,12 @@
   border: 2px solid #fff;  /* optional: white border */
   box-shadow: 0 0 5px rgba(0,0,0,0.2); /* optional: soft shadow */
 }
+
+.table tbody tr.product-row:hover td {
+  scale: 1.1;
+  background-color: #e0e7ff !important;
+}
+
+.table tbody tr.product-row td {
+  transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
