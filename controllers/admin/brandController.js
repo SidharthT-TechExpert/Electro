@@ -137,8 +137,8 @@ const deleteBrand = async (req, res) => {
 
 const Ablock = async (req, res) => {
   try {
-    const { id , status } = req.body;
-    
+    const { id, status } = req.body;
+
     const update = await brandSchema.findByIdAndUpdate(
       id,
       { $set: { status } },
@@ -156,16 +156,75 @@ const Ablock = async (req, res) => {
       message: `Brand ${status} successfully!`,
       status: update.status,
     });
-
   } catch (error) {
     console.error("Customer Block Error :", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
 
+
+const updateBrand = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    const logoFile = req.file; // Multer handles file
+
+    if (!name || !name.trim()) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Brand name is required!",
+      });
+    }
+
+    // Check duplicate brand name
+    const exists = await brandSchema.findOne({
+      _id: { $ne: id }, // exclude current brand
+      name: { $regex: `^${name.trim()}$`, $options: "i" },
+    });
+
+    if (exists) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Brand already exists!",
+      });
+    }
+
+    const updateData = { name: name.trim() };
+    if (logoFile) {
+      updateData.logo = `/uploads/brands/${logoFile.filename}`;
+    }
+
+    const updated = await brandSchema.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updated) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: "Brand not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Brand updated successfully!",
+      brand: updated,
+    });
+  } catch (error) {
+    console.error("Update Brand Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Server Error while updating brand",
+    });
+  }
+};
+
+
 module.exports = {
   getBranchPage,
   addBrands,
   deleteBrand,
   Ablock,
+  updateBrand,
 };

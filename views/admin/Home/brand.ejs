@@ -93,9 +93,12 @@
         </a>
 
         <!-- Edit -->
-        <a class="btn-action btn-edit" onclick="editBrand('<%= brand._id %>', '<%= brand.name %>')" title="Edit Brand">
-          <i class="fa fa-edit"></i>
+        <a class="btn-action btn-edit"
+           onclick="editBrand('<%= brand._id %>', `<%= brand.name %>`, `<%= brand.logo %>`)"
+           title="Edit Brand">
+         <i class="fa fa-edit"></i>
         </a>
+
 
         <!-- Delete -->
         <a class="btn-action btn-delete" onclick="deleteBrand('<%= brand._id %>')" title="Delete Brand">
@@ -307,5 +310,95 @@
             }
           });
         }
+
+  function editBrand(id, name, logo) {
+  Swal.fire({
+    title: `<h2 style="font-weight:700; font-size:22px; color:#1e293b; display:flex; align-items:center; gap:8px;">
+      <i class="fas fa-edit" style="color:#6366f1;"></i> Edit Brand
+    </h2>`,
+    html: `
+      <div class="mb-3 text-start">
+        <label for="swal-edit-name" class="form-label fw-bold">Brand Name</label>
+        <input type="text" id="swal-edit-name" class="form-control" 
+               placeholder="Enter brand name" value="${name}">
+      </div>
+      <div class="mb-3 text-start">
+        <label for="swal-edit-logo" class="form-label fw-bold">Brand Logo</label>
+        <input type="file" id="swal-edit-logo" class="form-control" accept="image/*">
+        <div class="mt-2">
+          <img src="${logo}" alt="${name} Logo" 
+               style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:1px solid #ccc;" />
+          <small class="text-muted d-block">Leave empty if you don’t want to change the logo.</small>
+        </div>
+      </div>
+    `,
+    focusConfirm: false,
+    width: "480px",
+    background: "#f9fafb",
+    padding: "1.8rem",
+    showCancelButton: true,
+    confirmButtonText: '<i class="fas fa-save"></i> Update Brand',
+    cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+    confirmButtonColor: "#4f46e5",
+    cancelButtonColor: "#6b7280",
+    customClass: {
+      popup: "swal2-rounded",
+      confirmButton: "btn btn-primary",
+      cancelButton: "btn btn-secondary"
+    },
+    preConfirm: () => {
+      const name = document.getElementById("swal-edit-name").value.trim();
+      const file = document.getElementById("swal-edit-logo").files[0];
+      
+      console.log(name);
+      
+      if (!name) {
+        Swal.showValidationMessage("⚠️ Brand name is required!");
+        return false;
+      }
+      
+      return { name, file };
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const { name, file } = result.value;
+
+      const formData = new FormData();
+      formData.append("name", name);
+      if (file) {
+        formData.append("logo", file); // only append if user selected new logo
+      }
+
+      $.ajax({
+        type: "PATCH",
+        url: `/admin/brands/${id}`,
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+          if (response.success) {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Brand updated successfully!",
+              showConfirmButton: false,
+              timer: 2000
+            }).then(() => location.reload());
+          } else {
+            Swal.fire("Error", response.message, "error");
+          }
+        },
+        error: function (xhr) {
+          let msg = "Server error, please try again!";
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            msg = xhr.responseJSON.message;
+          }
+          Swal.fire("Error", msg, "error");
+        }
+      });
+    }
+  });
+}
 
 </script>

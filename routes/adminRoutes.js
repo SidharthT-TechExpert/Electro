@@ -7,7 +7,7 @@ const brandController = require("../controllers/admin/brandController.js");
 const session = require("../middlewares/session");
 
 const passport = require("passport");
-const upload = require("../helpers/multer.js"); 
+const upload = require("../helpers/multer.js");
 // Login Menagement admin
 routes
   .route("/login")
@@ -50,8 +50,10 @@ routes
   .get(brandController.getBranchPage)
   .post(upload.single("logo"), brandController.addBrands)
   .delete(brandController.deleteBrand)
-  .patch(brandController.Ablock)
-  
+  .patch(brandController.Ablock);
+
+routes.patch("/brands/:id", upload.single("logo"), brandController.updateBrand);
+
 routes.get("/orders", categorieController.categories);
 
 // Admin Google Login
