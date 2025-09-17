@@ -1,82 +1,87 @@
 [
   {
     "name": "Apple",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Apple.jpg",
+    "status": "active"
   },
   {
     "name": "Samsung",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Samsung.webp",
+    "status": "active"
   },
   {
     "name": "Sony",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/22/Sony_logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Sony.gif",
+    "status": "active"
   },
   {
     "name": "LG",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2e/LG_logo_%282015%29.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/LG.png",
+    "status": "active"
   },
   {
     "name": "Dell",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/48/Dell_Logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Dell.jpg",
+    "status": "active"
   },
   {
     "name": "HP",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/3/3a/HP_logo_2012.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/HP.jpg",
+    "status": "active"
   },
   {
     "name": "Lenovo",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Lenovo_logo_2015.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Lenovo.png",
+    "status": "active"
   },
   {
     "name": "Asus",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/2e/AsusTek_logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Asus.jpg",
+    "status": "active"
   },
   {
     "name": "Microsoft",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Microsoft.jpg",
+    "status": "active"
   },
   {
     "name": "Xiaomi",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/2/29/Xiaomi_logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Xiaomi.png",
+    "status": "active"
   },
   {
     "name": "OnePlus",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4d/OnePlus_logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/OnePlus.png",
+    "status": "active"
   },
   {
     "name": "Oppo",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5a/OPPO_Logo_2019.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Oppo.jpg",
+    "status": "active"
   },
   {
     "name": "Vivo",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/6/69/Vivo_logo_2019.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Vivo.jpg",
+    "status": "active"
   },
   {
     "name": "Realme",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Realme_logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Realme.jpg",
+    "status": "active"
   },
   {
     "name": "Canon",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Canon_logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Canon.jpg",
+    "status": "active"
   },
   {
     "name": "Nikon",
-    "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Nikon_Logo.svg",
-    "status": "Active"
+    "logo": "/uploads/brands/Nikon.jpg",
+    "status": "blocked"
+  },
+    {
+    "name": "MIVI",
+    "logo": "/uploads/brands/MIVI.jpeg",
+    "status": "active"
   }
 ]

@@ -7,7 +7,7 @@ function escapeRegex(s = "") {
 
 const getBranchPage = async (req, res) => {
   try {
-    const limit = 6;
+    const limit = 5;
     const page = parseInt(req.query.page) || 1;
     const search = escapeRegex(req.query.search || "");
     const status = req.query.status || "all";
