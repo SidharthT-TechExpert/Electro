@@ -1,0 +1,87 @@
+[
+  {
+    "name": "Apple",
+    "logo": "/uploads/brands/Apple.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Samsung",
+    "logo": "/uploads/brands/Samsung.webp",
+    "status": "active"
+  },
+  {
+    "name": "Sony",
+    "logo": "/uploads/brands/Sony.gif",
+    "status": "active"
+  },
+  {
+    "name": "LG",
+    "logo": "/uploads/brands/LG.png",
+    "status": "active"
+  },
+  {
+    "name": "Dell",
+    "logo": "/uploads/brands/Dell.jpg",
+    "status": "active"
+  },
+  {
+    "name": "HP",
+    "logo": "/uploads/brands/HP.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Lenovo",
+    "logo": "/uploads/brands/Lenovo.png",
+    "status": "active"
+  },
+  {
+    "name": "Asus",
+    "logo": "/uploads/brands/Asus.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Microsoft",
+    "logo": "/uploads/brands/Microsoft.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Xiaomi",
+    "logo": "/uploads/brands/Xiaomi.png",
+    "status": "active"
+  },
+  {
+    "name": "OnePlus",
+    "logo": "/uploads/brands/OnePlus.png",
+    "status": "active"
+  },
+  {
+    "name": "Oppo",
+    "logo": "/uploads/brands/Oppo.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Vivo",
+    "logo": "/uploads/brands/Vivo.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Realme",
+    "logo": "/uploads/brands/Realme.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Canon",
+    "logo": "/uploads/brands/Canon.jpg",
+    "status": "active"
+  },
+  {
+    "name": "Nikon",
+    "logo": "/uploads/brands/Nikon.jpg",
+    "status": "blocked"
+  },
+    {
+    "name": "MIVI",
+    "logo": "/uploads/brands/MIVI.jpeg",
+    "status": "active"
+  }
+]

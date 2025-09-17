@@ -106,3 +106,12 @@
 .swal2-container {
   z-index: 99999 !important;
 }
+
+.brand-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;   /* makes it circular */
+  object-fit: cover;    /* crops nicely */
+  border: 2px solid #fff;  /* optional: white border */
+  box-shadow: 0 0 5px rgba(0,0,0,0.2); /* optional: soft shadow */
+}

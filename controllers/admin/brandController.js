@@ -1,0 +1,103 @@
+const brandSchema = require("../../models/brandSchema");
+const HTTP_STATUS = require("../../config/statusCodes");
+
+function escapeRegex(s = "") {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const getBranchPage = async (req, res) => {
+  try {
+    const limit = 5;
+    const page = parseInt(req.query.page) || 1;
+    const search = escapeRegex(req.query.search || "");
+    const status = req.query.status || "all";
+
+    // Base query
+    let query = {
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    // Apply status filter
+    if (status === "listed") query.status = "listed";
+    if (status === "unlisted") query.status = "unlisted";
+
+    // Fetch paginated categories
+    const brandData = await brandSchema
+      .find(query)
+      .sort({ name: 1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Count for pagination
+    const count = await brandSchema.countDocuments(query);
+
+    res.render("Home/brand", {
+      brandData,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      search: req.query.search || "",
+      status, // ✅ pass to frontend
+    });
+  } catch (error) {
+    console.log("Get Branch Page Error :", error);
+    res.redirect("/admin/pageNotFound");
+  }
+};
+
+const addBrands = async (req, res) => {
+  try {
+    const { name } = req.body;
+    const logo = req.file;
+
+
+    if (!name || !logo) {
+      // ❌ delete the uploaded file since it's not needed
+      fs.unlinkSync(
+        path.join(__dirname, "../public/uploads/brands", logo.filename)
+      );
+
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Brand name and logo are required",
+      });
+    }
+
+    // Fetch paginated categories
+    const exist = await brandSchema.findOne({ name: name.trim() });
+    if (exist) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Brand already exists!",
+      });
+    }
+
+    // ✅ Create new brand
+    const newBrand = new brandSchema({
+      name: name.trim(),
+      logo: `/uploads/brands/${logo.filename}`,
+    });
+
+    await newBrand.save();
+
+    res.json({
+      success: true,
+      message: "Brand created successfully",
+      brand: newBrand,
+    });
+  } catch (error) {
+    console.log("Get Branch Page Error :", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Server Error while adding brand",
+    });
+  }
+};
+
+module.exports = {
+  getBranchPage,
+  addBrands,
+};

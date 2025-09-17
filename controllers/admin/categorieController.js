@@ -140,6 +140,15 @@ const updateCategory = async (req, res) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
+    // Check if category already exists
+    const exists = await categorieSchema.findOne({
+      name: { $regex: `^${name}$`, $options: "i" },
+    });
+
+    if (exists) {
+      return res.json({ success: false, message: "Category already exists!" });
+    }
+
     const update = await categorieSchema.findByIdAndUpdate(
       id,
       { $set: { name, description } },

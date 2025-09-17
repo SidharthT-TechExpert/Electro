@@ -23,24 +23,20 @@ const Blocked = (id, isBlocked) => {
 
             // ✅ Update the button dynamically
             const btn = document.querySelector(`button[data-id="${id}"]`);
-            if (!response.isBlocked) {
+            const badgeContainer = document.querySelector(`.status-badge-${id}`);
+
+            if (response.isBlocked) {
+              // User is now BLOCKED
               btn.className = "btn-success";
               btn.innerHTML = '<i class="fas fa-unlock"></i> Unblock';
               btn.setAttribute("onclick", `Blocked('${id}', true)`);
+              badgeContainer.innerHTML = `<span class="badge bg-danger">Blocked</span>`;
             } else {
+              // User is now ACTIVE
               btn.className = "btn-danger";
               btn.innerHTML = '<i class="fas fa-ban"></i> Block';
               btn.setAttribute("onclick", `Blocked('${id}', false)`);
-            }
-
-            // ✅ Update badge
-            const badgeContainer = document.querySelector(
-              `.status-badge-${id}`
-            );
-            if (!response.isBlocked) {
-              badgeContainer.innerHTML = `<span class="badge badge-danger">Blocked</span>`;
-            } else {
-              badgeContainer.innerHTML = `<span class="badge badge-success">Active</span>`;
+              badgeContainer.innerHTML = `<span class="badge bg-success">Active</span>`;
             }
           } else {
             Swal.fire({
