@@ -101,7 +101,41 @@ const addProduct = async (req, res) => {
   }
 };
 
+const loadProductDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch single product with brand & category populated
+    const product = await productSchema
+      .findById(id)
+      .populate("brand", "name logo")
+      .populate("category", "name")
+      .exec();
+
+    if (!product) {
+      return res.status(404).send("Product not found");
+    }
+
+    // Get categories & brands for dropdowns
+    const categories = await categorieSchema.find({});
+    const brands = await brandSchema.find({});
+
+    // Render product details page
+    res.render("Home/productsDetails", {
+      product,
+      categories,
+      brands,
+    });
+  } catch (error) {
+    console.log("Products Details Page Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+};
+
+
+
 module.exports = {
   getProductsPage,
   addProduct,
+  loadProductDetails,
 };

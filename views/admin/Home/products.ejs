@@ -5,6 +5,8 @@
 <link rel="stylesheet" href="/css/admin/DashBoard/header.css">
 <link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
 <link rel="stylesheet" href="/css/admin/DashBoard/category.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/ProductDetails.css">
+
 
 <%- include("../../partials/admin/sidebar") %>
   <%- include("../../partials/admin/header") %>
@@ -62,7 +64,7 @@
             </thead>
             <tbody>
               <% productData.forEach((product, i)=> { %>
-                <tr class="product-row" >
+                <tr onclick="window.location.href='/admin/products/Details/<%= product._id %>'" class="product-row" >
                   <td>
                     <%= i + 1 %>
                   </td>
