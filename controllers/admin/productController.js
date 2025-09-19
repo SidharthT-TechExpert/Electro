@@ -5,6 +5,7 @@ const HTTP_STATUS = require("../../config/statusCodes");
 const fs = require("fs");
 const path = require("path");
 
+
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -100,6 +101,7 @@ const addProduct = async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
+const categoryFieldsMap = require('../../helpers/variant');
 
 const loadProductDetails = async (req, res) => {
   try {
@@ -119,9 +121,10 @@ const loadProductDetails = async (req, res) => {
     // Get categories & brands for dropdowns
     const categories = await categorieSchema.find({});
     const brands = await brandSchema.find({});
-
+    const variantField = categoryFieldsMap[product.category.name];
     // Render product details page
     res.render("Home/productsDetails", {
+      variantField,
       product,
       categories,
       brands,
@@ -132,10 +135,38 @@ const loadProductDetails = async (req, res) => {
   }
 };
 
+const addVariants = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const variantData = req.body;
+console.log(id)
+    // Find product by ID
+    const product = await productSchema.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // Push new variant into product
+    product.variants.push(variantData);
+
+    // Save product with new variant
+    await product.save();
+
+    res.json({
+      success: true,
+      message: "Variant added successfully",
+      variant: product.variants[product.variants.length - 1],
+    });
+  } catch (err) {
+    console.error("Error adding variant:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
 
 
 module.exports = {
   getProductsPage,
   addProduct,
   loadProductDetails,
+  addVariants
 };

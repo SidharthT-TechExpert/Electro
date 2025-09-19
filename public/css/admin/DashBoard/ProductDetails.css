@@ -9,7 +9,7 @@
   padding: 24px;
   padding-top: calc(var(--header-height) + 20px);
   min-height: calc(100vh - var(--header-height));
-  background: var(--page-bg, #f5f7fb);
+  background:var(--card-bg, #fff)
   transition: background 0.3s ease, color 0.3s ease;
 }
 

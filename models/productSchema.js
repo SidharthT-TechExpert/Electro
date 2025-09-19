@@ -1,25 +1,46 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-// 🔹 Variant schema for electronics
-const variantSchema = new Schema({
-  color: { type: String },
-  sku: { type: String },  // unique identifier
+// 🔹 Variant schema 
+const variantSchema = new mongoose.Schema({
+  ram: String,
+  storage: String,
+  battery: String,
+  camera: String,
+  screen: String,
+  display: String,
+  processor: String,
+  gpu: String,
+  os: String,
+  strap: String,
+  controllerType: String,
+  type: String,
+  connectivity: String,
+  color: String,
+  resolution: String,
+  screenSize: String,
+  smartFeatures: String,
+  channels: String,
+  powerOutput: String,
+  lens: String,
+  flightTime: String,
+  range: String,
+  colorPrint: String,
+  size: String,
+  ports: String,
+  band: String,
+  compatibility: String,
+  capacity: String,
+  interface: String,
+  material: String,
+
   stock: { type: Number, default: 0 },
-  price: { type: Number },
-
-  // Device-specific attributes
-  storage: { type: String },       // e.g. "128GB", "1TB"
-  ram: { type: String },           // e.g. "8GB", "16GB DDR5"
-  processor: { type: String },     // e.g. "Intel i7", "Snapdragon 8 Gen 2"
-  screenSize: { type: String },    // e.g. "15.6 inch", "6.7 inch"
-  battery: { type: String },       // e.g. "5000mAh", "60Wh"
-  warranty: { type: String },      // e.g. "1 Year", "2 Years"
-  modelNumber: { type: String },
-  features: [String],              // e.g. ["Bluetooth 5.0", "WiFi 6"]
-
-  image: { type: String, default: "/images/product-placeholder.png" }
+  price: { type: Number, default: 0 },
+  sku: { type: String },
+  description: String,
+  images: [String] // array of file paths
 });
+
 
 // 🔹 Main Product schema
 const productSchema = new Schema(

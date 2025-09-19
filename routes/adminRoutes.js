@@ -61,6 +61,8 @@ routes
   .get(productController.getProductsPage)
   .post(productController.addProduct);
 routes.route("/products/Details/:id").get(productController.loadProductDetails);
+routes.post("/products/:id/variants", productController.addVariants);
+ 
 
 routes.get("/orders", categorieController.categories);
 
