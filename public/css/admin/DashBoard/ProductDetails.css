@@ -1,0 +1,210 @@
+:root {
+  --sidebar-width: 240px;
+  --header-height: 70px;
+}
+
+/* Layout */
+.admin-page-content {
+  margin-left: var(--sidebar-width);
+  padding: 24px;
+  padding-top: calc(var(--header-height) + 20px);
+  min-height: calc(100vh - var(--header-height));
+  background:var(--card-bg, #fff)
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Mobile fix → content full width */
+@media (max-width: 991px) {
+  .admin-page-content {
+    margin-left: 0;
+    padding: 16px;
+    padding-top: calc(var(--header-height) + 15px);
+  }
+}
+
+/* Banner */
+.product-banner {
+  background: var(--card-bg, #fff);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+.product-banner h2 {
+  margin: 0;
+  font-weight: 700;
+}
+.badge-status {
+  padding: 6px 14px;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.badge-In\ Stock {
+  background: #22c55e;
+  color: #fff;
+}
+.badge-Out\ of\ Stock {
+  background: #ef4444;
+  color: #fff;
+}
+.badge-Not\ Listed {
+  background: #6b7280;
+  color: #fff;
+}
+
+/* Image Gallery */
+.image-gallery {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+.image-gallery img {
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.image-gallery img:hover {
+  transform: scale(1.05);
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.info-card {
+  background: var(--card-bg, #fff);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+.info-card h6 {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+.info-card p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Variants */
+.variants-table thead th {
+  background: var(--table-header-bg, #1f2937);
+  color: var(--table-header-text, #fff);
+  font-size: 14px;
+  text-align: center;
+  padding: 12px;
+}
+.variants-table tbody td {
+  text-align: center;
+  padding: 10px;
+  vertical-align: middle;
+}
+.variants-table tbody tr:nth-child(even) {
+  background: var(--table-alt-row, #f9fafb);
+}
+.variants-table tbody tr:hover {
+  background: var(--table-hover, #e5e7eb);
+}
+.no-variants {
+  color: #888;
+  padding: 20px;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Dark Mode */
+body.dark .admin-page-content {
+  --page-bg: #111827;
+}
+body.dark .card,
+body.dark .product-banner,
+body.dark .info-card {
+  --card-bg: #1e293b;
+  color: #f9fafb;
+}
+body.dark .variants-table thead th {
+  --table-header-bg: #f3f4f6;
+  --table-header-text: #111827;
+}
+body.dark .variants-table tbody tr:nth-child(even) {
+  --table-alt-row: #1f2937;
+}
+body.dark .variants-table tbody tr:hover {
+  --table-hover: #374151;
+}
+
+/* Light Mode */
+body.light .admin-page-content {
+  --page-bg: #f5f7fb;
+}
+body.light .variants-table thead th {
+  --table-header-bg: #1f2937;
+  --table-header-text: #f9fafb;
+}
+body.light .variants-table tbody tr:nth-child(even) {
+  --table-alt-row: #f9fafb;
+}
+body.light .variants-table tbody tr:hover {
+  --table-hover: #e5e7eb;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  font-size: 14px;
+}
+
+/* Back Button */
+.btn-back {
+  background-color: #ff0090;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 8px 16px;
+}
+.btn-back:hover {
+  background-color: #0b5ed7;
+  color: #fff;
+}
+
+/* Actions Button */
+.btn-actions {
+  background-color: #dc3545;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 14px;
+}
+.btn-actions:hover {
+  background-color: #bb2d3b;
+  color: #fff;
+}
+
+/* Align buttons */
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 2rem;
+}

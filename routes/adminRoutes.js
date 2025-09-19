@@ -4,7 +4,7 @@ const adminController = require("../controllers/admin/adminController");
 const customerController = require("../controllers/admin/customerController");
 const categorieController = require("../controllers/admin/categorieController.js");
 const brandController = require("../controllers/admin/brandController.js");
-const productController = require('../controllers/admin/productController.js')
+const productController = require("../controllers/admin/productController.js");
 const session = require("../middlewares/session");
 
 const passport = require("passport");
@@ -52,15 +52,17 @@ routes
   .post(upload.single("logo"), brandController.addBrands)
   .delete(brandController.deleteBrand)
   .patch(brandController.Ablock);
-  
-  routes.patch("/brands/:id", upload.single("logo"), brandController.updateBrand);
-  
-  // Product Management
-  routes
-    .route("/products")
-    .get(productController.getProductsPage)
-    .post(productController.addProduct)
 
+routes.patch("/brands/:id", upload.single("logo"), brandController.updateBrand);
+
+// Product Management
+routes
+  .route("/products")
+  .get(productController.getProductsPage)
+  .post(productController.addProduct);
+routes.route("/products/Details/:id").get(productController.loadProductDetails);
+routes.post("/products/:id/variants", productController.addVariants);
+ 
 
 routes.get("/orders", categorieController.categories);
 
