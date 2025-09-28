@@ -326,7 +326,7 @@ const userLogIn = async (req, res) => {
     // Handle rememberMe with session cookie
     if (rememberMe === "true") {
       req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
-    } else { 
+    } else {
       req.session.cookie.expires = false; // expires on browser close
     }
 
@@ -337,12 +337,10 @@ const userLogIn = async (req, res) => {
       .json({ success: true, message: "Login successful" });
   } catch (error) {
     console.log("user Login verification Error :", error);
-    return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({
-        success: false,
-        message: "Internal Server Error, Please Try Again!",
-      });
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error, Please Try Again!",
+    });
   }
 };
 
@@ -448,6 +446,7 @@ const updatePass = async (req, res) => {
   }
 };
 
+//logOut  Btn Logic
 const logOut = async (req, res) => {
   try {
     req.session.userId = null;
@@ -456,6 +455,21 @@ const logOut = async (req, res) => {
     console.log("Logout Error :", error);
     req.flash("error_msg", "Internal Server Error , please try again later !");
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).redirect("/pageNotFound");
+  }
+};
+
+// Products Details Page Loader
+const loadProductDetails = async (req, res) => {
+  try {
+    const user = await checkSession(req.session.userId);
+
+    res
+      .status(HTTP_STATUS.OK)
+      .render("auth/page-404", { user, cartCount: req.cartCount || null });
+  
+  } catch (error) {
+    console.error("Error loading product details page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -474,4 +488,5 @@ module.exports = {
   passReset,
   updatePass,
   logOut,
+  loadProductDetails,
 };

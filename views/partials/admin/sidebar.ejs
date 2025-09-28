@@ -27,7 +27,7 @@
       <!-- Scrollable Navigation -->
       <div class="sidebar-menu">
         <p class="sidebar-title">MAIN MENU</p>
-        <a href="/admin/dashboard" class="nav-link active" data-path="/admin/dashboard">
+        <a href="/admin/dashboard" class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'dashboard') ? 'active' : '' %>" data-path="/admin/dashboard">
           <i class="ri-dashboard-line nav-icon"></i>
           <span class="nav-text">Dashboard</span>
         </a>
@@ -41,16 +41,16 @@
         </a>
 
         <!-- Products Dropdown -->
-        <a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
-          href="#productsMenu" role="button" aria-expanded="false" aria-controls="productsMenu">
+        <a class="nav-link <%= (typeof activePage !== 'undefined' && activePage === 'products') ? 'active' : '' %> d-flex justify-content-between align-items-center" data-bs-toggle="collapse"
+          href="#productsMenu" role="button" aria-expanded="<%= (typeof activePage !== 'undefined' && activePage === 'products') ? 'true' : 'false' %>" aria-controls="productsMenu">
           <span>
             <i class="ri-box-3-line nav-icon"></i>
             <span class="nav-text">Products</span>
           </span>
           <i class="ri-arrow-right-s-line dropdown-arrow"></i>
         </a>
-        <div class="collapse ps-4" id="productsMenu">
-          <a href="/admin/products" class="nav-sublink">
+        <div class="collapse <%= (typeof activePage !== 'undefined' && activePage === 'products') ? 'show' : '' %> ps-4" id="productsMenu">
+          <a href="/admin/products" class="nav-sublink <%= (typeof activePage !== 'undefined' && activePage === 'products') ? 'active' : '' %>">
             <i class="ri-file-list-line sub-icon"></i> Product List
           </a>
           <a href="/admin/sales" class="nav-sublink">
@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
       clearActive();
       link.classList.add("active");
 
-      // if it’s a sublink, expand its parent menu
+      // if it's a sublink, expand its parent menu
       const parentCollapse = link.closest(".collapse");
       if (parentCollapse) {
         new bootstrap.Collapse(parentCollapse, { show: true });
@@ -136,6 +136,20 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+
+  // Handle product details page (URL pattern: /admin/products/Details/:id)
+  if (path.includes('/admin/products/Details/')) {
+    clearActive();
+    const productsMenu = document.getElementById('productsMenu');
+    const productsLink = productsMenu.previousElementSibling;
+    const productListLink = productsMenu.querySelector('a[href="/admin/products"]');
+    
+    if (productsLink && productListLink) {
+      productsLink.classList.add("active");
+      productListLink.classList.add("active");
+      new bootstrap.Collapse(productsMenu, { show: true });
+    }
+  }
 });
 </script>
 

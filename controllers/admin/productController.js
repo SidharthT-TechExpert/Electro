@@ -1,9 +1,8 @@
+const variantSchema = require("../../models/variantSchema");
 const productSchema = require("../../models/productSchema");
 const categorieSchema = require("../../models/categorySchema");
 const brandSchema = require("../../models/brandSchema");
 const HTTP_STATUS = require("../../config/statusCodes");
-const fs = require("fs");
-const path = require("path");
 
 
 function escapeRegex(s = "") {
@@ -101,15 +100,15 @@ const addProduct = async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
+
 const categoryFieldsMap = require('../../helpers/variant');
 
 const loadProductDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Fetch single product with brand & category populated
-    const product = await productSchema
-      .findById(id)
+    // 1️⃣ Fetch product with brand & category populated
+    const product = await productSchema.findById(id)
       .populate("brand", "name logo")
       .populate("category", "name")
       .exec();
@@ -118,55 +117,29 @@ const loadProductDetails = async (req, res) => {
       return res.status(404).send("Product not found");
     }
 
-    // Get categories & brands for dropdowns
-    const categories = await categorieSchema.find({});
-    const brands = await brandSchema.find({});
-    const variantField = categoryFieldsMap[product.category.name];
-    // Render product details page
+    // 2️⃣ Fetch variants linked to this product
+    const variants = await variantSchema.find({ product_id: id }).exec();
+
+    // 4️⃣ Get allowed variant fields based on category
+    const variantField = categoryFieldsMap[product.category.name] || [];
+
+    // 5️⃣ Render view
     res.render("Home/productsDetails", {
-      variantField,
       product,
-      categories,
-      brands,
+      variants,      // all variants for this product
+      variantField,  // dynamic fields (e.g. ram, size, etc.)
+      activePage: "products"  // Set active page for sidebar
     });
   } catch (error) {
-    console.log("Products Details Page Error:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+    console.error("Products Details Page Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send("Server Error");
   }
 };
-
-const addVariants = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const variantData = req.body;
-console.log(id)
-    // Find product by ID
-    const product = await productSchema.findById(id);
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
-    }
-
-    // Push new variant into product
-    product.variants.push(variantData);
-
-    // Save product with new variant
-    await product.save();
-
-    res.json({
-      success: true,
-      message: "Variant added successfully",
-      variant: product.variants[product.variants.length - 1],
-    });
-  } catch (err) {
-    console.error("Error adding variant:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-}
-
 
 module.exports = {
   getProductsPage,
   addProduct,
   loadProductDetails,
-  addVariants
 };
