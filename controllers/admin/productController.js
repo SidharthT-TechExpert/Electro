@@ -1,9 +1,8 @@
+const variantSchema = require("../../models/variantSchema");
 const productSchema = require("../../models/productSchema");
 const categorieSchema = require("../../models/categorySchema");
 const brandSchema = require("../../models/brandSchema");
 const HTTP_STATUS = require("../../config/statusCodes");
-const fs = require("fs");
-const path = require("path");
 
 
 function escapeRegex(s = "") {
@@ -101,8 +100,8 @@ const addProduct = async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
+
 const categoryFieldsMap = require('../../helpers/variant');
-const variantSchema = require("../../models/variantSchema");
 
 const loadProductDetails = async (req, res) => {
   try {
@@ -138,8 +137,6 @@ const loadProductDetails = async (req, res) => {
       .send("Server Error");
   }
 };
-
-
 
 module.exports = {
   getProductsPage,

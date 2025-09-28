@@ -457,6 +457,260 @@ body.light .image-item img {
   border-color: #e5e7eb;
 }
 
+/* Image Upload Modal Styles */
+#imageUploadModal .modal-dialog {
+  max-width: 900px;
+}
+
+/* Cropper.js Styles */
+.cropper-container {
+  position: relative;
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cropper-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+.cropper-container .cropper-view-box {
+  outline: 2px solid #007bff;
+  outline-color: rgba(0, 123, 255, 0.75);
+}
+
+.cropper-container .cropper-face {
+  background-color: #007bff;
+  opacity: 0.1;
+}
+
+.cropper-container .cropper-line {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point {
+  background-color: #007bff;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cropper-container .cropper-point.point-se {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-sw {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-nw {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-ne {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-n {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-s {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-w {
+  background-color: #007bff;
+}
+
+.cropper-container .cropper-point.point-e {
+  background-color: #007bff;
+}
+
+/* Dark mode cropper styles */
+body.dark .cropper-container {
+  background: #1f2937;
+}
+
+body.dark .cropper-container .cropper-view-box {
+  outline-color: rgba(96, 165, 250, 0.75);
+}
+
+body.dark .cropper-container .cropper-face {
+  background-color: #60a5fa;
+}
+
+body.dark .cropper-container .cropper-line {
+  background-color: #60a5fa;
+}
+
+body.dark .cropper-container .cropper-point {
+  background-color: #60a5fa;
+}
+
+#imageUploadModal .card-header {
+  background: linear-gradient(135deg, #007bff, #0056b3) !important;
+  border: none;
+}
+
+#imageUploadModal .form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+#imageUploadModal .input-group-text {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+  color: #495057;
+  font-weight: 500;
+}
+
+#imageUploadModal .btn-success {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  border: none;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+#imageUploadModal .btn-success:hover {
+  background: linear-gradient(135deg, #218838, #155724);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+#imageUploadModal .btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+#imageUploadModal .btn-primary:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+#imageUploadModal .btn-secondary {
+  background: linear-gradient(135deg, #6c757d, #545b62);
+  border: none;
+  padding: 8px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+#imageUploadModal .btn-secondary:hover {
+  background: linear-gradient(135deg, #545b62, #3d4043);
+  transform: translateY(-1px);
+}
+
+#imageUploadModal #previewImg,
+#imageUploadModal #croppedImg {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+#imageUploadModal #previewImg:hover,
+#imageUploadModal #croppedImg:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+#imageUploadModal .form-text {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+#imageUploadModal .card {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#imageUploadModal .modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+#imageUploadModal .modal-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 12px 12px 0 0;
+}
+
+#imageUploadModal .modal-title {
+  font-weight: 600;
+  color: #495057;
+}
+
+#imageUploadModal .modal-footer {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Dark mode styles for modal */
+body.dark #imageUploadModal .modal-content {
+  background-color: #1e293b;
+  color: #f9fafb;
+}
+
+body.dark #imageUploadModal .modal-header {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  border-bottom-color: #4b5563;
+}
+
+body.dark #imageUploadModal .modal-footer {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  border-top-color: #4b5563;
+}
+
+body.dark #imageUploadModal .modal-title {
+  color: #f9fafb;
+}
+
+body.dark #imageUploadModal .card {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+body.dark #imageUploadModal .card-header {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a) !important;
+}
+
+body.dark #imageUploadModal .form-control {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark #imageUploadModal .form-control:focus {
+  background-color: #374151;
+  border-color: #60a5fa;
+  color: #f9fafb;
+  box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25);
+}
+
+body.dark #imageUploadModal .input-group-text {
+  background-color: #4b5563;
+  border-color: #6b7280;
+  color: #f9fafb;
+}
+
+body.dark #imageUploadModal .form-text {
+  color: #9ca3af;
+}
+
 /* Dropdown */
 .dropdown-menu {
   font-size: 14px;

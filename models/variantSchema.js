@@ -5,22 +5,23 @@ const variantSchema = new Schema(
   {
     product_id: {
       type: Schema.Types.ObjectId,
-      ref: "Product", // linked to Product collection
+      ref: "Product",
       required: true,
     },
-    material: { type: String },
-    color: { type: String, required: true },
-    size: { type: String, enum: ["S", "M", "L"], required: false },
-    description: { type: String },
 
+    // Base common fields
+    color: { type: String },
+    description: { type: String, required: true },
     price: { type: Number, required: true },
-    sale_price: { type: Number, required: false },
-
+    sale_price: { type: Number },
     sku: { type: String, unique: true },
     product_image: [{ type: String }], // Array of image URLs
     quantity: { type: Number, default: 0 },
-
-    status: { type: String, enum: ["listed", "unlisted"], default: "unlisted" },
+    status: {
+      type: String,
+      enum: ["listed", "unlisted"],
+      default: "unlisted",
+    },
 
     discountType: {
       type: String,
@@ -32,8 +33,18 @@ const variantSchema = new Schema(
     offer_id: { type: Schema.Types.ObjectId, ref: "Offer" },
 
     isDeleted: { type: Boolean, default: false },
+
+    /**
+     * Dynamic category-specific fields
+     * Example: { ram: "8GB", storage: "128GB", battery: "5000mAh" }
+     */
+    specifications: {
+      type: Map,
+      of: Schema.Types.Mixed, // allows String/Number/Boolean etc.
+      default: {},
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Variant", variantSchema);
+module.exports = mongoose.model("Variants", variantSchema);

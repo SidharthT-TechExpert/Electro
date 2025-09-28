@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 
-// Configure multer for image uploads
+// =============== Multer Config for Image Upload ===============
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, "../../public/uploads/variants");
@@ -18,57 +18,58 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
-  }
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed!'), false);
+      cb(new Error("Only image files are allowed!"), false);
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
 });
 
-// Add Variants
+// =============== Add Variant ===============//
 const addVariants = async (req, res) => {
   try {
     const { id } = req.params; // product ID
-    const variantData = req.body; // data from form
+    const variantData = req.body;
 
-    // 1️⃣ Find product by ID
+    // Find product
     const product = await productSchema.findById(id);
     if (!product) {
       return res
-        .status(404)
+        .status(HTTP_STATUS.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
-    const existSku = await variantSchema.findOne({ sku: variantData.sku });
 
+    // Check duplicate SKU
+    const existSku = await variantSchema.findOne({ sku: variantData.sku });
     if (existSku) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "This SKU already exists , Please enter a unique SKU",
-        });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "This SKU already exists, please enter a unique SKU",
+      });
     }
 
-    // 2️⃣ Create new variant linked to this product
+    // Create new variant
     const newVariant = new variantSchema({
       product_id: product._id,
-      ...variantData,
+      ...variantData, // includes specifications if sent from frontend
     });
 
     await newVariant.save();
 
-    // 3️⃣ Return success response
     res.json({
       success: true,
       message: "Variant added successfully",
@@ -76,45 +77,27 @@ const addVariants = async (req, res) => {
     });
   } catch (err) {
     console.error("Error adding variant:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Server error" });
   }
 };
 
-// Delete Variants
-const deleteVariants = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const variant = await variantSchema.findByIdAndDelete(id);
-
-    if (!variant) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Variant not found" });
-    }
-    
-    res.json({
-      success: true,
-      message: "Variant deleted successfully",
-      variant,
-    });
-  }
-  catch (err) {
-    console.error("Error deleting variant:", err);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
-  }
-};
-
-// Edit Variants
+// =============== Edit Variant ===============
 const editVariants = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // variant ID
     const variantData = req.body;
-    const variant = await variantSchema.findAndUpdate(
-      { product_id: id, sku: variantData.sku },
-      variantData,
-      { new: true }
-    );
+
+    // Find and update variant by ID
+    const variant = await variantSchema.findByIdAndUpdate(id, variantData, {
+      new: true,
+    });
 
     if (!variant) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Variant not found" });
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Variant not found" });
     }
 
     res.json({
@@ -122,50 +105,109 @@ const editVariants = async (req, res) => {
       message: "Variant updated successfully",
       variant,
     });
-
   } catch (err) {
     console.error("Error editing variant:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Server error" });
   }
 };
 
-// Upload Variant Image
+// =============== Delete Variant ===============
+const deleteVariants = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const variant = await variantSchema.findById(id);
+
+    if (!variant) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Variant not found" });
+    }
+
+    // Delete associated image files
+    if (variant.product_image && variant.product_image.length > 0) {
+      for (const imageUrl of variant.product_image) {
+        try {
+          const filename = path.basename(imageUrl);
+          const filePath = path.join(
+            __dirname,
+            "../../public/uploads/variants",
+            filename
+          );
+
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`Deleted image file: ${filename}`);
+          }
+        } catch (fileErr) {
+          console.error(
+            `Error deleting image file ${imageUrl}:`,
+            fileErr
+          );
+        }
+      }
+    }
+
+    // Delete the variant
+    await variantSchema.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: "Variant and associated images deleted successfully",
+      variant,
+    });
+  } catch (err) {
+    console.error("Error deleting variant:", err);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Server error" });
+  }
+};
+
+// =============== Upload Variant Image ===============
 const uploadVariantImage = async (req, res) => {
   try {
     const { variantId } = req.params;
-    
-    // Check if variant exists
+
+    // Check variant exists
     const variant = await variantSchema.findById(variantId);
     if (!variant) {
-      return res.status(404).json({ success: false, message: "Variant not found" });
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Variant not found" });
     }
 
-    // Use multer middleware
-    upload.single('image')(req, res, async (err) => {
+    // Multer upload
+    upload.single("image")(req, res, async (err) => {
       if (err) {
-        return res.status(400).json({ success: false, message: err.message });
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ success: false, message: err.message });
       }
 
       if (!req.file) {
-        return res.status(400).json({ success: false, message: "No image file provided" });
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ success: false, message: "No image file provided" });
       }
 
       try {
         // Generate image URL
         const imageUrl = `/uploads/variants/${req.file.filename}`;
-        
-        // Add image to variant's product_image array
+
+        // Add image to product_image array
         if (!variant.product_image) {
           variant.product_image = [];
         }
         variant.product_image.push(imageUrl);
-        
+
         await variant.save();
 
         res.json({
           success: true,
           message: "Image uploaded successfully",
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
         });
       } catch (saveErr) {
         // Clean up uploaded file if save fails
@@ -175,43 +217,55 @@ const uploadVariantImage = async (req, res) => {
     });
   } catch (err) {
     console.error("Error uploading variant image:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Server error" });
   }
 };
 
-// Delete Variant Image
+// =============== Delete Variant Image ===============
 const deleteVariantImage = async (req, res) => {
   try {
     const { variantId } = req.params;
     const { imageUrl } = req.body;
-    
-    // Check if variant exists
+
+    // Check variant exists
     const variant = await variantSchema.findById(variantId);
     if (!variant) {
-      return res.status(404).json({ success: false, message: "Variant not found" });
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Variant not found" });
     }
 
-    // Remove image from variant's product_image array
+    // Remove image from DB array
     if (variant.product_image && variant.product_image.length > 0) {
-      variant.product_image = variant.product_image.filter(img => img !== imageUrl);
+      variant.product_image = variant.product_image.filter(
+        (img) => img !== imageUrl
+      );
       await variant.save();
     }
 
     // Delete file from filesystem
     const filename = path.basename(imageUrl);
-    const filePath = path.join(__dirname, "../../public/uploads/variants", filename);
-    
+    const filePath = path.join(
+      __dirname,
+      "../../public/uploads/variants",
+      filename
+    );
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
     res.json({
       success: true,
-      message: "Image deleted successfully"
+      message: "Image deleted successfully",
     });
   } catch (err) {
     console.error("Error deleting variant image:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Server error" });
   }
 };
 
