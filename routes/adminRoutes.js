@@ -5,6 +5,8 @@ const customerController = require("../controllers/admin/customerController");
 const categorieController = require("../controllers/admin/categorieController.js");
 const brandController = require("../controllers/admin/brandController.js");
 const productController = require("../controllers/admin/productController.js");
+const variantController = require('../controllers/admin/variantController.js')
+
 const session = require("../middlewares/session");
 
 const passport = require("passport");
@@ -61,7 +63,9 @@ routes
   .get(productController.getProductsPage)
   .post(productController.addProduct);
 routes.route("/products/Details/:id").get(productController.loadProductDetails);
-routes.post("/products/:id/variants", productController.addVariants);
+
+// Variant Management
+routes.post("/products/:id/variants", variantController.addVariants);
 
 routes.get("/orders", categorieController.categories);
 

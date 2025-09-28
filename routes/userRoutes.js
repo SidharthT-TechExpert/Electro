@@ -4,7 +4,6 @@ const passport = require("passport");
 const userController = require("../controllers/user/userController.js");
 const checkSession = require("../middlewares/session.js");
 
-
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
 

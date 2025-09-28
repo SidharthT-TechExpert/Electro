@@ -57,7 +57,7 @@
       </div>
       <div class="info-card">
         <h6>Total Variants</h6>
-        <p><%= product?.variants?.length || 0 %></p>
+        <p><%= variants?.length || 0 %></p>
       </div>
       <div class="info-card">
         <h6>Created At</h6>
@@ -90,8 +90,8 @@
             </tr>
           </thead>
           <tbody>
-            <% if(product.variants.length > 0){ %>
-              <% product.variants.forEach(variant => { %>
+            <% if(variants.length > 0){ %>
+              <% variants.forEach(variant => { %>
                 <tr>
                   <% variantFields.forEach(f => { %>
                     <td>
@@ -155,64 +155,59 @@
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    document.getElementById("variantForm").addEventListener("submit", async function(e){
+      e.preventDefault();
 
+      const form = e.target;
+      const formData = new FormData(form);
 
- document.getElementById("variantForm").addEventListener("submit", async function(e){
-  e.preventDefault();
+      const variantData = {};
+      let hasEmpty = false;
 
-  const form = e.target;
-  const formData = new FormData(form);
+      formData.forEach((value, key) => {
+        if (value === "" || value === null) {
+          hasEmpty = true;
+        } else {
+          if (["price", "stock"].includes(key)) {
+            variantData[key] = Number(value);
+          } else {
+            variantData[key] = value;
+          }
+        }
+      });
 
-  // Convert formData → plain object
-  const variantData = {};
-  let hasEmpty = false;
-
-  formData.forEach((value, key) => {
-    if (value === "" || value === null) {
-      hasEmpty = true;
-    } else {
-      if (["price", "stock"].includes(key)) {
-        variantData[key] = Number(value);
-      } else {
-        variantData[key] = value;
+      if (hasEmpty) {
+        Swal.fire({
+          icon: "warning",
+          title: "Missing Fields",
+          text: "Please fill out all fields before saving!"
+        });
+        return;
       }
-    }
-  });
 
-  // If any field empty → block submit
-  if (hasEmpty) {
-    Swal.fire({
-      icon: "warning",
-      title: "Missing Fields",
-      text: "Please fill out all fields before saving!"
+      try {
+        const res = await fetch("/admin/products/<%= product._id %>/variants", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(variantData)
+        });
+
+        const data = await res.json();
+
+        if(data.success){
+          Swal.fire({
+            icon: "success",
+            title: "Variant Added",
+            text: data.message || "Variant saved successfully!"
+          }).then(() => location.reload());
+        } else {
+          Swal.fire({ icon: "error", title: "Failed", text: data.message });
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." });
+      }
     });
-    return;
-  }
-
-  try {
-    const res = await fetch("/admin/products/<%= product._id %>/variants", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(variantData)
-    });
-
-    const data = await res.json();
-
-    if(data.success){
-      Swal.fire({
-        icon: "success",
-        title: "Variant Added",
-        text: data.message || "Variant saved successfully!"
-      }).then(() => location.reload());
-    } else {
-      Swal.fire({ icon: "error", title: "Failed", text: data.message });
-    }
-  } catch (err) {
-    console.error(err);
-    Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." });
-  }
-});
-
   </script>
 </body>
 </html>
