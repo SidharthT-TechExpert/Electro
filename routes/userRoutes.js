@@ -6,33 +6,42 @@ const checkSession = require("../middlewares/session.js");
 
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
-
+// SignUp Route
 routes
-  .route('/signUp')
-     .get(checkSession.isAuth, userController.loadSignUpPage)
-     .post(userController.signUp);
-       
-routes
-  .route('/logIn')
-     .get( userController.loadLogInPage)
-     .post(checkSession.isAuth, userController.userLogIn);
+  .route("/signUp")
+  .get(checkSession.isAuth, userController.loadSignUpPage)
+  .post(userController.signUp);
 
+// LogIn Route
 routes
-  .route('/forgetPass')
-     .get( checkSession.isAuth, userController.loadForgetPage)
-     .post(checkSession.isAuth , userController.forgetPass);
+  .route("/logIn")
+  .get(userController.loadLogInPage)
+  .post(checkSession.isAuth, userController.userLogIn);
 
+// Forget Password Route
 routes
-  .route('/verify-Otp')
-     .get( checkSession.isAuth, userController.verify_Otp)
-     .post( userController.post_Verify_Otp);
+  .route("/forgetPass")
+  .get(checkSession.isAuth, userController.loadForgetPage)
+  .post(checkSession.isAuth, userController.forgetPass);
 
+// Verify OTP Route
+routes
+  .route("/verify-Otp")
+  .get(checkSession.isAuth, userController.verify_Otp)
+  .post(userController.post_Verify_Otp);
+
+// LogOut Route
 routes.get("/logOut", checkSession.userLogOut, userController.logOut);
+
+// Home Page Route
 routes.get("/", checkSession.homeAuth, userController.loadHomePage);
 
 // Post Request
+// Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
+// Reset Password Route
 routes.post("/passReset", userController.passReset);
+// Update Password Route
 routes.post("/update-password", userController.updatePass);
 
 // Product Details Page route

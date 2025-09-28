@@ -119,8 +119,17 @@
 }
 .variants-table tbody td {
   text-align: center;
-  padding: 10px;
+  padding: 15px;
   vertical-align: middle;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  height: 80px;
+}
+
+.variants-table tbody tr:hover td {
+  padding: 15px;
+  font-size: 16px;
+  height: 80px;
 }
 .variants-table tbody tr:nth-child(even) {
   background: var(--table-alt-row, #f9fafb);
@@ -136,39 +145,316 @@
 }
 
 /* Dark Mode */
-body.dark .admin-page-content {
-  --page-bg: #111827;
+body.dark {
+  background-color: #111827;
+  color: #f9fafb;
 }
+
+body.dark .admin-page-content {
+  background: #111827;
+  color: #f9fafb;
+}
+
 body.dark .card,
 body.dark .product-banner,
 body.dark .info-card {
-  --card-bg: #1e293b;
+  background: #1e293b;
+  color: #f9fafb;
+  border: 1px solid #374151;
+}
+
+body.dark .variants-table thead th {
+  background: #374151;
   color: #f9fafb;
 }
-body.dark .variants-table thead th {
-  --table-header-bg: #f3f4f6;
-  --table-header-text: #111827;
-}
+
 body.dark .variants-table tbody tr:nth-child(even) {
-  --table-alt-row: #1f2937;
+  background: #1f2937;
 }
+
 body.dark .variants-table tbody tr:hover {
-  --table-hover: #374151;
+  background: #374151;
+}
+
+body.dark .variants-table tbody td {
+  color: #f9fafb;
+}
+
+body.dark .info-card h6 {
+  color: #9ca3af;
+}
+
+body.dark .badge-status {
+  color: #fff;
+}
+
+body.dark .btn-outline-primary {
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+body.dark .btn-outline-primary:hover {
+  background-color: #60a5fa;
+  color: #111827;
+}
+
+body.dark .btn-outline-secondary {
+  color: #9ca3af;
+  border-color: #6b7280;
+}
+
+body.dark .btn-outline-secondary:hover {
+  background-color: #6b7280;
+  color: #f9fafb;
+}
+
+body.dark .dropdown-menu {
+  background-color: #1e293b;
+  border: 1px solid #374151;
+}
+
+body.dark .dropdown-item {
+  color: #f9fafb;
+}
+
+body.dark .dropdown-item:hover {
+  background-color: #374151;
+  color: #f9fafb;
 }
 
 /* Light Mode */
+body.light {
+  background-color: #f5f7fb;
+  color: #111827;
+}
+
 body.light .admin-page-content {
-  --page-bg: #f5f7fb;
+  background: #f5f7fb;
+  color: #111827;
 }
+
+body.light .card,
+body.light .product-banner,
+body.light .info-card {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
 body.light .variants-table thead th {
-  --table-header-bg: #1f2937;
-  --table-header-text: #f9fafb;
+  background: #1f2937;
+  color: #f9fafb;
 }
+
 body.light .variants-table tbody tr:nth-child(even) {
-  --table-alt-row: #f9fafb;
+  background: #f9fafb;
 }
+
 body.light .variants-table tbody tr:hover {
-  --table-hover: #e5e7eb;
+  background: #e5e7eb;
+}
+
+body.light .variants-table tbody td {
+  color: #111827;
+}
+
+body.light .info-card h6 {
+  color: #6b7280;
+}
+
+
+/* Variant Image Upload Styles */
+.variant-image-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.existing-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.image-item {
+  position: relative;
+  display: inline-block;
+}
+
+.image-item img {
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.image-item:hover img {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.remove-existing-image {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 16px;
+  height: 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+.image-item:hover .remove-existing-image {
+  opacity: 1;
+}
+
+.remove-existing-image:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.add-image-box {
+  position: relative;
+  width: 80px;
+  height: 60px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.add-image-box:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.add-image-box .image-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.add-image-box:hover .image-upload-placeholder {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.add-image-box .image-upload-placeholder i {
+  font-size: 20px;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.add-image-box:hover .image-upload-placeholder i {
+  transform: rotate(90deg);
+  font-size: 22px;
+}
+
+.add-image-box .image-upload-placeholder span {
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.add-image-box:hover .image-upload-placeholder span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Plus icon on the side during hover */
+.add-image-box::before {
+  content: '+';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  font-weight: bold;
+  color: #3b82f6;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.add-image-box:hover::before {
+  opacity: 1;
+  font-size: 20px;
+  right: 6px;
+}
+
+/* Dark mode styles for variant image upload */
+body.dark .add-image-box {
+  border-color: #4b5563;
+  background: #1f2937;
+}
+
+body.dark .add-image-box:hover {
+  border-color: #60a5fa;
+  background: #1e3a8a;
+}
+
+body.dark .add-image-box .image-upload-placeholder {
+  color: #9ca3af;
+}
+
+body.dark .add-image-box:hover .image-upload-placeholder {
+  color: #60a5fa;
+}
+
+body.dark .add-image-box::before {
+  color: #60a5fa;
+}
+
+body.dark .image-item img {
+  border-color: #4b5563;
+}
+
+/* Light mode styles for variant image upload */
+body.light .add-image-box {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+body.light .add-image-box:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+body.light .add-image-box .image-upload-placeholder {
+  color: #6b7280;
+}
+
+body.light .add-image-box:hover .image-upload-placeholder {
+  color: #3b82f6;
+}
+
+body.light .add-image-box::before {
+  color: #3b82f6;
+}
+
+body.light .image-item img {
+  border-color: #e5e7eb;
 }
 
 /* Dropdown */

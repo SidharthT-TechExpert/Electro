@@ -129,6 +129,7 @@ const loadProductDetails = async (req, res) => {
       product,
       variants,      // all variants for this product
       variantField,  // dynamic fields (e.g. ram, size, etc.)
+      activePage: "products"  // Set active page for sidebar
     });
   } catch (error) {
     console.error("Products Details Page Error:", error);
