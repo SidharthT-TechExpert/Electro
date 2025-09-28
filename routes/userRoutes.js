@@ -36,6 +36,9 @@ routes.post("/resend-Otp", userController.resend_Otp);
 routes.post("/passReset", userController.passReset);
 routes.post("/update-password", userController.updatePass);
 
+// Product Details Page route
+routes.get("/products/Details/:id", userController.loadProductDetails);
+
 // For signUp/SignIn with Google
 routes.get(
   "/auth/google",
