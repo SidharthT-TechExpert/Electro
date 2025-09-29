@@ -69,6 +69,7 @@ routes.post("/products/:id/variants", variantController.addVariants);
 routes.patch("/products/:product_id/variants/edit/:variant_id", variantController.editVariants);
 routes.delete("/products/variants/delete/:id", variantController.deleteVariants);
 routes.get("/products/variants/delete/:id", variantController.deleteVariants);
+routes.post('/products/variants/check-sku' , variantController.checkSKU)
 
 // Variant Image Management
 routes.post("/products/variants/:variantId/images", variantController.uploadVariantImage);

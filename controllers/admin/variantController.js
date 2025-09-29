@@ -42,8 +42,9 @@ const upload = multer({
 // =============== Add Variant ===============//
 const addVariants = async (req, res) => {
   try {
+    // Controller – addVariants
     const { id } = req.params; // product ID
-    const variantData = req.body;
+    let { color, description, price, sku, ...specifications } = req.body;
 
     // Find product
     const product = await productSchema.findById(id);
@@ -54,7 +55,7 @@ const addVariants = async (req, res) => {
     }
 
     // Check duplicate SKU
-    const existSku = await variantSchema.findOne({ sku: variantData.sku });
+    const existSku = await variantSchema.findOne({ sku });
     if (existSku) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -64,8 +65,12 @@ const addVariants = async (req, res) => {
 
     // Create new variant
     const newVariant = new variantSchema({
-      product_id: product._id,
-      ...variantData, // includes specifications if sent from frontend
+      product_id: id,
+      color,
+      description,
+      price,
+      sku,
+      specifications,
     });
 
     await newVariant.save();
@@ -88,7 +93,6 @@ const editVariants = async (req, res) => {
   try {
     const { id } = req.params; // variant ID
     const variantData = req.body;
-
     // Find and update variant by ID
     const variant = await variantSchema.findByIdAndUpdate(id, variantData, {
       new: true,
@@ -128,24 +132,6 @@ const deleteVariants = async (req, res) => {
     // Delete associated image files
     if (variant.product_image && variant.product_image.length > 0) {
       for (const imageUrl of variant.product_image) {
-        try {
-          const filename = path.basename(imageUrl);
-          const filePath = path.join(
-            __dirname,
-            "../../public/uploads/variants",
-            filename
-          );
-
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            console.log(`Deleted image file: ${filename}`);
-          }
-        } catch (fileErr) {
-          console.error(
-            `Error deleting image file ${imageUrl}:`,
-            fileErr
-          );
-        }
       }
     }
 
@@ -269,10 +255,26 @@ const deleteVariantImage = async (req, res) => {
   }
 };
 
+const checkSKU = async (req, res) => {
+  try {
+    const { sku, variantId } = req.body;
+    const existsSKU = await variantSchema.findOne({ sku });
+
+    if (existsSKU && existsSKU._id.toString() !== variantId) {
+      return res.json({ exists: true });
+    }
+
+  } catch (error) {
+    console.log("Check SKU Error", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   addVariants,
   editVariants,
   deleteVariants,
   uploadVariantImage,
   deleteVariantImage,
+  checkSKU,
 };

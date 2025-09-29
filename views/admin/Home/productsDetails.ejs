@@ -1,501 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <!-- CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Cropper.js CSS -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/admin/DashBoard/category.css">
   <link rel="stylesheet" href="/css/admin/DashBoard/ProductDetails.css">
+  <style>
+    .swal-wide {
+      width: 60% !important;
+    }
+
+    .image-upload-placeholder {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed #6c757d;
+      padding: 10px;
+      width: 50px;
+      height: 50px;
+    }
+
+    .variant-image-container img {
+      border-radius: 4px;
+    }
+  </style>
 </head>
+
 <body>
   <!-- Sidebar + Header -->
   <%- include("../../partials/admin/sidebar", { activePage: activePage }) %>
-  <%- include("../../partials/admin/header") %>
-  <%- include("../../partials/user/messages") %>
+    <%- include("../../partials/admin/header") %>
+      <%- include("../../partials/user/messages") %>
 
-  <div class="admin-page-content">
-    <!-- Top Bar -->
-    <div class="top-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <a href="/admin/products" class="btn btn-outline-primary">
-        <i class="fa fa-arrow-left"></i> Back to Products
-      </a>
-      <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fa fa-ellipsis-v"></i> Actions
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="/admin/products/edit/<%= product._id %>"><i class="fa fa-edit text-primary"></i> Edit</a></li>
-          <li><a class="dropdown-item text-warning" href="/admin/products/block/<%= product._id %>"><i class="fa fa-ban"></i> Block</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item text-danger" href="/admin/products/delete/<%= product._id %>"><i class="fa fa-trash"></i> Delete</a></li>
-        </ul>
-      </div>
-    </div>
+        <div class="admin-page-content">
+          <!-- Top Bar -->
+          <div class="top-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a href="/admin/products" class="btn btn-outline-primary">
+              <i class="fa fa-arrow-left"></i> Back to Products
+            </a>
+            <div class="btn-group">
+              <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fa fa-ellipsis-v"></i> Actions
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="/admin/products/edit/<%= product._id %>"><i
+                      class="fa fa-edit text-primary"></i> Edit</a></li>
+                <li><a class="dropdown-item text-warning" href="/admin/products/block/<%= product._id %>"><i
+                      class="fa fa-ban"></i> Block</a></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item text-danger" href="/admin/products/delete/<%= product._id %>"><i
+                      class="fa fa-trash"></i> Delete</a></li>
+              </ul>
+            </div>
+          </div>
 
-    <!-- Product Banner -->
-    <div class="product-banner d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <div>
-        <h2><%= product?.name %></h2>
-        <p class="mb-0">
-          <strong>Brand:</strong> <%= product?.brand?.name || "Unbranded" %> &nbsp;|&nbsp; 
-          <strong>Category:</strong> <%= product?.category?.name || "Uncategorized" %>
-        </p>
-      </div>
-      <div>
-        <span class="badge-status badge-<%= product?.status %>"><%= product?.status %></span>
-      </div>
-    </div>
+          <!-- Product Banner -->
+          <div class="product-banner d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <h2>
+                <%= product?.name %>
+              </h2>
+              <p class="mb-0">
+                <strong>Brand:</strong>
+                <%= product?.brand?.name || "Unbranded" %> &nbsp;|&nbsp;
+                  <strong>Category:</strong>
+                  <%= product?.category?.name || "Uncategorized" %>
+              </p>
+            </div>
+            <div>
+              <span class="badge-status badge-<%= product?.status %>">
+                <%= product?.status %>
+              </span>
+            </div>
+          </div>
 
-    <!-- Info Cards -->
-    <div class="info-cards">
-      <div class="info-card">
-        <h6>Base Price</h6>
-        <p>₹<%= (product?.price || 0).toFixed(2) %></p>
-      </div>
-      <div class="info-card">
-        <h6>Total Variants</h6>
-        <p><%= variants?.length || 0 %></p>
-      </div>
-      <div class="info-card">
-        <h6>Created At</h6>
-        <p><%= product.createdAt?.toDateString() %></p>
-      </div>
-    </div>
+          <!-- Info Cards -->
+          <div class="info-cards">
+            <div class="info-card">
+              <h6>Base Price</h6>
+              <p>₹<%= (product?.price || 0).toFixed(2) %>
+              </p>
+            </div>
+            <div class="info-card">
+              <h6>Total Variants</h6>
+              <p>
+                <%= variants?.length || 0 %>
+              </p>
+            </div>
+            <div class="info-card">
+              <h6>Created At</h6>
+              <p>
+                <%= product.createdAt?.toDateString() %>
+              </p>
+            </div>
+          </div>
 
-   <%
-     const variantFields = (typeof variantField !== "undefined" && variantField) 
-       ? variantField 
-       : ["color", "material", "size", "stock", "price", "sku", "description", "images"];
-   %>
+          <% const variantFields=(typeof variantField !=="undefined" && variantField) ? variantField :
+            ["color","material","size","stock","price","sku","description","images","ram","storage","battery","display","os"];
+            %>
 
-    <!-- Variants Table -->
-    <div class="card p-3 mt-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="mb-0">Variants</h5>
-        <button class="btn btn-success btn-sm" onclick="document.getElementById('variantFormCard').classList.toggle('d-none')">
-          <i class="fa fa-plus"></i> Add Variant
-        </button>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-bordered variants-table">
-          <thead>
-            <tr>
-              <% variantFields.forEach(f => { %>
-                <th><%= f.charAt(0).toUpperCase() + f.slice(1) %></th>
-              <% }) %>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if(variants.length > 0){ %>
-              <% variants.forEach(variant => { %>
-                <tr>
-                  <% variantFields.forEach(f => { %>
-                    <td>
-                      <% if(f === 'images'){ %>
-                        <div class="variant-image-container" data-variant-id="<%= variant._id %>">
-                          <% if(variant.product_image && variant.product_image.length > 0){ %>
-                            <div class="existing-images">
-                              <% variant.product_image.forEach(img => { %>
-                                <div class="image-item">
-                                  <img src="<%= img %>" style="width:50px;height:50px;" class="me-1">
-                                  <button class="remove-existing-image" data-image="<%= img %>" data-variant-id="<%= variant._id %>">
-                                    <i class="fa fa-times"></i>
-                                  </button>
-                                </div>
-                              <% }) %>
-                            </div>
-                          <% } %>
-                          <div class="add-image-box" data-variant-id="<%= variant._id %>">
-                            <div onclick="addImg(`<%= variant._id %>`)" class="image-upload-placeholder">
-                              <i class="fa fa-plus"></i>
-                              <span>Add</span>
-                            </div>
-                          </div>
-                        </div>
-                      <% } else { %>
-                        <%= variant[f] || "-" %>
-                      <% } %>
-                    </td>
-                  <% }) %>
-                  <td>
-                    <a href="/admin/products/<%= product._id %>/variants/edit/<%= variant._id %>" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
-                    <a onclick="deleteVariant('<%= variant._id %>')" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></a>
-                  </td>
-                </tr>
-              <% }) %>
-            <% } else { %>
-              <tr><td colspan="<%= variantFields.length + 1 %>" class="text-center">No variants available</td></tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Add Variant Form -->
-    <div class="card p-3 mt-4 d-none" id="variantFormCard">
-      <h5>Add Variant</h5>
-      <form id="variantForm">
-        <div class="row">
-          <% variantFields.forEach(f => { %>
-            <% if(f !== 'description' && f !== 'images'){ %>
-              <div class="col-md-4 mb-3">
-                <input type="<%= (f==='price' || f==='stock')?'number':'text' %>" 
-                       name="<%= f %>" 
-                       class="form-control" 
-                       placeholder="<%= f.charAt(0).toUpperCase() + f.slice(1) %>" 
-                       <%= f==='price'?'step="0.01"':'' %>>
+            <!-- Variants Table -->
+            <div class="card p-3 mt-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Variants</h5>
+                <button class="btn btn-success btn-sm" onclick="openVariantPopup()">
+                  <i class="fa fa-plus"></i> Add Variant
+                </button>
               </div>
-            <% } %>
-          <% }) %>
+              <div class="table-responsive">
+                <table class="table table-bordered variants-table">
+                  <thead>
+                    <tr>
+                      <% variantFields.forEach(f=>{ %><th>
+                          <%= f.charAt(0).toUpperCase() + f.slice(1) %>
+                        </th>
+                        <% }) %>
+                          <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if(variants.length>0){ %>
+                      <% variants.forEach(variant=>{ %>
+                        <tr>
+                          <% variantFields.forEach(f=>{ %>
+                            <td>
+                              <% if(f==='images' ){ %>
+                                <div class="variant-image-container" data-variant-id="<%= variant._id %>">
+                                  <% if(variant.product_image && variant.product_image.length>0){ %>
+                                    <div class="existing-images">
+                                      <% variant.product_image.forEach(img=>{ %>
+                                        <div class="image-item">
+                                          <img src="<%= img %>" style="width:50px;height:50px;" class="me-1">
+                                          <button class="remove-existing-image" data-image="<%= img %>"
+                                            data-variant-id="<%= variant._id %>">
+                                            <i class="fa fa-times"></i>
+                                          </button>
+                                        </div>
+                                        <% }) %>
+                                    </div>
+                                    <% } %>
+                                      <div class="add-image-box" data-variant-id="<%= variant._id %>">
+                                        <div onclick="addImg(`<%= variant._id %>`)" class="image-upload-placeholder">
+                                          <i class="fa fa-plus"></i><span>Add</span>
+                                        </div>
+                                      </div>
+                                </div>
+                                <% } else { %>
+                                  <%= variant[f] ?? variant.specifications?.get(f) ?? "-" %>
+                                    <% } %>
+                            </td>
+                            <% }) %>
+                              <td>
+                                <a href="javascript:void(0);" class="btn btn-sm btn-primary"
+                                  onclick='openVariantPopup(<%- JSON.stringify(variant) %>)'><i
+                                    class="fa fa-edit"></i></a>
+                                <a onclick="deleteVariant('<%= variant._id %>')" class="btn btn-sm btn-danger"><i
+                                    class="fa fa-trash"></i></a>
+                              </td>
+                        </tr>
+                        <% }) %>
+                          <% } else { %>
+                            <tr>
+                              <td colspan="<%= variantFields.length + 1 %>" class="text-center">No variants available
+                              </td>
+                            </tr>
+                            <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
         </div>
 
-        <% if(variantFields.includes('description')){ %>
-          <div class="mb-3">
-            <textarea name="description" class="form-control" placeholder="Description"></textarea>
-          </div>
-        <% } %>
+        <!-- JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-        <button type="submit" class="btn btn-primary">Save Variant</button>
-      </form>
-    </div>
+        <script>
+          function openVariantPopup(variantData = {}) {
+            console.log(variantData)
+            const variantFields = JSON.parse('<%- JSON.stringify(variantFields) %>');
+            let formHtml = `<form id="swalVariantForm" class="row g-3">`;
 
-   </div>
+            variantFields.forEach(f => {
+              if (!['description', 'images'].includes(f)) {
+                const type = ['price', 'stock'].includes(f) ? 'number' : 'text';
+                const step = f === 'price' ? 'step="0.01"' : '';
+                formHtml += `
+            <div class="col-md-4">
+              <input type="${type}" name="${f}" class="form-control" ${step}
+                value="${variantData[f] || variantData.specifications?.[f] || ''}"
+                placeholder="${f.charAt(0).toUpperCase() + f.slice(1)}" required>
+            </div>`;
+              }
+            });
 
-   <!-- Image Upload Modal -->
-   <div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
-     <div class="modal-dialog modal-lg">
-       <div class="modal-content">
-         <div class="modal-header">
-           <h5 class="modal-title" id="imageUploadModalLabel">Add Image to Variant</h5>
-           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-         </div>
-         <div class="modal-body">
-           <!-- Image Cropper Modal -->
-           <div class="card">
-             <div class="card-header bg-primary text-white">
-               <h6 class="mb-0">Image Cropper</h6>
-             </div>
-             <div class="card-body">
-               <div class="mb-3">
-                 <label for="imageFile" class="form-label">Select an image:</label>
-                 <div class="input-group">
-                   <input type="file" class="form-control" id="imageFile" accept="image/*">
-                   <label class="input-group-text" for="imageFile">Choose file</label>
-                 </div>
-                 <div class="form-text">No file chosen</div>
-               </div>
-               
-               <!-- Image Preview and Crop Area -->
-               <div id="imagePreview" class="text-center" style="display: none;">
-                 <div class="mb-3">
-                   <div class="cropper-container" style="max-height: 400px; max-width: 100%;">
-                     <img id="previewImg" class="img-fluid" style="display: block; max-width: 100%;">
-                   </div>
-                 </div>
-                 <div class="mb-3">
-                   <button type="button" class="btn btn-success" id="cropImageBtn">
-                     <i class="fa fa-crop"></i> Crop Image
-                   </button>
-                 </div>
-               </div>
-               
-               <!-- Cropped Image Result -->
-               <div id="croppedResult" class="text-center" style="display: none;">
-                 <div class="mb-3">
-                   <h6>Cropped Image:</h6>
-                   <img id="croppedImg" class="img-fluid" style="max-height: 300px; max-width: 100%;">
-                 </div>
-               </div>
-             </div>
-           </div>
-         </div>
-         <div class="modal-footer">
-           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-           <button type="button" class="btn btn-primary" id="saveImageBtn" style="display: none;">
-             <i class="fa fa-save"></i> Save Image
-           </button>
-         </div>
-       </div>
-     </div>
-   </div>
+            if (variantFields.includes('description')) {
+              formHtml += `<div class="col-12">
+            <textarea name="description" class="form-control" placeholder="Description">${variantData.description || ''}</textarea>
+          </div>`;
+            }
 
-   <!-- JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Cropper.js JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <script>
-    document.getElementById("variantForm").addEventListener("submit", async function(e){
-      e.preventDefault();
+            formHtml += `</form>`;
 
-      const form = e.target;
-      const formData = new FormData(form);
+            Swal.fire({
+              title: variantData._id ? 'Edit Variant' : 'Add Variant',
+              html: formHtml,
+              customClass: 'swal-wide',
+              showCancelButton: true,
+              confirmButtonText: variantData._id ? 'Update' : 'Save',
+              focusConfirm: false,
+              preConfirm: async () => {
+                const form = document.getElementById('swalVariantForm');
+                const fd = new FormData(form);
+                const data = {};
+                let hasEmpty = false;
 
-      const variantData = {};
-      let hasEmpty = false;
+                fd.forEach((value, key) => {
+                  if (!value) hasEmpty = true;
+                  data[key] = ['price', 'stock'].includes(key) ? Number(value) : value;
+                });
 
-      formData.forEach((value, key) => {
-        if (value === "" || value === null) {
-          hasEmpty = true;
-        } else {
-          if (["price", "stock"].includes(key)) {
-            variantData[key] = Number(value);
-          } else {
-            variantData[key] = value;
+                if (hasEmpty) {
+                  Swal.showValidationMessage('Please fill out all fields!');
+                  return false;
+                }
+
+                // Check SKU uniqueness via server
+                const res = await fetch('/admin/products/variants/check-sku', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ sku: data.sku, variantId: variantData._id })
+                });
+                const json = await res.json();
+                if (json.exists) {
+                  Swal.showValidationMessage('SKU already exists!');
+                  return false;
+                }
+                return data;
+              }
+            }).then((result) => {
+              if (result.isConfirmed) saveVariant(result.value, variantData._id);
+            });
           }
-        }
-      });
 
-      if (hasEmpty) {
-        Swal.fire({
-          icon: "warning",
-          title: "Missing Fields",
-          text: "Please fill out all fields before saving!"
-        });
-        return;
-      }
+          async function saveVariant(data, variantId = null) {
+            const url = variantId
+              ? `/admin/products/<%= product._id %>/variants/edit/${variantId}`
+              : `/admin/products/<%= product._id %>/variants`;
+            const method = variantId ? 'PATCH' : 'POST';
+            try {
+              const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+              const json = await res.json();
+              if (json.success) {
+                Swal.fire({ icon: 'success', title: variantId ? 'Variant Updated' : 'Variant Added', text: json.message || 'Saved successfully!', timer: 1500, showConfirmButton: false })
+                  .then(() => location.reload());
+              } else {
+                Swal.fire({ icon: 'error', title: 'Failed', text: json.message });
+              }
+            } catch (err) {
+              console.error(err);
+              Swal.fire({ icon: 'error', title: 'Server Error', text: 'Try again later.' });
+            }
+          }
 
-      try {
-        const res = await fetch("/admin/products/<%= product._id %>/variants", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(variantData)
-        });
-
-        const data = await res.json();
-
-        if(data.success){
-          Swal.fire({
-            icon: "success",
-            title: "Variant Added",
-            text: data.message || "Variant saved successfully!"
-          }).then(() => location.reload());
-        } else {
-          Swal.fire({ icon: "error", title: "Failed", text: data.message });
-        }
-      } catch (err) {
-        console.error(err);
-        Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." });
-      }
-    });
- 
-     function deleteVariant(id) {
-       Swal.fire({
-         title: "Are you sure?",
-         text: "This will permanently delete the variant and all its associated images.",
-         icon: "warning",
-         showCancelButton: true,
-         confirmButtonColor: "#d33",
-         cancelButtonColor: "#6c757d",
-         confirmButtonText: "Yes, delete it!"
-       }).then((result) => {
-         if (result.isConfirmed) {
-           $.ajax({
-             type: "DELETE",
-             url: `/admin/products/variants/delete/${id}`,
-             success: function (response) {
-               if (response.success) {
-                 Swal.fire({ 
-                   icon: "success", 
-                   title: "Variant Deleted", 
-                   text: "Variant and all associated images have been deleted successfully.",
-                   timer: 2000, 
-                   showConfirmButton: false 
-                 });
-                 document.querySelector(`a[onclick="deleteVariant('${id}')"]`).closest("tr").remove();
-               }else{
-                 Swal.fire("Error", response.message, "error");
-               }
-             },
-             error: function () {
-               Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." });
-             }
-             });
-             }
-           });
-         }
-
-     // Global variables for image upload
-     let currentVariantId = null;
-     let selectedFile = null;
-     let croppedImageData = null;
-     let cropper = null;
-
-     function addImg(id) {
-       currentVariantId = id;
-       // Reset modal state
-       document.getElementById('imagePreview').style.display = 'none';
-       document.getElementById('croppedResult').style.display = 'none';
-       document.getElementById('saveImageBtn').style.display = 'none';
-       document.getElementById('imageFile').value = '';
-       document.querySelector('.form-text').textContent = 'No file chosen';
-       
-       // Destroy existing cropper if any
-       if (cropper) {
-         cropper.destroy();
-         cropper = null;
-       }
-       
-       // Show modal
-       const modal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
-       modal.show();
-     }
-
-     // Handle file selection
-     document.getElementById('imageFile').addEventListener('change', function(e) {
-       const file = e.target.files[0];
-       if (file) {
-         selectedFile = file;
-         document.querySelector('.form-text').textContent = file.name;
-         
-         // Show image preview and initialize cropper
-         const reader = new FileReader();
-         reader.onload = function(e) {
-           const img = document.getElementById('previewImg');
-           img.src = e.target.result;
-           document.getElementById('imagePreview').style.display = 'block';
-           
-           // Initialize cropper after image loads
-           img.onload = function() {
-             if (cropper) {
-               cropper.destroy();
-             }
-             cropper = new Cropper(img, {
-               aspectRatio: 1, // Square crop
-               viewMode: 1,
-               dragMode: 'move',
-               autoCropArea: 0.8,
-               restore: false,
-               guides: true,
-               center: true,
-               highlight: false,
-               cropBoxMovable: true,
-               cropBoxResizable: true,
-               toggleDragModeOnDblclick: false,
-               background: false,
-               modal: true,
-               scalable: true,
-               zoomable: true,
-               zoomOnTouch: true,
-               zoomOnWheel: true,
-               wheelZoomRatio: 0.1,
-               cropstart: function(e) {
-                 console.log(e.type, e.detail.action);
-               },
-               cropmove: function(e) {
-                 console.log(e.type, e.detail.action);
-               },
-               cropend: function(e) {
-                 console.log(e.type, e.detail.action);
-               },
-               crop: function(e) {
-                 console.log(e.type, e.detail.x, e.detail.y, e.detail.width, e.detail.height, e.detail.rotate, e.detail.scaleX, e.detail.scaleY);
-               },
-               zoom: function(e) {
-                 console.log(e.type, e.detail.ratio);
-               }
-             });
-           };
-         };
-         reader.readAsDataURL(file);
-       }
-     });
-
-     // Handle crop image button
-     document.getElementById('cropImageBtn').addEventListener('click', function() {
-       if (cropper) {
-         // Get cropped canvas
-         const canvas = cropper.getCroppedCanvas({
-           width: 400,
-           height: 400,
-           minWidth: 256,
-           minHeight: 256,
-           maxWidth: 4096,
-           maxHeight: 4096,
-           fillColor: '#fff',
-           imageSmoothingEnabled: true,
-           imageSmoothingQuality: 'high',
-         });
-         
-         if (canvas) {
-           // Convert canvas to data URL
-           croppedImageData = canvas.toDataURL('image/jpeg', 0.9);
-           document.getElementById('croppedImg').src = croppedImageData;
-           document.getElementById('croppedResult').style.display = 'block';
-           document.getElementById('saveImageBtn').style.display = 'inline-block';
-           
-           // Show success message
-           Swal.fire({
-             icon: 'success',
-             title: 'Image Cropped!',
-             text: 'Your image has been cropped successfully.',
-             timer: 1500,
-             showConfirmButton: false
-           });
-         } else {
-           Swal.fire({
-             icon: 'error',
-             title: 'Crop Failed',
-             text: 'Unable to crop the image. Please try again.'
-           });
-         }
-       }
-     });
-
-     // Handle save image button
-     document.getElementById('saveImageBtn').addEventListener('click', function() {
-       if (croppedImageData && currentVariantId) {
-         // Convert data URL to blob
-         fetch(croppedImageData)
-           .then(res => res.blob())
-           .then(blob => {
-             const formData = new FormData();
-             formData.append('image', blob, 'cropped-image.jpg');
-             
-             // Upload image
-             fetch(`/admin/products/variants/${currentVariantId}/images`, {
-               method: 'POST',
-               body: formData
-             })
-             .then(response => response.json())
-             .then(data => {
-               if (data.success) {
-                 Swal.fire({
-                   icon: 'success',
-                   title: 'Image Added',
-                   text: 'Image uploaded successfully!',
-                   timer: 1500,
-                   showConfirmButton: false
-                 }).then(() => {
-                   // Close modal and reload page
-                   const modal = bootstrap.Modal.getInstance(document.getElementById('imageUploadModal'));
-                   modal.hide();
-                   location.reload();
-                 });
-               } else {
-                 Swal.fire({
-                   icon: 'error',
-                   title: 'Upload Failed',
-                   text: data.message || 'Failed to upload image'
-                 });
-               }
-             })
-             .catch(err => {
-               console.error(err);
-               Swal.fire({
-                 icon: 'error',
-                 title: 'Server Error',
-                 text: 'Try again later'
-               });
-             });
-           });
-       }
-     });
- </script>
+          function deleteVariant(id) {
+            Swal.fire({
+              title: "Are you sure?",
+              text: "This will permanently delete the variant and all its associated images.",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#6c757d",
+              confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+              if (result.isConfirmed) {
+                fetch(`/admin/products/variants/delete/${id}`, { method: 'DELETE' })
+                  .then(res => res.json())
+                  .then(response => {
+                    if (response.success) {
+                      Swal.fire({ icon: "success", title: "Variant Deleted", text: "Variant deleted successfully.", timer: 2000, showConfirmButton: false });
+                      document.querySelector(`a[onclick="deleteVariant('${id}')"]`).closest("tr").remove();
+                    } else {
+                      Swal.fire("Error", response.message, "error");
+                    }
+                  })
+                  .catch(() => Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." }));
+              }
+            });
+          }
+        </script>
 </body>
+
 </html>
