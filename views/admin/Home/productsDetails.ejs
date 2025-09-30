@@ -82,19 +82,19 @@
           </div>
 
           <!-- Info Cards -->
-          <div class="info-cards d-flex gap-3 mt-3">
-            <div class="info-card">
+          <div class="info-cards d-flex gap-3 mt-3" style="justify-content: center;">
+            <div class="info-card col-md-3">
               <h6>Base Price</h6>
               <p>₹<%= (product?.price || 0).toFixed(2) %>
               </p>
             </div>
-            <div class="info-card">
+            <div class="info-card col-md-4">
               <h6>Total Variants</h6>
               <p>
                 <%= variants?.length || 0 %>
               </p>
             </div>
-            <div class="info-card">
+            <div class="info-card col-md-3">
               <h6>Created At</h6>
               <p>
                 <%= product.createdAt?.toDateString() %>
@@ -148,7 +148,7 @@
                                     </div>
                                     <% } %>
                                       <div class="add-image-box" data-variant-id="<%= variant._id %>">
-                                        <div onclick="addImg('<%= variant._id %>')" class="image-upload-placeholder">
+                                        <div class="image-upload-placeholder">
                                           <i class="fa fa-plus"></i><span>Add</span>
                                         </div>
                                       </div>
@@ -238,7 +238,7 @@
             console.log('openVariantPopup called with:', variantData);
 
             // ✅ Injected array from server-side EJS (avoid JSON.parse/string quotes)
-            const variantFields = <%- JSON.stringify(variantFields) %>;
+            const variantFields = <% - JSON.stringify(variantFields) %>;
             console.log('variantFields (client):', variantFields, 'isArray:', Array.isArray(variantFields));
             if (!Array.isArray(variantFields)) {
               console.error('variantFields is not an array. Fix server-side injection.');
@@ -427,14 +427,14 @@
                   .then(res => res.json())
                   .then(response => {
                     if (response.success) {
-                      Swal.fire({ 
-                        icon: "success", 
-                        title: "Variant Deleted", 
-                        text: "Variant deleted successfully.", 
-                        timer: 2000, 
-                        showConfirmButton: false 
-                      }).then(()=>location.reload());
-                      
+                      Swal.fire({
+                        icon: "success",
+                        title: "Variant Deleted",
+                        text: "Variant deleted successfully.",
+                        timer: 2000,
+                        showConfirmButton: false
+                      }).then(() => location.reload());
+
                     } else {
                       Swal.fire("Error", response.message || 'Delete failed', "error");
                     }
@@ -446,6 +446,111 @@
               }
             });
           }
+
+          let cropper = null;
+          let currentVariantId = null;
+
+          // Listen on a stable parent, e.g., the table
+          document.querySelector('.variants-table').addEventListener('click', function (e) {
+            const placeholder = e.target.closest('.image-upload-placeholder');
+            if (!placeholder) return;
+
+            const box = placeholder.closest('.add-image-box');
+            if (!box) return;
+
+            const variantId = box.dataset.variantId;
+            if (!variantId) return;
+
+            // Call your existing addImg function
+            addImg(variantId);
+          });
+
+
+          function addImg(variantId) {
+            currentVariantId = variantId;
+
+            Swal.fire({
+              title: 'Upload & Crop Image',
+              html: `
+      <input type="file" id="swalImageFile" class="swal2-file mb-2" accept="image/*">
+      <div id="swalImagePreview" style="margin-top:10px; display:none;">
+        <img id="swalPreviewImg" style="max-width:100%;" />
+      </div>
+    `,
+              showCancelButton: true,
+              confirmButtonText: 'Upload',
+              didOpen: () => {
+                const fileInput = document.getElementById('swalImageFile');
+
+                fileInput.addEventListener('change', () => {
+                  const file = fileInput.files[0];
+                  if (!file) return;
+
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const previewDiv = document.getElementById('swalImagePreview');
+                    const img = document.getElementById('swalPreviewImg');
+                    previewDiv.style.display = 'block';
+                    img.src = reader.result;
+
+                    // Destroy previous cropper if exists
+                    if (cropper) cropper.destroy();
+
+                    // Initialize cropper
+                    cropper = new Cropper(img, {
+                      aspectRatio: NaN,  // Free ratio
+                      viewMode: 2,       // Restrict crop box inside image
+                      autoCropArea: 1,
+                      movable: true,
+                      zoomable: true,
+                      rotatable: true,
+                      scalable: true
+                    });
+                  };
+                  reader.readAsDataURL(file);
+                });
+              },
+              preConfirm: () => {
+                if (!cropper) {
+                  Swal.showValidationMessage('Please select and crop an image!');
+                  return false;
+                }
+
+                // Get cropped image as Blob at original size
+                return new Promise((resolve, reject) => {
+                  cropper.getCroppedCanvas().toBlob(async (blob) => {
+                    try {
+                      const fd = new FormData();
+                      fd.append('image', blob, 'variant.jpg');
+
+                      const res = await fetch(`/admin/products/variants/${currentVariantId}/images`, {
+                        method: 'POST',
+                        body: fd
+                      });
+
+                      const json = await res.json();
+                      if (json.success) resolve(json);
+                      else reject(json.message || 'Upload failed');
+                    } catch (err) {
+                      reject(err.message || 'Upload failed');
+                    }
+                  }, 'image/jpeg');
+                });
+              }
+            }).then(result => {
+              if (result.isConfirmed) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Image Uploaded',
+                  showConfirmButton: false,
+                  timer: 1500
+                }).then(() => location.reload());
+              }
+            }).catch(err => {
+              Swal.fire({ icon: 'error', title: 'Upload Failed', text: err });
+            });
+          }
+
         </script>
 
 </body>
