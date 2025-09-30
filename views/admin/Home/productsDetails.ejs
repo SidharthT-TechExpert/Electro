@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <!-- CSS -->
+  <title>Product Variants</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -41,9 +41,8 @@
         <div class="admin-page-content">
           <!-- Top Bar -->
           <div class="top-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <a href="/admin/products" class="btn btn-outline-primary">
-              <i class="fa fa-arrow-left"></i> Back to Products
-            </a>
+            <a href="/admin/products" class="btn btn-outline-primary"><i class="fa fa-arrow-left"></i> Back to
+              Products</a>
             <div class="btn-group">
               <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fa fa-ellipsis-v"></i> Actions
@@ -83,7 +82,7 @@
           </div>
 
           <!-- Info Cards -->
-          <div class="info-cards">
+          <div class="info-cards d-flex gap-3 mt-3">
             <div class="info-card">
               <h6>Base Price</h6>
               <p>₹<%= (product?.price || 0).toFixed(2) %>
@@ -111,7 +110,7 @@
             <div class="card p-3 mt-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="mb-0">Variants</h5>
-                <button class="btn btn-success btn-sm" onclick="openVariantPopup()">
+                <button class="btn btn-success btn-sm" onclick="openVariantFromData(this)">
                   <i class="fa fa-plus"></i> Add Variant
                 </button>
               </div>
@@ -119,7 +118,8 @@
                 <table class="table table-bordered variants-table">
                   <thead>
                     <tr>
-                      <% variantFields.forEach(f=>{ %><th>
+                      <% variantFields.forEach(f=> { %>
+                        <th>
                           <%= f.charAt(0).toUpperCase() + f.slice(1) %>
                         </th>
                         <% }) %>
@@ -127,16 +127,16 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <% if(variants.length>0){ %>
-                      <% variants.forEach(variant=>{ %>
+                    <% if (variants.length> 0) { %>
+                      <% variants.forEach(variant=> { %>
                         <tr>
-                          <% variantFields.forEach(f=>{ %>
+                          <% variantFields.forEach(f=> { %>
                             <td>
                               <% if(f==='images' ){ %>
                                 <div class="variant-image-container" data-variant-id="<%= variant._id %>">
                                   <% if(variant.product_image && variant.product_image.length>0){ %>
                                     <div class="existing-images">
-                                      <% variant.product_image.forEach(img=>{ %>
+                                      <% variant.product_image.forEach(img=> { %>
                                         <div class="image-item">
                                           <img src="<%= img %>" style="width:50px;height:50px;" class="me-1">
                                           <button class="remove-existing-image" data-image="<%= img %>"
@@ -148,7 +148,7 @@
                                     </div>
                                     <% } %>
                                       <div class="add-image-box" data-variant-id="<%= variant._id %>">
-                                        <div onclick="addImg(`<%= variant._id %>`)" class="image-upload-placeholder">
+                                        <div onclick="addImg('<%= variant._id %>')" class="image-upload-placeholder">
                                           <i class="fa fa-plus"></i><span>Add</span>
                                         </div>
                                       </div>
@@ -160,10 +160,15 @@
                             <% }) %>
                               <td>
                                 <a href="javascript:void(0);" class="btn btn-sm btn-primary"
-                                  onclick='openVariantPopup(<%- JSON.stringify(variant) %>)'><i
-                                    class="fa fa-edit"></i></a>
-                                <a onclick="deleteVariant('<%= variant._id %>')" class="btn btn-sm btn-danger"><i
-                                    class="fa fa-trash"></i></a>
+                                  data-variant='<%- encodeURIComponent(JSON.stringify(variant)) %>'
+                                  onclick="openVariantFromData(this)">
+                                  <i class="fa fa-edit"></i>
+                                </a>
+
+
+                                <a onclick="deleteVariant('<%= variant._id %>')" class="btn btn-sm btn-danger">
+                                  <i class="fa fa-trash"></i>
+                                </a>
                               </td>
                         </tr>
                         <% }) %>
@@ -182,32 +187,86 @@
         <!-- JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
         <script>
-          function openVariantPopup(variantData = {}) {
-            console.log(variantData)
-            const variantFields = JSON.parse('<%- JSON.stringify(variantFields) %>');
-            let formHtml = `<form id="swalVariantForm" class="row g-3">`;
+          // --- Helpers ---
+          const escapeHtml = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
 
+          const getVariantValue = (vd, f) => {
+            if (!vd) return '';
+            if (vd[f] !== undefined && vd[f] !== null) return vd[f];
+            if (vd.specifications) {
+              try {
+                if (typeof vd.specifications.get === 'function') {
+                  return vd.specifications.get(f) ?? '';
+                }
+                return vd.specifications[f] ?? '';
+              } catch (e) {
+                return '';
+              }
+            }
+            return '';
+          };
+
+          // --- Open variant from element (edit) or handle add-mode ---
+          function openVariantFromData(el) {
+            try {
+              console.log('openVariantFromData called, el:', el);
+              if (!el || !el.dataset || !el.dataset.variant) {
+                // no data → add mode
+                console.log('No variant data found on element — opening Add Variant');
+                return openVariantPopup({});
+              }
+
+              const variantStr = el.getAttribute('data-variant') || el.dataset.variant || '';
+              const decoded = decodeURIComponent(variantStr || '');
+              const variantData = decoded ? JSON.parse(decoded) : {};
+              console.log('Parsed variantData:', variantData);
+              openVariantPopup(variantData);
+            } catch (err) {
+              console.error('Failed to parse variant data:', err);
+              Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load variant data.' });
+            }
+          }
+
+          // --- Main popup builder & handler ---
+          function openVariantPopup(variantData = {}) {
+            console.log('openVariantPopup called with:', variantData);
+
+            // ✅ Injected array from server-side EJS (avoid JSON.parse/string quotes)
+            const variantFields = <%- JSON.stringify(variantFields) %>;
+            console.log('variantFields (client):', variantFields, 'isArray:', Array.isArray(variantFields));
+            if (!Array.isArray(variantFields)) {
+              console.error('variantFields is not an array. Fix server-side injection.');
+              return Swal.fire({ icon: 'error', title: 'Server Error', text: 'Invalid variant field configuration.' });
+            }
+
+            // Build form HTML (escape values to avoid breaking the HTML)
+            let formHtml = `<form id="swalVariantForm" class="row g-3" onsubmit="return false;">`;
             variantFields.forEach(f => {
               if (!['description', 'images'].includes(f)) {
                 const type = ['price', 'stock'].includes(f) ? 'number' : 'text';
                 const step = f === 'price' ? 'step="0.01"' : '';
-                formHtml += `
-            <div class="col-md-4">
-              <input type="${type}" name="${f}" class="form-control" ${step}
-                value="${variantData[f] || variantData.specifications?.[f] || ''}"
-                placeholder="${f.charAt(0).toUpperCase() + f.slice(1)}" required>
-            </div>`;
+                const val = escapeHtml(getVariantValue(variantData, f));
+                const placeholder = escapeHtml(f.charAt(0).toUpperCase() + f.slice(1));
+                formHtml += `<div class="col-md-4">
+            <input type="${type}" name="${f}" class="form-control" ${step}
+              value="${val}"
+              placeholder="${placeholder}" required>
+          </div>`;
               }
             });
 
             if (variantFields.includes('description')) {
+              const desc = escapeHtml(variantData.description || '');
               formHtml += `<div class="col-12">
-            <textarea name="description" class="form-control" placeholder="Description">${variantData.description || ''}</textarea>
-          </div>`;
+          <textarea name="description" class="form-control" placeholder="Description">${desc}</textarea>
+        </div>`;
             }
-
             formHtml += `</form>`;
 
             Swal.fire({
@@ -217,60 +276,142 @@
               showCancelButton: true,
               confirmButtonText: variantData._id ? 'Update' : 'Save',
               focusConfirm: false,
+              allowOutsideClick: () => !Swal.isLoading(),
+
               preConfirm: async () => {
-                const form = document.getElementById('swalVariantForm');
-                const fd = new FormData(form);
-                const data = {};
-                let hasEmpty = false;
+                console.log('preConfirm started');
+                try {
+                  const form = document.getElementById('swalVariantForm');
 
-                fd.forEach((value, key) => {
-                  if (!value) hasEmpty = true;
-                  data[key] = ['price', 'stock'].includes(key) ? Number(value) : value;
-                });
+                  if (!form) {
+                    Swal.showValidationMessage('Form not found.');
+                    console.error('Form element not found in DOM.');
+                    return false;
+                  }
 
-                if (hasEmpty) {
-                  Swal.showValidationMessage('Please fill out all fields!');
+                  const fd = new FormData(form);
+                  const data = {};
+                  let hasEmpty = false;
+
+                  // collect values and detect empties safely
+                  fd.forEach((value, key) => {
+                    // treat strings with only whitespace as empty
+                    if (typeof value === 'string' && value.trim() === '') hasEmpty = true;
+                    // convert numbers where applicable
+                    if (['price', 'stock'].includes(key)) {
+                      const num = Number(value);
+                      data[key] = isNaN(num) ? value : num;
+                    } else {
+                      data[key] = value;
+                    }
+                  });
+
+                  console.log('Collected form data:', data, 'hasEmpty:', hasEmpty);
+                  if (hasEmpty) {
+                    Swal.showValidationMessage('Please fill out all fields!');
+                    return false;
+                  }
+
+                  // only check SKU when present — protects against missing endpoint or unexpected response
+                  if ('sku' in data) {
+                    try {
+                      Swal.showLoading();
+                      const resp = await fetch('/admin/products/variants/check-sku', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sku: data.sku, variantId: variantData._id })
+                      });
+
+                      // protect against non-json or server errors
+                      if (!resp.ok) {
+                        const txt = await resp.text().catch(() => '');
+                        throw new Error('SKU check network error: ' + resp.status + ' ' + txt);
+                      }
+
+                      const json = await resp.json().catch(_ => { throw new Error('Invalid JSON from SKU check'); });
+                      console.log('SKU check response:', json);
+
+                      if (json.exists) {
+                        Swal.hideLoading();
+                        Swal.showValidationMessage('SKU already exists!');
+                        return false;
+                      }
+
+                    } catch (err) {
+                      console.error('SKU check failed:', err);
+                      Swal.hideLoading();
+                      Swal.showValidationMessage('Error checking SKU: ' + (err.message || err));
+                      return false;
+                    } finally {
+                      Swal.hideLoading();
+                    }
+                  }
+
+                  console.log('preConfirm returning data:', data);
+                  return data;
+
+                } catch (err) {
+                  console.error('unexpected error in preConfirm:', err);
+                  Swal.showValidationMessage('Unexpected error: ' + (err.message || err));
                   return false;
                 }
-
-                // Check SKU uniqueness via server
-                const res = await fetch('/admin/products/variants/check-sku', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ sku: data.sku, variantId: variantData._id })
-                });
-                const json = await res.json();
-                if (json.exists) {
-                  Swal.showValidationMessage('SKU already exists!');
-                  return false;
-                }
-                return data;
               }
-            }).then((result) => {
-              if (result.isConfirmed) saveVariant(result.value, variantData._id);
+            }).then(result => {
+              console.log('Swal closed with:', result);
+              if (result.isConfirmed) {
+                if (!result.value) {
+                  console.warn('preConfirm did not return a value — aborting save');
+                  return;
+                }
+                console.log('Calling saveVariant with:', result.value, 'variantId:', variantData._id);
+                saveVariant(result.value, variantData._id);
+              } else {
+                console.log('User cancelled or dismissed the dialog:', result.dismiss);
+              }
             });
           }
 
-          async function saveVariant(data, variantId = null) {
+          // --- Save variant to server ---
+          async function saveVariant(data, variantId = undefined) {
+            console.log('saveVariant called with:', data, variantId);
             const url = variantId
-              ? `/admin/products/<%= product._id %>/variants/edit/${variantId}`
+              ? `/admin/products/variants/edit/${variantId}`
               : `/admin/products/<%= product._id %>/variants`;
-            const method = variantId ? 'PATCH' : 'POST';
+
+            const method = variantId ? 'PUT' : 'POST';
             try {
-              const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-              const json = await res.json();
+              const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              });
+
+              if (!res.ok) {
+                const txt = await res.text().catch(() => '');
+                throw new Error('Network error: ' + res.status + ' ' + txt);
+              }
+
+              const json = await res.json().catch(() => ({ success: false, message: 'Invalid JSON response' }));
+              console.log('saveVariant response:', json);
+
               if (json.success) {
-                Swal.fire({ icon: 'success', title: variantId ? 'Variant Updated' : 'Variant Added', text: json.message || 'Saved successfully!', timer: 1500, showConfirmButton: false })
-                  .then(() => location.reload());
+                Swal.fire({
+                  icon: 'success',
+                  title: variantId ? 'Variant Updated' : 'Variant Added',
+                  text: json.message || 'Saved successfully!',
+                  timer: 1500,
+                  showConfirmButton: false
+                }).then(() => location.reload());
               } else {
-                Swal.fire({ icon: 'error', title: 'Failed', text: json.message });
+                Swal.fire({ icon: 'error', title: 'Failed', text: json.message || 'Save failed' });
               }
             } catch (err) {
-              console.error(err);
-              Swal.fire({ icon: 'error', title: 'Server Error', text: 'Try again later.' });
+              console.error('saveVariant error:', err);
+              Swal.fire({ icon: 'error', title: 'Server Error', text: 'Try again later. ' + (err.message || '') });
             }
           }
 
+          // --- Delete variant (unchanged but safe DOM removal) ---
           function deleteVariant(id) {
             Swal.fire({
               title: "Are you sure?",
@@ -280,23 +421,33 @@
               confirmButtonColor: "#d33",
               cancelButtonColor: "#6c757d",
               confirmButtonText: "Yes, delete it!"
-            }).then((result) => {
+            }).then(result => {
               if (result.isConfirmed) {
                 fetch(`/admin/products/variants/delete/${id}`, { method: 'DELETE' })
                   .then(res => res.json())
                   .then(response => {
                     if (response.success) {
-                      Swal.fire({ icon: "success", title: "Variant Deleted", text: "Variant deleted successfully.", timer: 2000, showConfirmButton: false });
-                      document.querySelector(`a[onclick="deleteVariant('${id}')"]`).closest("tr").remove();
+                      Swal.fire({ 
+                        icon: "success", 
+                        title: "Variant Deleted", 
+                        text: "Variant deleted successfully.", 
+                        timer: 2000, 
+                        showConfirmButton: false 
+                      }).then(()=>location.reload());
+                      
                     } else {
-                      Swal.fire("Error", response.message, "error");
+                      Swal.fire("Error", response.message || 'Delete failed', "error");
                     }
                   })
-                  .catch(() => Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." }));
+                  .catch(err => {
+                    console.error('deleteVariant error', err);
+                    Swal.fire({ icon: "error", title: "Server Error", text: "Try again later." });
+                  });
               }
             });
           }
         </script>
+
 </body>
 
 </html>

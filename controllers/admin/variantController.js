@@ -42,7 +42,7 @@ const upload = multer({
 // =============== Add Variant ===============//
 const addVariants = async (req, res) => {
   try {
-    // Controller – addVariants
+    console.log("Started");
     const { id } = req.params; // product ID
     let { color, description, price, sku, ...specifications } = req.body;
 
@@ -56,6 +56,7 @@ const addVariants = async (req, res) => {
 
     // Check duplicate SKU
     const existSku = await variantSchema.findOne({ sku });
+
     if (existSku) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -92,15 +93,26 @@ const addVariants = async (req, res) => {
 const editVariants = async (req, res) => {
   try {
     const { id } = req.params; // variant ID
-    const variantData = req.body;
-    // Find and update variant by ID
+
+
+    // Destructure main fields and collect the rest as specifications
+    let { color, description, price, sku, ...specifications } = req.body;
+
+    const variantData = {
+      color,
+      description,
+      price,
+      sku,
+      specifications, // nested automatically
+    };
+
     const variant = await variantSchema.findByIdAndUpdate(id, variantData, {
       new: true,
     });
 
     if (!variant) {
       return res
-        .status(HTTP_STATUS.NOT_FOUND)
+        .status(404)
         .json({ success: false, message: "Variant not found" });
     }
 
@@ -263,6 +275,8 @@ const checkSKU = async (req, res) => {
     if (existsSKU && existsSKU._id.toString() !== variantId) {
       return res.json({ exists: true });
     }
+
+    return res.json({ exists: false });
 
   } catch (error) {
     console.log("Check SKU Error", error);
