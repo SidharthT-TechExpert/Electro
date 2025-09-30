@@ -238,7 +238,7 @@
             console.log('openVariantPopup called with:', variantData);
 
             // ✅ Injected array from server-side EJS (avoid JSON.parse/string quotes)
-            const variantFields = <% - JSON.stringify(variantFields) %>;
+            const variantFields = <%- JSON.stringify(variantFields) %>;
             console.log('variantFields (client):', variantFields, 'isArray:', Array.isArray(variantFields));
             if (!Array.isArray(variantFields)) {
               console.error('variantFields is not an array. Fix server-side injection.');
@@ -498,7 +498,7 @@
 
                     // Initialize cropper
                     cropper = new Cropper(img, {
-                      aspectRatio: NaN,  // Free ratio
+                      aspectRatio: 3,  // Free ratio
                       viewMode: 2,       // Restrict crop box inside image
                       autoCropArea: 1,
                       movable: true,
