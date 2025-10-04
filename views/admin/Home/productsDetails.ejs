@@ -432,7 +432,7 @@
                         icon: "success",
                         title: "Variant Deleted",
                         text: "Variant deleted successfully.",
-                        timer: 2000,
+                        timer: 1500,
                         showConfirmButton: false
                       }).then(() => location.reload());
 
@@ -500,13 +500,26 @@
 
                     // Initialize cropper
                     cropper = new Cropper(img, {
-                      aspectRatio: 1,  // Free ratio
+                      aspectRatio: NaN,  // Free ratio
                       viewMode: 2,       // Restrict crop box inside image
                       autoCropArea: 1,
                       movable: true,
                       zoomable: true,
                       rotatable: true,
-                      scalable: true
+                      scalable: true,
+                      responsive: true,
+                      dragMode: 'move',          // 👈 Image moves, cropbox resizable
+                      ready() {
+                        // Set initial crop box equal to full image size
+                        const containerData = cropper.getContainerData();
+                        const imageData = cropper.getImageData();
+                        cropper.setCropBoxData({
+                          left: 0,
+                          top: 0,
+                          width: imageData.width,
+                          height: imageData.height
+                        });
+                      }
                     });
                   };
                   reader.readAsDataURL(file);
