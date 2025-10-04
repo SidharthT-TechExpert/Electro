@@ -139,8 +139,8 @@
                                       <% variant.product_image.forEach(img=> { %>
                                         <div class="image-item">
                                           <img src="<%= img %>" style="width:50px;height:50px;" class="me-1">
-                                          <button class="remove-existing-image" data-image="<%= img %>"
-                                            data-variant-id="<%= variant._id %>">
+                                          <button class="remove-existing-image" data-variant-id="<%= variant._id %>"
+                                            data-image="<%= img %>">
                                             <i class="fa fa-times"></i>
                                           </button>
                                         </div>
@@ -188,6 +188,7 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
         <script>
+
           // --- Helpers ---
           const escapeHtml = (s) => String(s == null ? '' : s)
             .replace(/&/g, '&amp;')
@@ -447,6 +448,7 @@
             });
           }
 
+
           let cropper = null;
           let currentVariantId = null;
 
@@ -465,7 +467,6 @@
             addImg(variantId);
           });
 
-
           function addImg(variantId) {
             currentVariantId = variantId;
 
@@ -479,6 +480,7 @@
     `,
               showCancelButton: true,
               confirmButtonText: 'Upload',
+
               didOpen: () => {
                 const fileInput = document.getElementById('swalImageFile');
 
@@ -498,7 +500,7 @@
 
                     // Initialize cropper
                     cropper = new Cropper(img, {
-                      aspectRatio: 3,  // Free ratio
+                      aspectRatio: 1,  // Free ratio
                       viewMode: 2,       // Restrict crop box inside image
                       autoCropArea: 1,
                       movable: true,
@@ -510,6 +512,7 @@
                   reader.readAsDataURL(file);
                 });
               },
+
               preConfirm: () => {
                 if (!cropper) {
                   Swal.showValidationMessage('Please select and crop an image!');
@@ -547,9 +550,61 @@
                 }).then(() => location.reload());
               }
             }).catch(err => {
-              Swal.fire({ icon: 'error', title: 'Upload Failed', text: err });
+              Swal.fire({
+                icon: 'error', title: 'Upload Failed',
+                text: err
+              });
             });
           }
+
+          // ✅ Handle image delete buttons dynamically
+          document.querySelector('.variants-table').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.remove-existing-image');
+            if (!btn) return;
+
+            const variantId = btn.closest('.variant-image-container').dataset.variantId;
+            const imageUrl = btn.dataset.image;
+
+            if (!variantId || !imageUrl) return;
+
+            // Confirmation alert
+            const confirmRes = await Swal.fire({
+              title: 'Are you sure?',
+              text: 'This image will be deleted permanently.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, delete it!',
+              cancelButtonText: 'Cancel'
+            });
+
+            if (confirmRes.isConfirmed) {
+              try {
+                const res = await fetch(`/admin/products/variants/${variantId}/images`, {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ imageUrl })
+                });
+
+                const json = await res.json();
+
+                if (json.success) {
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Image Deleted',
+                    text: 'The image has been deleted successfully.',
+                    showConfirmButton: false,
+                    timer: 1500
+                  }).then(() => location.reload());
+                } else {
+                  Swal.fire('Error', json.message || 'Delete failed', 'error');
+                }
+              } catch (err) {
+                Swal.fire('Server Error', err.message || 'Try again later.', 'error');
+              }
+            }
+          });
+
+
 
         </script>
 
