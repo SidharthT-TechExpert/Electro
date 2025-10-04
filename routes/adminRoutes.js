@@ -61,8 +61,13 @@ routes.patch("/brands/:id", upload.single("logo"), brandController.updateBrand);
 routes
   .route("/products")
   .get(productController.getProductsPage)
-  .post(productController.addProduct);
-routes.route("/products/Details/:id").get(productController.loadProductDetails);
+  .post(productController.addProduct)
+  .patch(productController.toggleStatus)
+  .delete(productController.deleteProduct);
+
+routes
+      .route("/products/Details/:id")
+      .get(productController.loadProductDetails);
 
 // Variant Management
 routes.post("/products/:id/variants", variantController.addVariants);
@@ -70,6 +75,7 @@ routes.put("/products/variants/edit/:id", variantController.editVariants);
 routes.delete("/products/variants/delete/:id", variantController.deleteVariants);
 routes.get("/products/variants/delete/:id", variantController.deleteVariants);
 routes.post('/products/variants/check-sku' , variantController.checkSKU)
+
 
 // Variant Image Management
 routes.post("/products/variants/:variantId/images", variantController.uploadVariantImage);

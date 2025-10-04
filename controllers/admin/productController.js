@@ -4,7 +4,6 @@ const categorieSchema = require("../../models/categorySchema");
 const brandSchema = require("../../models/brandSchema");
 const HTTP_STATUS = require("../../config/statusCodes");
 
-
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -35,7 +34,7 @@ const getProductsPage = async (req, res) => {
       .populate("brand", "name logo")
       .populate("category", "name")
       .sort({ createAt: -1 })
-      .limit(limit) 
+      .limit(limit)
       .skip((page - 1) * limit)
       .exec();
 
@@ -45,7 +44,7 @@ const getProductsPage = async (req, res) => {
     const brands = await brandSchema.find({});
 
     res.render("Home/products", {
-      productData:products,
+      productData: products,
       categories,
       brands,
       totalPages: Math.ceil(count / limit),
@@ -101,14 +100,15 @@ const addProduct = async (req, res) => {
   }
 };
 
-const categoryFieldsMap = require('../../helpers/variant');
+const categoryFieldsMap = require("../../helpers/variant");
 
 const loadProductDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
     // 1️⃣ Fetch product with brand & category populated
-    const product = await productSchema.findById(id)
+    const product = await productSchema
+      .findById(id)
       .populate("brand", "name logo")
       .populate("category", "name")
       .exec();
@@ -126,15 +126,60 @@ const loadProductDetails = async (req, res) => {
     // 5️⃣ Render view
     res.render("Home/productsDetails", {
       product,
-      variants,      // all variants for this product
-      variantField,  // dynamic fields (e.g. ram, size, etc.)
-      activePage: "products"  // Set active page for sidebar
+      variants, // all variants for this product
+      variantField, // dynamic fields (e.g. ram, size, etc.)
+      activePage: "products", // Set active page for sidebar
     });
   } catch (error) {
     console.error("Products Details Page Error:", error);
-    res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send("Server Error");
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+};
+
+const toggleStatus = async (req, res) => {
+  try {
+    const { id, isBlocked } = req.body;
+    const update = await productSchema.findByIdAndUpdate(
+      id,
+      { $set: { isBlocked } },
+      { new: true }
+    );
+
+    if (!update) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Product status updated successfully",
+      isBlocked: update.isBlocked,
+    });
+  } catch (error) {
+    console.error("Toggle Status Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const product = await productSchema.findByIdAndDelete(id);
+
+    if (!product) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Product Deleted successfully",
+    });
+  } catch (error) {
+    console.error("Product Delete Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
 
@@ -142,4 +187,6 @@ module.exports = {
   getProductsPage,
   addProduct,
   loadProductDetails,
+  toggleStatus,
+  deleteProduct,
 };
