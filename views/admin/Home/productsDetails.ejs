@@ -10,6 +10,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin/DashBoard/category.css">
   <link rel="stylesheet" href="/css/admin/DashBoard/ProductDetails.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     .swal-wide {
       width: 60% !important;
@@ -44,21 +45,40 @@
             <a href="/admin/products" class="btn btn-outline-primary"><i class="fa fa-arrow-left"></i> Back to
               Products</a>
             <div class="btn-group">
-              <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+              <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                aria-expanded="false">
                 <i class="fa fa-ellipsis-v"></i> Actions
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="/admin/products/edit/<%= product._id %>"><i
-                      class="fa fa-edit text-primary"></i> Edit</a></li>
-                <li><a class="dropdown-item text-warning" href="/admin/products/block/<%= product._id %>"><i
-                      class="fa fa-ban"></i> Block</a></li>
+                <li>
+                  <a class="dropdown-item" href="/admin/products/edit/<%= product._id %>">
+                    <i class="fa fa-edit text-primary"></i> Edit
+                  </a>
+                </li>
+                <li>
+                  <% if (product.isBlocked) { %>
+                    <a class="dropdown-item text-success"
+                      onclick="isListed('<%= product._id %>','<%= product.isBlocked %>')">
+                      <i class="fa fa-eye"></i> List
+                    </a>
+                    <% } else { %>
+                      <a class="dropdown-item text-warning"
+                        onclick="isListed('<%= product._id %>','<%= product.isBlocked %>')">
+                        <i class="fa fa-eye-slash"></i> Unlist
+                      </a>
+                      <% } %>
+                </li>
                 <li>
                   <hr class="dropdown-divider">
                 </li>
-                <li><a class="dropdown-item text-danger" href="/admin/products/delete/<%= product._id %>"><i
-                      class="fa fa-trash"></i> Delete</a></li>
+                <li>
+                  <a class="dropdown-item text-danger" onclick="deleteProduct('<%= product._id %>')">
+                    <i class="fa fa-trash"></i> Delete
+                  </a>
+                </li>
               </ul>
             </div>
+
           </div>
 
           <!-- Product Banner -->
@@ -75,9 +95,13 @@
               </p>
             </div>
             <div>
-              <span class="badge-status badge-<%= product?.status %>">
-                <%= product?.status %>
-              </span>
+              <% if ((product.status).toLowerCase()==="in stock"  && !product.isBlocked) { %>
+                <span class="badge bg-success">In Stock</span>
+                <% } else if ((product.status).toLowerCase()==="out of stock" && !product.isBlocked ) { %>
+                  <span class="badge bg-warning text-dark">Out of Stock</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Not Listed</span>
+                    <% } %>
             </div>
           </div>
 
@@ -617,10 +641,97 @@
             }
           });
 
+          function isListed(id, isBlocked) {
+            isBlocked = isBlocked === 'true';
+
+            Swal.fire({
+              title: 'Are you sure?',
+              text: !!isBlocked ? 'This will list the product. It will be visible to users.' : 'This will unlist the product. It will not be visible to users.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: !!isBlocked ? 'Yes, list it!' : 'Yes, unlist it!',
+              cancelButtonText: 'Cancel'
+            }).then(result => {
+              if (result.isConfirmed) {
+                fetch(`/admin/products`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id, isBlocked: !isBlocked })
+                })
+                  .then(res => res.json())
+                  .then(response => {
+                    if (response.success) {
+                      Swal.fire({
+                        icon: 'success',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                      }).then(() => location.reload());
+                    } else {
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'List failed'
+                      });
+                    }
+                  })
+                  .catch(err => {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Server Error',
+                      text: 'Try again later.'
+                    });
+                  })
+              };
+            });
+          }
+
+          function deleteProduct(id) {
+            Swal.fire({
+              title: 'Are you sure?',
+              text: 'This will permanently delete the product.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, delete it!'
+            }).then(result => {
+              if (result.isConfirmed) {
+                fetch(`/admin/products`, {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id })
+                })
+                  .then(res => res.json())
+                  .then(response => {
+                    if (response.success) {
+                      Swal.fire({
+                        icon: 'success',
+                        title: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                      }).then(() => {
+                        location.href = '/admin/products'
+                      });
+                    } else {
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                      });
+                    }
+                  })
+                  .catch(err => {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Server Error',
+                      text: 'Try again later.'
+                    });
+                  })
+              }
+            });
+          }
 
 
         </script>
-
 </body>
 
 </html>
