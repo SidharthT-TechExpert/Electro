@@ -42,8 +42,9 @@ const upload = multer({
 // =============== Add Variant ===============//
 const addVariants = async (req, res) => {
   try {
+    console.log("Started");
     const { id } = req.params; // product ID
-    const variantData = req.body;
+    let { color, description, price, sku, ...specifications } = req.body;
 
     // Find product
     const product = await productSchema.findById(id);
@@ -54,7 +55,8 @@ const addVariants = async (req, res) => {
     }
 
     // Check duplicate SKU
-    const existSku = await variantSchema.findOne({ sku: variantData.sku });
+    const existSku = await variantSchema.findOne({ sku });
+
     if (existSku) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -64,8 +66,12 @@ const addVariants = async (req, res) => {
 
     // Create new variant
     const newVariant = new variantSchema({
-      product_id: product._id,
-      ...variantData, // includes specifications if sent from frontend
+      product_id: id,
+      color,
+      description,
+      price,
+      sku,
+      specifications,
     });
 
     await newVariant.save();
@@ -87,16 +93,25 @@ const addVariants = async (req, res) => {
 const editVariants = async (req, res) => {
   try {
     const { id } = req.params; // variant ID
-    const variantData = req.body;
 
-    // Find and update variant by ID
+    // Destructure main fields and collect the rest as specifications
+    let { color, description, price, sku, ...specifications } = req.body;
+
+    const variantData = {
+      color,
+      description,
+      price,
+      sku,
+      specifications, // nested automatically
+    };
+
     const variant = await variantSchema.findByIdAndUpdate(id, variantData, {
       new: true,
     });
 
     if (!variant) {
       return res
-        .status(HTTP_STATUS.NOT_FOUND)
+        .status(404)
         .json({ success: false, message: "Variant not found" });
     }
 
@@ -128,24 +143,6 @@ const deleteVariants = async (req, res) => {
     // Delete associated image files
     if (variant.product_image && variant.product_image.length > 0) {
       for (const imageUrl of variant.product_image) {
-        try {
-          const filename = path.basename(imageUrl);
-          const filePath = path.join(
-            __dirname,
-            "../../public/uploads/variants",
-            filename
-          );
-
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            console.log(`Deleted image file: ${filename}`);
-          }
-        } catch (fileErr) {
-          console.error(
-            `Error deleting image file ${imageUrl}:`,
-            fileErr
-          );
-        }
       }
     }
 
@@ -229,7 +226,6 @@ const deleteVariantImage = async (req, res) => {
     const { variantId } = req.params;
     const { imageUrl } = req.body;
 
-    // Check variant exists
     const variant = await variantSchema.findById(variantId);
     if (!variant) {
       return res
@@ -237,35 +233,51 @@ const deleteVariantImage = async (req, res) => {
         .json({ success: false, message: "Variant not found" });
     }
 
-    // Remove image from DB array
-    if (variant.product_image && variant.product_image.length > 0) {
+    // Remove from DB array
+    if (variant.product_image?.length) {
       variant.product_image = variant.product_image.filter(
         (img) => img !== imageUrl
       );
       await variant.save();
     }
 
-    // Delete file from filesystem
+    // Get absolute path safely
     const filename = path.basename(imageUrl);
-    const filePath = path.join(
-      __dirname,
-      "../../public/uploads/variants",
+    const filePath = path.resolve(
+      process.cwd(),
+      "public/uploads/variants",
       filename
     );
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+      console.log("File deleted successfully");
+    } else {
+      console.warn("File not found at path:", filePath);
     }
 
-    res.json({
-      success: true,
-      message: "Image deleted successfully",
-    });
+    res.json({ success: true, message: "Image deleted successfully" });
   } catch (err) {
     console.error("Error deleting variant image:", err);
     res
       .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Server error" });
+  }
+};
+
+const checkSKU = async (req, res) => {
+  try {
+    const { sku, variantId } = req.body;
+    const existsSKU = await variantSchema.findOne({ sku });
+
+    if (existsSKU && existsSKU._id.toString() !== variantId) {
+      return res.json({ exists: true });
+    }
+
+    return res.json({ exists: false });
+  } catch (error) {
+    console.log("Check SKU Error", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -275,4 +287,5 @@ module.exports = {
   deleteVariants,
   uploadVariantImage,
   deleteVariantImage,
+  checkSKU,
 };
