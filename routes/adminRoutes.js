@@ -6,7 +6,7 @@ const categorieController = require("../controllers/admin/categorieController.js
 const brandController = require("../controllers/admin/brandController.js");
 const productController = require("../controllers/admin/productController.js");
 const variantController = require('../controllers/admin/variantController.js')
-
+const offerController = require("../controllers/admin/offerController.js");
 const session = require("../middlewares/session");
 
 const passport = require("passport");
@@ -65,6 +65,8 @@ routes
   .patch(productController.toggleStatus)
   .delete(productController.deleteProduct);
 
+routes.patch('/products/:id' , productController.editProduct)
+
 routes
       .route("/products/Details/:id")
       .get(productController.loadProductDetails);
@@ -81,6 +83,14 @@ routes.post('/products/variants/check-sku' , variantController.checkSKU)
 routes.post("/products/variants/:variantId/images", variantController.uploadVariantImage);
 routes.delete("/products/variants/:variantId/images", variantController.deleteVariantImage);
 
+//Offer Management
+routes.route("/offers")
+       .get(offerController.loadOfferPage)
+        .post(offerController.addOffer)
+      //  .delete(offerController.deleteOffer)
+      //  .patch(offerController.editOffer);
+
+// Orders Management
 routes.get("/orders", categorieController.categories);
 
 // Admin Google Login

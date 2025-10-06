@@ -123,9 +123,13 @@ const loadProductDetails = async (req, res) => {
     // 4️⃣ Get allowed variant fields based on category
     const variantField = categoryFieldsMap[product.category.name] || [];
 
+    const brands = await brandSchema.find({});
+    const categories = await categorieSchema.find({});
     // 5️⃣ Render view
     res.render("Home/productsDetails", {
       product,
+      brands,
+      categories,
       variants, // all variants for this product
       variantField, // dynamic fields (e.g. ram, size, etc.)
       activePage: "products", // Set active page for sidebar
@@ -183,10 +187,45 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const editProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, brand, category, status } = req.body;
+
+    const update = await productSchema.findByIdAndUpdate(
+      id,
+      {
+        $set: { name, brand, category, status }
+      },
+      { new: true }
+    );
+
+    if (!update) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Product edited successfully",
+      product: update, // send updated product
+    });
+  } catch (error) {
+    console.error("Edit Product Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProductsPage,
   addProduct,
   loadProductDetails,
   toggleStatus,
   deleteProduct,
+  editProduct,
 };

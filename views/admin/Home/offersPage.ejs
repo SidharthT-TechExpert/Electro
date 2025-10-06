@@ -1,0 +1,301 @@
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<link rel="stylesheet" href="/css/admin/DashBoard/header.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/category.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/ProductDetails.css">
+
+<%- include("../../partials/admin/sidebar") %>
+  <%- include("../../partials/admin/header") %>
+    <%- include("../../partials/user/messages") %>
+
+      <div class="main-content">
+
+        <!-- Page Header -->
+        <div class="content-header">
+          <h2>Offers</h2>
+          <div class="page-header mb-3">
+            <a onclick="addOfferModal()" class="btn btn-primary"><i class="fa fa-plus"></i> Add Offer</a>
+          </div>
+        </div>
+
+        <!-- Offers Table -->
+        <div class="table-wrapper">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Offer Name</th>
+                <th>Offer Code</th>
+                <th>Discount Type</th>
+                <th>Value</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% offerData.forEach((offer, i)=> { %>
+                <tr>
+                  <td>
+                    <%= i + 1 %>
+                  </td>
+                  <td class="offer-name">
+                    <%= offer.name %>
+                  </td>
+                  <td class="offer-name">
+                    <%= offer.code %>
+                  </td>
+                  <td class="offer-type">
+                    <%= offer.discountType %>
+                  </td>
+                  <td class="offer-value">
+                    <%= offer.discountValue %>
+                  </td>
+                  <td class="offer-start">
+                    <%= new Date(offer.startDate).toLocaleDateString() %>
+                  </td>
+                  <td class="offer-end">
+                    <%= new Date(offer.endDate).toLocaleDateString() %>
+                  </td>
+                  <td class="status-badge-<%= offer._id %>">
+                    <% if ((offer.status || "" ).toLowerCase()==="active" ) { %>
+                      <span class="badge bg-success">Active</span>
+                      <% } else if ((offer.status || "" ).toLowerCase()==="expired" ) { %>
+                        <span class="badge bg-danger">Expired</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary">Upcoming</span>
+                          <% } %>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-warning me-1" onclick="editOffer('<%= offer._id %>')">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteOffer('<%= offer._id %>')">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <%- include("../../partials/admin/pageNavigation") %>
+      </div>
+
+      <script>
+        /* Add Offer Modal */
+        function addOfferModal() {
+          Swal.fire({
+            title: "➕ Add New Offer",
+            html: `
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Offer Name</label>
+          <input type="text" id="swal-input-name" class="form-control" placeholder="Enter offer name">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Offer Code</label>
+          <input type="text" id="swal-input-code" class="form-control" placeholder="Enter offer code">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Discount Type</label>
+          <select id="swal-input-type" class="form-control">
+            <option value="Percentage">Percentage</option>
+            <option value="Fixed">Fixed</option>
+          </select>
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Discount Value</label>
+          <input type="number" id="swal-input-value" class="form-control" placeholder="Enter discount value">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Start Date</label>
+          <input type="date" id="swal-input-start" class="form-control">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">End Date</label>
+          <input type="date" id="swal-input-end" class="form-control">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Status</label>
+          <select id="swal-input-status" class="form-control">
+            <option value="true">Active</option>
+            <option value="false">Expired</option>
+            <option value="true">Upcoming</option>
+          </select>
+        </div>
+      `,
+            showCancelButton: true,
+            confirmButtonText: "Add Offer",
+            preConfirm: () => {
+              const name = document.getElementById("swal-input-name").value.trim();
+              const code = document.getElementById("swal-input-code").value.trim();
+              const discountType = document.getElementById("swal-input-type").value;
+              const discountValue = document.getElementById("swal-input-value").value;
+              const startDate = document.getElementById("swal-input-start").value;
+              const endDate = document.getElementById("swal-input-end").value;
+              const status = document.getElementById("swal-input-status").value;
+
+              if (!name || !code || !discountType || !discountValue || !startDate || !endDate) {
+                Swal.showValidationMessage("⚠️ All fields are required!");
+                return false;
+              }
+              const isActive = status === "true";
+
+              return { name, discountType, discountValue, startDate, endDate, isActive, code };
+            }
+          }).then((result) => {
+            try {
+              console.log(result.value);
+              if (result.isConfirmed) {
+                $.ajax({
+                  type: "POST",
+                  url: "/admin/offers",
+                  contentType: "application/json",     // ✅ tell backend it's JSON
+                  data: JSON.stringify(result.value),  // ✅ convert to JSON string
+                  success: function (response) {
+                    if (response.success) {
+                      Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: "Offer added successfully!",
+                        timer: 2000,
+                        showConfirmButton: false
+                      });
+                      location.reload();
+                    } else {
+                      Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response.message || "An error occurred. Please try again."
+                      });
+                    }
+                  }
+                });
+              }
+
+            } catch (error) {
+              console.error("Error parsing JSON:", error);
+              Swal.showValidationMessage("⚠️ An error occurred. Please try again.");
+              return;
+            }
+          });
+        }
+
+        /* Edit Offer Modal */
+        function editOffer(id) {
+          const row = event.target.closest("tr");
+          const currentName = row.querySelector(".offer-name").innerText;
+          const currentType = row.querySelector(".offer-type").innerText;
+          const currentValue = row.querySelector(".offer-value").innerText;
+          const currentStart = row.querySelector(".offer-start").innerText;
+          const currentEnd = row.querySelector(".offer-end").innerText;
+          const currentStatus = row.querySelector(`.status-badge-${id}`).innerText.trim();
+
+          Swal.fire({
+            title: `<h2><i class="fas fa-edit"></i> Edit Offer</h2>`,
+            html: `
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Offer Name</label>
+          <input type="text" id="swal-edit-name" class="form-control" value="${currentName}">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Discount Type</label>
+          <select id="swal-edit-type" class="form-control">
+            <option value="Percentage" ${currentType === "Percentage" ? "selected" : ""}>Percentage</option>
+            <option value="Flat" ${currentType === "Flat" ? "selected" : ""}>Flat</option>
+          </select>
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Discount Value</label>
+          <input type="number" id="swal-edit-value" class="form-control" value="${currentValue}">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Start Date</label>
+          <input type="date" id="swal-edit-start" class="form-control">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">End Date</label>
+          <input type="date" id="swal-edit-end" class="form-control">
+        </div>
+        <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Status</label>
+          <select id="swal-edit-status" class="form-control">
+            <option value="Active" ${currentStatus === "Active" ? "selected" : ""}>Active</option>
+            <option value="Expired" ${currentStatus === "Expired" ? "selected" : ""}>Expired</option>
+            <option value="Upcoming" ${currentStatus === "Upcoming" ? "selected" : ""}>Upcoming</option>
+          </select>
+        </div>
+      `,
+            showCancelButton: true,
+            confirmButtonText: "Update Offer",
+            preConfirm: () => {
+              const name = document.getElementById("swal-edit-name").value.trim();
+              const discountType = document.getElementById("swal-edit-type").value;
+              const discountValue = document.getElementById("swal-edit-value").value;
+              const startDate = document.getElementById("swal-edit-start").value;
+              const endDate = document.getElementById("swal-edit-end").value;
+              const status = document.getElementById("swal-edit-status").value;
+
+              if (!name || !discountValue) {
+                Swal.showValidationMessage("⚠️ All fields are required!");
+                return false;
+              }
+              return { name, discountType, discountValue, startDate, endDate, status };
+            }
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                type: "PATCH",
+                url: `/admin/offers/${id}`,
+                data: result.value,
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({
+                      toast: true,
+                      position: "top-end",
+                      icon: "success",
+                      title: "Offer updated successfully!",
+                      timer: 2000,
+                      showConfirmButton: false
+                    });
+                    location.reload();
+                  }
+                }
+              });
+            }
+          });
+        }
+
+        /* Delete Offer Modal */
+        function deleteOffer(id) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This will permanently delete the offer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete it!"
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                type: "DELETE",
+                url: `/admin/offers`,
+                data: { id },
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({ icon: "success", title: response.message, timer: 1500, showConfirmButton: false });
+                    event.target.closest("tr").remove();
+                  }
+                }
+              });
+            }
+          });
+        }
+      </script>

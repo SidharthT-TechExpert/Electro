@@ -11,13 +11,7 @@ const productSchema = new Schema(
 
     // Base product-level pricing/stock
     price: { type: Number, required: true },
-    salePrice: { type: Number },
-    productOffer: { type: Number, default: 0 },
-
-    stock: { type: Number, default: 0 },
-    quantity: { type: Number, default: 0 },
-
-    color: { type: String }, // legacy field
+    
     Images: { type: [String] },
 
     isBlocked: { type: Boolean, default: false },
@@ -26,6 +20,7 @@ const productSchema = new Schema(
       enum: ["In Stock", "Out of Stock", "Not Listed"],
       default: "In Stock",
     },
+
   },
   { timestamps: true }
 );
