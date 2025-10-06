@@ -1,25 +1,32 @@
 const offerSchema = require("../../models/OfferSchema");
+const productSchema = require("../../models/productSchema");
+const categorieSchema = require("../../models/categorySchema");
 
 const HTTP_STATUS = require("../../config/statusCodes");
 
+// Load Offer Page
 const loadOfferPage = async (req, res) => {
   try {
-    const limit = 8;
+    const limit = 4;
     const page = parseInt(req.query.page) || 1;
     const isActive = req.query.status || true;
 
     // Fetch active offers
     const offerData = await offerSchema
       .find({ isActive })
-      .sort({ createAt: -1 })
+      .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .exec();
 
     const count = await offerSchema.countDocuments(isActive);
+    const products = await productSchema.find({ status: "In Stock" });
+    const categories = await categorieSchema.find({ status: "listed" });
 
     res.render("Home/offersPage", {
       offerData,
+      products,
+      categories,
       title: "Offers Management",
       totalPages: Math.ceil(count / limit),
       currentPage: page,
@@ -46,7 +53,8 @@ const addOffer = async (req, res) => {
       isActive,
     } = req.body;
 
-   console.log(req.body);
+    console.log(req.body);
+
     // Basic validation
     if (
       !name ||
@@ -58,10 +66,48 @@ const addOffer = async (req, res) => {
       !startDate ||
       !endDate
     ) {
-      return res
-        .json({ message: "Missing required fields" });
+      return res.json({ success: false, message: "Missing required fields" });
     }
- 
+
+    // Check for existing offer code
+    const existingOffer = await offerSchema.findOne({ code: code });
+    if (existingOffer) {
+      return res.json({ success: false, message: "Offer code already exists" });
+    }
+    // Validate discount value
+    if (
+      discountType === "Percentage" &&
+      (discountValue < 1 || discountValue > 100)
+    ) {
+      return res.json({
+        success: false,
+        message: "Percentage discount must be between 1 and 100",
+      });
+    }
+
+    // Validate discount value
+    if (discountType === "Fixed" && discountValue <= 0) {
+      return res.json({
+        success: false,
+        message: "Fixed discount must be greater than 0",
+      });
+    }
+
+    // Validate date range
+    if (new Date(startDate) >= new Date(endDate)) {
+      return res.json({
+        success: false,
+        message: "End date must be after start date",
+      });
+    }
+
+    // Validate targetIds
+    if (!Array.isArray(targetIds) || targetIds.length === 0) {
+      return res.json({
+        success: false,
+        message: "At least one target must be selected",
+      });
+    }
 
     // Create new offer
     const newOffer = new offerSchema({
@@ -76,12 +122,117 @@ const addOffer = async (req, res) => {
       isActive,
     });
 
+    console.log(newOffer);
+
     await newOffer.save();
 
-    res
-      .json({ message: "Offer created successfully", offer: newOffer });
+    res.json({
+      success: true,
+      message: "Offer created successfully",
+      offer: newOffer,
+    });
   } catch (error) {
     console.error("Add Offer Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: "Server Error" });
+  }
+};
+
+const checkOfferCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.json({ isUnique: false });
+    }
+
+    newCode = code.trim().toUpperCase();
+    const existingOffer = await offerSchema.findOne({ code: code.trim() });
+    console.log(existingOffer, code.trim().toUpperCase());
+
+    if (existingOffer) {
+      return res.json({ isUnique: true });
+    } else {
+      return res.json({ isUnique: false });
+    }
+  } catch (error) {
+    console.error("Check Offer Code Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: "Server Error" });
+  }
+};
+
+const checkDate = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+    if (!startDate || !endDate) {
+      return res.json({
+        valid: false,
+        message: "Start and end dates are required",
+      });
+    }
+
+    if (new Date(startDate) >= new Date(endDate)) {
+      return res.json({
+        valid: false,
+        message: "End date must be after start date",
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Remove time from today's date
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0); // Remove time from startDate
+
+    if (start < today) {
+      return res.json({
+        valid: false,
+        message: "Start date must be today or in the future",
+      });
+    }
+
+    return res.json({ valid: true });
+  } catch (error) {
+    console.error("Check Date Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: "Server Error" });
+  }
+};
+
+const checkDiscount = async (req, res) => {
+  try {
+    const { discountType, discountValue } = req.body;
+
+    if (!discountType || !discountValue) {
+      return res.json({
+        valid: false,
+        message: "Discount type and value are required",
+      });
+    }
+    if (
+      discountType === "Percentage" &&
+      (discountValue < 1 || discountValue > 100)
+    ) {
+      return res.json({
+        valid: false,
+        message: "Percentage discount must be between 1 and 100",
+      });
+    }
+
+    if (discountType === "Fixed" && discountValue <= 0) {
+      return res.json({
+        valid: false,
+        message: "Fixed discount must be greater than 0",
+      });
+    }
+
+    return res.json({ valid: true });
+  } catch (error) {
+    console.error("Check Discount Error:", error);
     res
       .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
       .json({ message: "Server Error" });
@@ -91,4 +242,7 @@ const addOffer = async (req, res) => {
 module.exports = {
   loadOfferPage,
   addOffer,
+  checkOfferCode,
+  checkDate,
+  checkDiscount,
 };

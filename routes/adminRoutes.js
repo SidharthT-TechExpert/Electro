@@ -90,6 +90,12 @@ routes.route("/offers")
       //  .delete(offerController.deleteOffer)
       //  .patch(offerController.editOffer);
 
+routes.post("/offers/check-code", offerController.checkOfferCode);
+routes.post("/offers/check-Date", offerController.checkDate);
+routes.post("/offers/check-discount", offerController.checkDiscount);
+
+
+
 // Orders Management
 routes.get("/orders", categorieController.categories);
 

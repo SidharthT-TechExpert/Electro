@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
 <link rel="stylesheet" href="/css/admin/DashBoard/category.css">
 <link rel="stylesheet" href="/css/admin/DashBoard/ProductDetails.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/pageNavigation.css">
+
 
 <%- include("../../partials/admin/sidebar") %>
   <%- include("../../partials/admin/header") %>
@@ -22,7 +24,7 @@
         </div>
 
         <!-- Offers Table -->
-        <div class="table-wrapper">
+        <div class="table-wrapper table-responsive">
           <table class="table align-middle">
             <thead>
               <tr>
@@ -31,6 +33,8 @@
                 <th>Offer Code</th>
                 <th>Discount Type</th>
                 <th>Value</th>
+                <th>Applies To</th>
+                <th>Targets</th>
                 <th>Start Date</th>
                 <th>End Date</th>
                 <th>Status</th>
@@ -38,7 +42,19 @@
               </tr>
             </thead>
             <tbody>
-              <% offerData.forEach((offer, i)=> { %>
+              <% offerData.forEach((offer, i)=> {
+                // Get target names for this offer
+                let targetNames = [];
+                if (offer.appliesTo === "product") {
+                targetNames = products
+                .filter(p => offer.targetIds.includes(p._id.toString()))
+                .map(p => p.name);
+                } else if (offer.appliesTo === "category") {
+                targetNames = categories
+                .filter(c => offer.targetIds.includes(c._id.toString()))
+                .map(c => c.name);
+                }
+                %>
                 <tr>
                   <td>
                     <%= i + 1 %>
@@ -46,7 +62,7 @@
                   <td class="offer-name">
                     <%= offer.name %>
                   </td>
-                  <td class="offer-name">
+                  <td class="offer-code">
                     <%= offer.code %>
                   </td>
                   <td class="offer-type">
@@ -55,21 +71,34 @@
                   <td class="offer-value">
                     <%= offer.discountValue %>
                   </td>
-                  <td class="offer-start">
+                  <td class="offer-appliesto">
+                    <%= offer.appliesTo %>
+                  </td>
+                  <td class="offer-targets">
+                    <%- targetNames.join("<br>") %>
+                  </td>
+                  <td class=" offer-start">
                     <%= new Date(offer.startDate).toLocaleDateString() %>
                   </td>
                   <td class="offer-end">
                     <%= new Date(offer.endDate).toLocaleDateString() %>
                   </td>
                   <td class="status-badge-<%= offer._id %>">
-                    <% if ((offer.status || "" ).toLowerCase()==="active" ) { %>
-                      <span class="badge bg-success">Active</span>
-                      <% } else if ((offer.status || "" ).toLowerCase()==="expired" ) { %>
-                        <span class="badge bg-danger">Expired</span>
-                        <% } else { %>
-                          <span class="badge bg-secondary">Upcoming</span>
-                          <% } %>
+                    <% const today=new Date(); const startDate=new Date(offer.startDate); const endDate=new
+                      Date(offer.endDate); %>
+
+                      <% if (today < startDate && offer.isActive) { %>
+                        <!-- Offer hasn't started yet -->
+                        <span class="badge bg-secondary">Upcoming</span>
+                        <% } else if (today> endDate || offer.isActive == false) { %>
+                          <!-- Offer has ended -->
+                          <span class="badge bg-danger">Expired</span>
+                          <% } else { %>
+                            <!-- Offer is currently active -->
+                            <span class="badge bg-success">Active</span>
+                            <% } %>
                   </td>
+
                   <td>
                     <button class="btn btn-sm btn-warning me-1" onclick="editOffer('<%= offer._id %>')">
                       <i class="fas fa-edit"></i>
@@ -81,18 +110,57 @@
                 </tr>
                 <% }) %>
             </tbody>
+
           </table>
         </div>
 
-        <%- include("../../partials/admin/pageNavigation") %>
+        <!-- Pagination -->
+        <div class="pagination">
+          <!-- Prev button -->
+          <% if (currentPage> 1) { %>
+            <a href="?page=<%= currentPage - 1 %>">
+              <button class="nav-btn">Prev</button>
+            </a>
+            <% } else { %>
+              <button class="nav-btn" disabled>Prev</button>
+              <% } %>
+
+                <!-- Page numbers -->
+                <% for (let i=1; i <=totalPages; i++) { %>
+                  <% if (currentPage===i) { %>
+                    <button class="page-btn active">
+                      <%= i %>
+                    </button>
+                    <% } else { %>
+                      <a href="?page=<%= i %>">
+                        <button class="page-btn">
+                          <%= i %>
+                        </button>
+                      </a>
+                      <% } %>
+                        <% } %>
+
+                          <!-- Next button -->
+                          <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %>">
+                              <button class="nav-btn">Next</button>
+                            </a>
+                            <% } else { %>
+                              <button class="nav-btn" disabled>Next</button>
+                              <% } %>
+        </div>
+
       </div>
 
       <script>
-        /* Add Offer Modal */
+        const products = <% - JSON.stringify(products) %>;
+        const categories = <% - JSON.stringify(categories) %>;
+
         function addOfferModal() {
           Swal.fire({
             title: "➕ Add New Offer",
             html: `
+      <div class="swal-scrollable p-2">
         <div class="mb-3 text-start">
           <label class="form-label fw-bold">Offer Name</label>
           <input type="text" id="swal-input-name" class="form-control" placeholder="Enter offer name">
@@ -113,6 +181,19 @@
           <input type="number" id="swal-input-value" class="form-control" placeholder="Enter discount value">
         </div>
         <div class="mb-3 text-start">
+          <label for="appliesTo">Applies To</label>
+          <select class="form-control" id="appliesTo" required>
+            <option value="product">Product</option>
+            <option value="category">Category</option>
+          </select>
+        </div>
+        <div class="mb-3 text-start">
+          <label for="targetIds">Select Targets</label>
+          <select class="form-control" id="targetIds" multiple required>
+            ${products.map(p => `<option value="${p._id}">${p.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="mb-3 text-start">
           <label class="form-label fw-bold">Start Date</label>
           <input type="date" id="swal-input-start" class="form-control">
         </div>
@@ -128,170 +209,105 @@
             <option value="true">Upcoming</option>
           </select>
         </div>
-      `,
+      </div>
+    `,
             showCancelButton: true,
             confirmButtonText: "Add Offer",
+            didOpen: () => {
+              const appliesToSelect = document.getElementById("appliesTo");
+              const targetSelect = document.getElementById("targetIds");
+              appliesToSelect.addEventListener("change", function () {
+                const items = this.value === "product" ? products : categories;
+                targetSelect.innerHTML = "";
+                items.forEach(item => {
+                  const option = document.createElement("option");
+                  option.value = item._id;
+                  option.text = item.name;
+                  targetSelect.appendChild(option);
+                });
+              });
+            },
             preConfirm: () => {
+              const targetSelect = document.getElementById("targetIds");
+              const selectedTargetIds = Array.from(targetSelect.selectedOptions).map(o => o.value);
+
               const name = document.getElementById("swal-input-name").value.trim();
               const code = document.getElementById("swal-input-code").value.trim();
               const discountType = document.getElementById("swal-input-type").value;
               const discountValue = document.getElementById("swal-input-value").value;
+              const appliesTo = document.getElementById("appliesTo").value;
               const startDate = document.getElementById("swal-input-start").value;
               const endDate = document.getElementById("swal-input-end").value;
               const status = document.getElementById("swal-input-status").value;
 
-              if (!name || !code || !discountType || !discountValue || !startDate || !endDate) {
+              if (selectedTargetIds.length === 0) {
+                Swal.showValidationMessage("⚠️ Targets is required!");
+                return false;
+              }
+
+              if (!name || !code || !discountType || !appliesTo || selectedTargetIds.length === 0 || !discountValue || !startDate || !endDate) {
                 Swal.showValidationMessage("⚠️ All fields are required!");
                 return false;
               }
-              const isActive = status === "true";
 
-              return { name, discountType, discountValue, startDate, endDate, isActive, code };
-            }
-          }).then((result) => {
-            try {
-              console.log(result.value);
-              if (result.isConfirmed) {
-                $.ajax({
-                  type: "POST",
-                  url: "/admin/offers",
-                  contentType: "application/json",     // ✅ tell backend it's JSON
-                  data: JSON.stringify(result.value),  // ✅ convert to JSON string
-                  success: function (response) {
-                    if (response.success) {
-                      Swal.fire({
-                        toast: true,
-                        position: "top-end",
-                        icon: "success",
-                        title: "Offer added successfully!",
-                        timer: 2000,
-                        showConfirmButton: false
-                      });
-                      location.reload();
-                    } else {
-                      Swal.fire({
-                        icon: "error",
-                        title: "Error",
-                        text: response.message || "An error occurred. Please try again."
-                      });
-                    }
-                  }
-                });
-              }
-
-            } catch (error) {
-              console.error("Error parsing JSON:", error);
-              Swal.showValidationMessage("⚠️ An error occurred. Please try again.");
-              return;
-            }
-          });
-        }
-
-        /* Edit Offer Modal */
-        function editOffer(id) {
-          const row = event.target.closest("tr");
-          const currentName = row.querySelector(".offer-name").innerText;
-          const currentType = row.querySelector(".offer-type").innerText;
-          const currentValue = row.querySelector(".offer-value").innerText;
-          const currentStart = row.querySelector(".offer-start").innerText;
-          const currentEnd = row.querySelector(".offer-end").innerText;
-          const currentStatus = row.querySelector(`.status-badge-${id}`).innerText.trim();
-
-          Swal.fire({
-            title: `<h2><i class="fas fa-edit"></i> Edit Offer</h2>`,
-            html: `
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold">Offer Name</label>
-          <input type="text" id="swal-edit-name" class="form-control" value="${currentName}">
-        </div>
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold">Discount Type</label>
-          <select id="swal-edit-type" class="form-control">
-            <option value="Percentage" ${currentType === "Percentage" ? "selected" : ""}>Percentage</option>
-            <option value="Flat" ${currentType === "Flat" ? "selected" : ""}>Flat</option>
-          </select>
-        </div>
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold">Discount Value</label>
-          <input type="number" id="swal-edit-value" class="form-control" value="${currentValue}">
-        </div>
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold">Start Date</label>
-          <input type="date" id="swal-edit-start" class="form-control">
-        </div>
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold">End Date</label>
-          <input type="date" id="swal-edit-end" class="form-control">
-        </div>
-        <div class="mb-3 text-start">
-          <label class="form-label fw-bold">Status</label>
-          <select id="swal-edit-status" class="form-control">
-            <option value="Active" ${currentStatus === "Active" ? "selected" : ""}>Active</option>
-            <option value="Expired" ${currentStatus === "Expired" ? "selected" : ""}>Expired</option>
-            <option value="Upcoming" ${currentStatus === "Upcoming" ? "selected" : ""}>Upcoming</option>
-          </select>
-        </div>
-      `,
-            showCancelButton: true,
-            confirmButtonText: "Update Offer",
-            preConfirm: () => {
-              const name = document.getElementById("swal-edit-name").value.trim();
-              const discountType = document.getElementById("swal-edit-type").value;
-              const discountValue = document.getElementById("swal-edit-value").value;
-              const startDate = document.getElementById("swal-edit-start").value;
-              const endDate = document.getElementById("swal-edit-end").value;
-              const status = document.getElementById("swal-edit-status").value;
-
-              if (!name || !discountValue) {
-                Swal.showValidationMessage("⚠️ All fields are required!");
-                return false;
-              }
-              return { name, discountType, discountValue, startDate, endDate, status };
-            }
-          }).then((result) => {
-            if (result.isConfirmed) {
               $.ajax({
-                type: "PATCH",
-                url: `/admin/offers/${id}`,
-                data: result.value,
+                url: '/admin/offers/check-code',
+                method: 'POST',
+                data: { code },
+                async: false,
                 success: function (response) {
-                  if (response.success) {
-                    Swal.fire({
-                      toast: true,
-                      position: "top-end",
-                      icon: "success",
-                      title: "Offer updated successfully!",
-                      timer: 2000,
-                      showConfirmButton: false
-                    });
-                    location.reload();
+                  if (response.isUnique) {
+                    Swal.showValidationMessage("⚠️ Offer code must be unique!");
+                    return false;
                   }
                 }
               });
-            }
-          });
-        }
 
-        /* Delete Offer Modal */
-        function deleteOffer(id) {
-          Swal.fire({
-            title: "Are you sure?",
-            text: "This will permanently delete the offer.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, delete it!"
-          }).then((result) => {
+              $.ajax({
+                url: '/admin/offers/check-Date',
+                method: 'POST',
+                data: { startDate, endDate },
+                async: false,
+                success: function (response) {
+                  if (!response.valid) {
+                    Swal.showValidationMessage(`⚠️ ${response.message}`);
+                    return false;
+                  }
+                }
+              });
+
+              $.ajax({
+                url: '/admin/offers/check-discount',
+                method: 'POST',
+                data: { discountType, discountValue },
+                async: false,
+                success: function (response) {
+                  if (!response.valid) {
+                    Swal.showValidationMessage(`⚠️ ${response.message}`);
+                    return false;
+                  }
+                }
+              });
+
+              return {
+                name, code, discountType, discountValue, appliesTo,
+                targetIds: selectedTargetIds, startDate, endDate,
+                isActive: status === "true"
+              };
+            }
+          }).then(result => {
             if (result.isConfirmed) {
               $.ajax({
-                type: "DELETE",
-                url: `/admin/offers`,
-                data: { id },
+                type: "POST",
+                url: "/admin/offers",
+                contentType: "application/json",
+                data: JSON.stringify(result.value),
                 success: function (response) {
                   if (response.success) {
-                    Swal.fire({ icon: "success", title: response.message, timer: 1500, showConfirmButton: false });
-                    event.target.closest("tr").remove();
+                    Swal.fire({ icon: "success", title: "Offer Added Successfully", timer: 1500, showConfirmButton: false })
+                      .then(() => location.reload());
+                  } else {
+                    Swal.fire("Error", response.message, "error");
                   }
                 }
               });
@@ -299,3 +315,59 @@
           });
         }
       </script>
+
+      <style>
+        /* Responsive table */
+        .table-wrapper {
+          overflow-x: auto;
+          width: 100%;
+        }
+
+        .table-wrapper table {
+          min-width: 1000px;
+        }
+
+        /* SweetAlert2 modal */
+        .swal2-popup {
+          width: 90% !important;
+          max-width: 700px !important;
+        }
+
+        .swal-scrollable {
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+
+        .swal2-popup .form-control {
+          width: 100% !important;
+          box-sizing: border-box;
+        }
+
+        /* Mobile-friendly stacked table rows */
+        @media (max-width: 768px) {
+          .table thead {
+            display: none;
+          }
+
+          .table tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+          }
+
+          .table tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-bottom: 1px solid #eee;
+          }
+
+          .table tbody td::before {
+            content: attr(data-label);
+            font-weight: bold;
+            flex: 1;
+          }
+        }
+      </style>

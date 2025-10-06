@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const offerSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  code: { type: String, required: false },
-  discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
+  code: { type: String, required: true, unique: true },
+  discountType: { type: String, enum: ['Percentage', 'Fixed'], required: true },
   discountValue: { type: Number, required: true },
   appliesTo: { type: String, enum: ['product', 'category'], required: true },
   targetIds: [{ type: mongoose.Schema.Types.ObjectId, refPath: 'appliesTo' }],
