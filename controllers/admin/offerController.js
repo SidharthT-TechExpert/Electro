@@ -38,7 +38,6 @@ const loadOfferPage = async (req, res) => {
 };
 
 // Add Offers
-
 const addOffer = async (req, res) => {
   try {
     const {
@@ -51,6 +50,7 @@ const addOffer = async (req, res) => {
       startDate,
       endDate,
       isActive,
+      maxAmount,
     } = req.body;
 
     console.log(req.body);
@@ -64,13 +64,17 @@ const addOffer = async (req, res) => {
       !appliesTo ||
       !isActive ||
       !startDate ||
-      !endDate
+      !endDate ||
+      !targetIds ||
+      targetIds.length === 0 ||
+      !maxAmount
     ) {
       return res.json({ success: false, message: "Missing required fields" });
     }
 
     // Check for existing offer code
-    const existingOffer = await offerSchema.findOne({ code: code });
+    const existingOffer = await offerSchema.findOne({ code: code.trim() });
+
     if (existingOffer) {
       return res.json({ success: false, message: "Offer code already exists" });
     }
@@ -101,14 +105,6 @@ const addOffer = async (req, res) => {
       });
     }
 
-    // Validate targetIds
-    if (!Array.isArray(targetIds) || targetIds.length === 0) {
-      return res.json({
-        success: false,
-        message: "At least one target must be selected",
-      });
-    }
-
     // Create new offer
     const newOffer = new offerSchema({
       name,
@@ -120,6 +116,7 @@ const addOffer = async (req, res) => {
       startDate,
       endDate,
       isActive,
+      maxAmount,
     });
 
     console.log(newOffer);
@@ -139,6 +136,42 @@ const addOffer = async (req, res) => {
   }
 };
 
+//Delete Offer
+const deleteOffer = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.json({ 
+        success: false,
+         message: "Offer ID is required" 
+        });
+    }
+
+    const deletedOffer = await offerSchema.findByIdAndDelete(id);
+
+    if (!deletedOffer) {
+      return res.json({ 
+        success: false,
+         message: "Offer not found"
+         });
+    }
+
+    res.json({ 
+      success: true,
+       message: "Offer deleted successfully" 
+      });
+
+  } catch (error) {
+    console.error("Delete Offer Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: "Server Error" });
+  }
+};
+
+//Validation Functions Start Here
+// Check Offer Code Uniqueness
 const checkOfferCode = async (req, res) => {
   try {
     const { code } = req.body;
@@ -164,6 +197,7 @@ const checkOfferCode = async (req, res) => {
   }
 };
 
+// Check Date Validity
 const checkDate = async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
@@ -203,9 +237,10 @@ const checkDate = async (req, res) => {
   }
 };
 
+// Check Discount Validity
 const checkDiscount = async (req, res) => {
   try {
-    const { discountType, discountValue } = req.body;
+    const { discountType, discountValue, maxAmount } = req.body;
 
     if (!discountType || !discountValue) {
       return res.json({
@@ -213,14 +248,20 @@ const checkDiscount = async (req, res) => {
         message: "Discount type and value are required",
       });
     }
-    if (
-      discountType === "Percentage" &&
-      (discountValue < 1 || discountValue > 100)
-    ) {
-      return res.json({
-        valid: false,
-        message: "Percentage discount must be between 1 and 100",
-      });
+    if (discountType === "Percentage") {
+      if (discountValue < 1 || discountValue > 100) {
+        return res.json({
+          valid: false,
+          message: "Percentage discount must be between 1 and 100",
+        });
+      }
+
+      if (maxAmount <= 0) {
+        return res.json({
+          valid: false,
+          message: "Maximum discount amount must be greater than 0",
+        });
+      }
     }
 
     if (discountType === "Fixed" && discountValue <= 0) {
@@ -245,4 +286,5 @@ module.exports = {
   checkOfferCode,
   checkDate,
   checkDiscount,
+  deleteOffer,
 };

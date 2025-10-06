@@ -10,6 +10,7 @@ const offerSchema = new mongoose.Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   isActive: { type: Boolean, default: false },
+  maxAmount: { type: Number, required: false },
 }, { timestamps: true });
 
 

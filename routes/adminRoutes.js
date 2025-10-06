@@ -87,9 +87,10 @@ routes.delete("/products/variants/:variantId/images", variantController.deleteVa
 routes.route("/offers")
        .get(offerController.loadOfferPage)
         .post(offerController.addOffer)
-      //  .delete(offerController.deleteOffer)
+        .delete(offerController.deleteOffer)
       //  .patch(offerController.editOffer);
 
+// New Routes for Offer Validations
 routes.post("/offers/check-code", offerController.checkOfferCode);
 routes.post("/offers/check-Date", offerController.checkDate);
 routes.post("/offers/check-discount", offerController.checkDiscount);

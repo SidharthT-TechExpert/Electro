@@ -153,8 +153,8 @@
       </div>
 
       <script>
-        const products = <% - JSON.stringify(products) %>;
-        const categories = <% - JSON.stringify(categories) %>;
+        const products = <%- JSON.stringify(products) %>;
+        const categories = <%- JSON.stringify(categories) %>;
 
         function addOfferModal() {
           Swal.fire({
@@ -172,7 +172,7 @@
         <div class="mb-3 text-start">
           <label class="form-label fw-bold">Discount Type</label>
           <select id="swal-input-type" class="form-control">
-            <option value="Percentage">Percentage</option>
+            <option value="Percentage" selected>Percentage</option>
             <option value="Fixed">Fixed</option>
           </select>
         </div>
@@ -180,15 +180,22 @@
           <label class="form-label fw-bold">Discount Value</label>
           <input type="number" id="swal-input-value" class="form-control" placeholder="Enter discount value">
         </div>
+
+        <!-- Dynamic Max Amount field -->
+        <div class="mb-3 text-start d-none" id="maxAmountContainer">
+          <label class="form-label fw-bold">Max Discount Amount</label>
+          <input type="number" id="swal-input-max" class="form-control" placeholder="Enter maximum discount amount">
+        </div>
+
         <div class="mb-3 text-start">
-          <label for="appliesTo">Applies To</label>
+          <label for="appliesTo" class="form-label fw-bold">Applies To</label>
           <select class="form-control" id="appliesTo" required>
             <option value="product">Product</option>
             <option value="category">Category</option>
           </select>
         </div>
         <div class="mb-3 text-start">
-          <label for="targetIds">Select Targets</label>
+          <label for="targetIds" class="form-label fw-bold">Select Targets</label>
           <select class="form-control" id="targetIds" multiple required>
             ${products.map(p => `<option value="${p._id}">${p.name}</option>`).join('')}
           </select>
@@ -216,6 +223,25 @@
             didOpen: () => {
               const appliesToSelect = document.getElementById("appliesTo");
               const targetSelect = document.getElementById("targetIds");
+              const discountTypeSelect = document.getElementById("swal-input-type");
+              const maxAmountContainer = document.getElementById("maxAmountContainer");
+
+              // ✅ Function to toggle max discount visibility
+              function toggleMaxAmountField() {
+                if (discountTypeSelect.value === "Percentage") {
+                  maxAmountContainer.classList.remove("d-none");
+                } else {
+                  maxAmountContainer.classList.add("d-none");
+                  document.getElementById("swal-input-max").value = "";
+                }
+              }
+
+              // ✅ Call once on open to handle default state
+              toggleMaxAmountField();
+
+              // ✅ Also handle changes dynamically
+              discountTypeSelect.addEventListener("change", toggleMaxAmountField);
+
               appliesToSelect.addEventListener("change", function () {
                 const items = this.value === "product" ? products : categories;
                 targetSelect.innerHTML = "";
@@ -235,6 +261,7 @@
               const code = document.getElementById("swal-input-code").value.trim();
               const discountType = document.getElementById("swal-input-type").value;
               const discountValue = document.getElementById("swal-input-value").value;
+              const maxAmount = document.getElementById("swal-input-max").value;
               const appliesTo = document.getElementById("appliesTo").value;
               const startDate = document.getElementById("swal-input-start").value;
               const endDate = document.getElementById("swal-input-end").value;
@@ -245,8 +272,13 @@
                 return false;
               }
 
-              if (!name || !code || !discountType || !appliesTo || selectedTargetIds.length === 0 || !discountValue || !startDate || !endDate) {
+              if (!name || !code || !discountType || !appliesTo || !discountValue || !startDate || !endDate) {
                 Swal.showValidationMessage("⚠️ All fields are required!");
+                return false;
+              }
+
+              if (discountType === "Percentage" && !maxAmount) {
+                Swal.showValidationMessage("⚠️ Max Discount Amount is required for Percentage type!");
                 return false;
               }
 
@@ -279,7 +311,7 @@
               $.ajax({
                 url: '/admin/offers/check-discount',
                 method: 'POST',
-                data: { discountType, discountValue },
+                data: { discountType, discountValue , maxAmount },
                 async: false,
                 success: function (response) {
                   if (!response.valid) {
@@ -290,9 +322,9 @@
               });
 
               return {
-                name, code, discountType, discountValue, appliesTo,
-                targetIds: selectedTargetIds, startDate, endDate,
-                isActive: status === "true"
+                name, code, discountType, discountValue, maxAmount,
+                appliesTo, targetIds: selectedTargetIds,
+                startDate, endDate, isActive: status === "true"
               };
             }
           }).then(result => {
@@ -304,8 +336,12 @@
                 data: JSON.stringify(result.value),
                 success: function (response) {
                   if (response.success) {
-                    Swal.fire({ icon: "success", title: "Offer Added Successfully", timer: 1500, showConfirmButton: false })
-                      .then(() => location.reload());
+                    Swal.fire({
+                      icon: "success",
+                      title: "Offer Added Successfully",
+                      timer: 1500,
+                      showConfirmButton: false
+                    }).then(() => location.reload());
                   } else {
                     Swal.fire("Error", response.message, "error");
                   }
@@ -314,6 +350,38 @@
             }
           });
         }
+        
+        function deleteOffer(id) {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This action will delete the offer permanently.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel"
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                type: "DELETE",
+                url: `/admin/offers`,
+                data: { id },
+                success: function (response) {
+                  if (response.success) {
+                    Swal.fire({
+                      icon: "success",
+                      title: "Offer Deleted Successfully",
+                      timer: 1500,
+                      showConfirmButton: false
+                    }).then(() => location.reload());
+                  } else {
+                    Swal.fire("Error", response.message, "error");
+                  }
+                }
+              });
+            }
+          });
+        }
+
       </script>
 
       <style>

@@ -6,6 +6,7 @@ const checkSession = require("../middlewares/session.js");
 
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
+
 // SignUp Route
 routes
   .route("/signUp")
