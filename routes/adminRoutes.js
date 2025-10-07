@@ -104,7 +104,7 @@ routes
   .get(bannerController.getBannerPage)
   .post(bannerUpload.single("image"), bannerController.addBanner)
   .patch(bannerUpload.single("image"), bannerController.updateBanner)
-  // .delete(bannerController.deleteBanner);
+  .delete(bannerController.deleteBanner);
   
 
 // Orders Management

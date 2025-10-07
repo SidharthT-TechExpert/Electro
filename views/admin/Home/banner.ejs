@@ -365,11 +365,16 @@
             if (result.isConfirmed) {
               $.ajax({
                 type: "DELETE",
-                url: "/admin/banners",
+                url: "/admin/banner",
                 data: { id },
                 success: function (response) {
                   if (response.success) {
-                    Swal.fire({ icon: "success", title: "Banner Deleted Successfully", timer: 1500, showConfirmButton: false })
+                    Swal.fire({
+                      icon: "success",
+                      title: "Banner Deleted Successfully",
+                      timer: 1500,
+                      showConfirmButton: false
+                    })
                       .then(() => location.reload());
                   } else {
                     Swal.fire("Error", response.message, "error");

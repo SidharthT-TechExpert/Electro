@@ -109,10 +109,36 @@ const updateBanner = async (req, res) => {
 };
 
 // =============== Delete Banner ===============
+const deleteBanner = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const banner = await bannerSchema.findByIdAndDelete(id,{ new: true });
+    
+    if (!banner) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "Banner not found" });
+    }
+    
+    // Delete image file
+    const imagePath = path.join("public", banner.image);
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    res.json({
+      success: true,
+      message: "Banner deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting banner:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+}
 
 module.exports = {
   getBannerPage,
   addBanner,
-  // deleteBanner,
+  deleteBanner,
   updateBanner
 };
