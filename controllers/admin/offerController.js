@@ -136,32 +136,104 @@ const addOffer = async (req, res) => {
   }
 };
 
+// Edit Offer
+const editOffer = async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      code,
+      discountType,
+      discountValue,
+      appliesTo,
+      targetIds,
+      startDate,
+      endDate,
+      isActive,
+      maxAmount,
+    } = req.body;
+    if (!id) {
+      return res.json({ success: false, message: "Offer ID is required" });
+    }
+    const offer = await offerSchema.findById(id);
+
+    if (!offer) {
+      return res.json({ success: false, message: "Offer not found" });
+    }
+    // Check for existing offer code if it's being changed
+    if (code && code.trim() !== offer.code) {
+      const existingOffer = await offerSchema.findOne({ code: code.trim() });
+
+      if (existingOffer) {
+        return res.json({
+          success: false,
+          message: "Offer code already exists",
+        });
+      }
+
+      offer.code = code.trim();
+    }
+
+    const update = await offerSchema.findByIdAndUpdate(
+      id,
+      {
+        name,
+        code,
+        discountType,
+        discountValue,
+        appliesTo,
+        targetIds,
+        startDate,
+        endDate,
+        isActive,
+        maxAmount,
+      },
+      { new: true }
+    );
+
+    if (!update) {
+      return res.json({ success: false, message: "Offer not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Offer updated successfully",
+      offer: update,
+    });
+
+  } catch (error) {
+    console.error("Edit Offer Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ message: "Server Error" });
+  }
+};
+
 //Delete Offer
 const deleteOffer = async (req, res) => {
   try {
     const { id } = req.body;
 
     if (!id) {
-      return res.json({ 
+      return res.json({
         success: false,
-         message: "Offer ID is required" 
-        });
+        message: "Offer ID is required",
+      });
     }
 
     const deletedOffer = await offerSchema.findByIdAndDelete(id);
 
     if (!deletedOffer) {
-      return res.json({ 
+      return res.json({
         success: false,
-         message: "Offer not found"
-         });
+        message: "Offer not found",
+      });
     }
 
-    res.json({ 
+    res.json({
       success: true,
-       message: "Offer deleted successfully" 
-      });
-
+      message: "Offer deleted successfully",
+    });
   } catch (error) {
     console.error("Delete Offer Error:", error);
     res
@@ -287,4 +359,5 @@ module.exports = {
   checkDate,
   checkDiscount,
   deleteOffer,
+  editOffer,
 };

@@ -7,25 +7,42 @@ const bannerSchema = new Schema({
     required: true,
   },
   title: {
-    type: Schema.Types.String,
+    type: String,
     required: true,
+  },
+  subtitle: {         
+    type: String,
+    default: "",
   },
   description: {
     type: String,
-    required: true,
+    required: false,
   },
-  link: {
+  buttonText: {      
     type: String,
+    default: "Shop Now",
+  },
+  buttonLink: {       
+    type: String,
+    default: "/shop",
+  },
+  order: {             
+    type: Number,
+    default: 0,
+  },
+  isActive: {          
+    type: Boolean,
+    default: true,
   },
   startDate: {
     type: Date,
     required: true,
   },
-  endDate : {
-        type : Date,
-        required : true
+  endDate: {
+    type: Date,
+    required: true,
   }
-});
+}, { timestamps: true });
 
-const Banner = mongoose.model("banner", bannerSchema);
+const Banner = mongoose.model("Banner", bannerSchema);
 module.exports = Banner;

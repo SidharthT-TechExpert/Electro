@@ -7,10 +7,13 @@ const brandController = require("../controllers/admin/brandController.js");
 const productController = require("../controllers/admin/productController.js");
 const variantController = require('../controllers/admin/variantController.js')
 const offerController = require("../controllers/admin/offerController.js");
+const bannerController = require("../controllers/admin/bannerController.js");
+
 const session = require("../middlewares/session");
 
 const passport = require("passport");
 const upload = require("../helpers/multer.js");
+const bannerUpload = require("../helpers/bannerMulter.js");
 // Login Menagement admin
 routes
   .route("/login")
@@ -88,14 +91,21 @@ routes.route("/offers")
        .get(offerController.loadOfferPage)
         .post(offerController.addOffer)
         .delete(offerController.deleteOffer)
-      //  .patch(offerController.editOffer);
+        .patch(offerController.editOffer);
 
 // New Routes for Offer Validations
 routes.post("/offers/check-code", offerController.checkOfferCode);
 routes.post("/offers/check-Date", offerController.checkDate);
 routes.post("/offers/check-discount", offerController.checkDiscount);
 
-
+// Banner Management
+routes
+  .route("/banner")
+  .get(bannerController.getBannerPage)
+  .post(bannerUpload.single("image"), bannerController.addBanner)
+  .patch(bannerUpload.single("image"), bannerController.updateBanner)
+  // .delete(bannerController.deleteBanner);
+  
 
 // Orders Management
 routes.get("/orders", categorieController.categories);

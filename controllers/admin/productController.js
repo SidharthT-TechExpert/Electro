@@ -33,7 +33,7 @@ const getProductsPage = async (req, res) => {
       .find(query)
       .populate("brand", "name logo")
       .populate("category", "name")
-      .sort({ createAt: -1 })
+      .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .exec();

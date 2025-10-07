@@ -1,13 +1,34 @@
-/* Hero Banner */
+/* ==================== General ==================== */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ==================== Hero Banner ==================== */
+.hero-banner {
+  background-color: #000;
+  color: #fff;
+  padding: 50px 0;
+}
 .hero-banner h1 {
   font-size: 2.5rem;
+  line-height: 1.2;
+}
+.hero-banner p {
+  font-size: 1rem;
 }
 .hero-banner img {
+  max-width: 100%;
   max-height: 350px;
   object-fit: contain;
 }
 
-/* Categories */
+/* ==================== Categories ==================== */
+.categories {
+  padding: 30px 0;
+  background-color: #f8f9fa;
+}
 .categories .cat-box {
   width: 120px;
   height: 100px;
@@ -30,51 +51,113 @@
   margin-bottom: 6px;
 }
 
-/* Products */
+/* ==================== Products Section ==================== */
 .products {
-  background: #111;
+  background-color: #111;
+  padding: 50px 0;
 }
 .products .nav-tabs .nav-link {
   color: #fff;
+  border: none;
+  border-bottom: 2px solid transparent;
 }
 .products .nav-tabs .nav-link.active {
   color: #db4444;
-  border: none;
   border-bottom: 2px solid #db4444;
-}
-.product-card {
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-.product-card img {
-  background: #f9f9f9;
-  padding: 10px;
-  height: 200px;
-  object-fit: contain;
+  background-color: transparent;
 }
 
-/* Features */
+/* Product Grid */
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Product Card Default Styles */
+.product-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+}
+
+/* Hover Effects */
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.product-img-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.product-img-wrapper img {
+  width: 100%;
+  height: auto;
+  transition: transform 0.4s ease, filter 0.4s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.08);
+  filter: brightness(0.9);
+}
+
+/* Hover Buttons */
+.product-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+.product-card:hover .product-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+.action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.action-btn i {
+  font-size: 1rem;
+}
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Rating stars */
+.text-warning {
+  font-size: 0.8rem;
+}
+
+/* ==================== Features ==================== */
+.features {
+  background-color: #f8f9fa;
+  padding: 50px 0;
+}
 .features .feature-box {
   max-width: 220px;
   margin: 10px;
+  text-align: center;
 }
-
-.footer {
-  background: #000000;
-  color: #ccc;
-  padding: 40px 0;
-}
-
 .features .icon {
   width: 60px;
   height: 60px;
   margin: 0 auto 10px;
-  background: #000000;
+  background: #000;
   color: #fff;
   border-radius: 50%;
   display: flex;
@@ -83,10 +166,14 @@
   font-size: 22px;
 }
 
-
-/* Footer */
+/* ==================== Footer ==================== */
+.footer {
+  background: #000;
+  color: #ccc;
+  padding: 40px 0;
+}
 .footer h6,
-h5 {
+.footer h5 {
   font-weight: bolder;
   margin-bottom: 15px;
   color: #c8b7b7;
@@ -99,12 +186,11 @@ h5 {
   border-radius: 4px;
 }
 
-/* Back to Top */
+/* ==================== Back to Top ==================== */
 .back-to-top {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  display: none;
   border-radius: 50%;
   width: 45px;
   height: 45px;
@@ -112,4 +198,286 @@ h5 {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  display: none;
+}
+
+/* ==================== Responsive Grid ==================== */
+
+/* Mobile: 2 columns (<576px) */
+@media (max-width: 575.98px) {
+  .product-card {
+    flex: 0 0 calc(50% - 16px);
+  }
+}
+
+/* Small Tablets: 3 columns (≥576px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .product-card {
+    flex: 0 0 calc(33.33% - 16px);
+  }
+}
+
+/* Tablets / Small Desktop: 4 columns (≥768px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .product-card {
+    flex: 0 0 calc(25% - 16px);
+  }
+}
+
+/* Desktop: 4 columns (≥992px) */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .product-card {
+    flex: 0 0 calc(25% - 16px);
+  }
+}
+
+/* Large Desktop: 5 columns (≥1200px) */
+@media (min-width: 1200px) {
+  .product-card {
+    flex: 0 0 calc(20% - 16px);
+  }
+}
+
+/* ==================== Hero Banner Text Responsive ==================== */
+@media (max-width: 767.98px) {
+  .hero-banner h1 {
+    font-size: 2rem;
+  }
+  .hero-banner p {
+    font-size: 0.9rem;
+  }
+}
+@media (max-width: 575.98px) {
+  .hero-banner h1 {
+    font-size: 1.5rem;
+  }
+  .hero-banner p {
+    font-size: 0.8rem;
+  }
+}
+
+/* ==================== Categories Responsive ==================== */
+@media (max-width: 767.98px) {
+  .categories .cat-box {
+    width: 100px;
+    height: 90px;
+  }
+}
+
+/* ==================== Features Responsive ==================== */
+@media (max-width: 767.98px) {
+  .features .feature-box {
+    max-width: 150px;
+    margin: 10px auto;
+  }
+}
+
+/* ========== Banner Section ========== */
+.banner {
+  position: relative;
+  overflow: hidden;
+  background: #f8f9fa;
+  padding: 40px 0;
+}
+
+.banner-slider {
+  position: relative;
+  width: 100%;
+  height: 400px;
+}
+
+.banner-slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.banner-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.banner-slide img {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.banner-text {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%);
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.banner-text h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.banner-text a {
+  color: #fff;
+  background: #db4444;
+  padding: 8px 20px;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.banner-text a:hover {
+  background: #b63030;
+}
+
+/* Banner Controls */
+.banner-controls {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  padding: 0 20px;
+}
+
+.banner-controls button {
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.banner-controls button:hover {
+  background: rgba(219,68,68,0.9);
+}
+@media (max-width: 767.98px) {
+  .banner-slide img {
+    height: 250px;
+  }
+  .banner-text h2 {
+    font-size: 1.8rem;
+  }
+} 
+
+
+/* 🌈 Fullscreen Hero Banner */
+.hero-banner {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hero-slider {
+  position: relative;
+  height: 100%;
+}
+
+.hero-slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 1s ease, transform 3s ease;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 2;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.hero-content {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 700px;
+}
+
+.hero-content h5 {
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  color: #ffcc00;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 10px 0;
+}
+
+.hero-content p {
+  font-size: 1rem;
+  max-width: 550px;
+  opacity: 0.9;
+}
+
+/* 🔘 Navigation Buttons */
+.hero-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  padding: 12px 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.hero-nav:hover {
+  background: rgba(255, 255, 255, 0.8);
+  color: #000;
+}
+
+.hero-nav.prev { left: 20px; }
+.hero-nav.next { right: 20px; }
+
+/* 🟢 Slide Dots */
+.hero-dots {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+}
+
+.hero-dots span {
+  width: 12px; height: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.hero-dots span.active {
+  background: #ffcc00;
+}
+.hero-dots span:hover {
+  background: #ffcc00;
 }

@@ -1,7 +1,7 @@
 const categoryVariantFields = {
   Smartphones: ["color","ram", "storage", "battery", "camera", "screen", "stock", "price", "sku", "description", "images"],
   Laptops: ["color","ram", "storage", "display", "processor", "gpu", "os", "stock", "price", "sku", "description", "images"],
-  Tablets: ["color","ram", "storage", "display", "battery", "os", "stock", "price", "sku", "description", "images"],
+  Tablets: ["color","ram", "storage", "display", "battery",'Sim', "os", "stock", "price", "sku", "description", "images"],
   Smartwatches: ["color","battery", "display", "strap", "os", "stock", "price", "sku", "description", "images"],
   "Gaming Consoles": ["storage", "controllerType", "stock", "price", "sku", "description", "images"],
   Headphones: ["type", "connectivity", "color", "stock", "price", "sku", "description", "images"],

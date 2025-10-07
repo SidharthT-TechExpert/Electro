@@ -1,31 +1,66 @@
-<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- Header Start  -->
+<!-- Header -->
 <%- include("../partials/user/header") %>
   <%- include("../partials/user/messages") %>
+
     <main class="homepage">
 
-      <!-- Hero Banner -->
-      <section class="hero-banner bg-black text-white py-5">
-        <div class="container">
-          <div class="row align-items-center">
-            <!-- Left text -->
-            <div class="col-md-6">
-              <p class="small mb-2">
-                <i class="fab fa-apple"></i> iPhone 14 Series
-              </p>
-              <h1 class="fw-bold display-5">Up to 10% off Voucher</h1>
-              <a href="#" class="btn btn-light mt-3 px-4 py-2">Shop Now →</a>
-            </div>
-            <!-- Right image -->
-            <div class="col-md-6 text-center">
-              <img src="/img/header-img.jpg" alt="iPhone Banner" class="img-fluid">
-            </div>
-          </div>
+      <!-- 🌟 Fullscreen Dynamic Banner -->
+      <section class="hero-banner position-relative">
+        <div class="hero-slider">
+
+          <% if (bannerData && bannerData.length> 0) { %>
+            <% bannerData.forEach((banner, index)=> { %>
+              <div class="hero-slide <%= index === 0 ? 'active' : '' %>"
+                style="background-image: url('<%= banner.image %>')">
+                <div class="hero-overlay"></div>
+                <div class="hero-content container text-white">
+                  <h5 class="animate__animated animate__fadeInDown">
+                    <%= banner.subtitle %>
+                  </h5>
+                  <h1 class="animate__animated animate__fadeInUp">
+                    <%= banner.title %>
+                  </h1>
+                  <p class="animate__animated animate__fadeInUp animate__delay-1s">
+                    <%= banner.description %>
+                  </p>
+                  <% if (banner.buttonText && banner.buttonLink) { %>
+                    <a href="<%= banner.buttonLink %>"
+                      class="btn btn-light px-4 py-2 mt-2 animate__animated animate__fadeInUp animate__delay-2s">
+                      <%= banner.buttonText %>
+                    </a>
+                    <% } %>
+                </div>
+              </div>
+              <% }) %>
+                <% } else { %>
+                  <!-- Fallback banner -->
+                  <div class="hero-slide active" style="background-image: url('/img/header-img.jpg')">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content container text-white">
+                      <h5>Welcome to ElectroHub</h5>
+                      <h1>Your One-Stop Electronics Store</h1>
+                      <p>Explore the latest gadgets, phones, and accessories at unbeatable prices!</p>
+                      <a href="/shop" class="btn btn-light px-4 py-2 mt-2">Shop Now</a>
+                    </div>
+                  </div>
+                  <% } %>
+
         </div>
+
+        <!-- 🔘 Controls -->
+        <button id="prevSlide" class="hero-nav prev"><i class="fa-solid fa-chevron-left"></i></button>
+        <button id="nextSlide" class="hero-nav next"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <!-- 🟢 Slide Dots -->
+        <div class="hero-dots"></div>
       </section>
 
-      <!-- Categories -->
+
+
+      <!-- 🧩 Categories -->
       <section class="categories py-4 bg-light">
         <div class="container d-flex justify-content-center flex-wrap gap-3">
           <div class="cat-box active"><i class="fas fa-mobile-alt fa-2x"></i>
@@ -49,61 +84,97 @@
         </div>
       </section>
 
-      <!-- Products Section -->
+      <!-- 🛍️ Product Section -->
       <section class="products py-5 bg-black text-white">
         <div class="container">
 
           <!-- Tabs -->
           <ul class="nav nav-tabs border-0 mb-4" id="productTabs">
-            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#best">Best Sellers</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#new">New Arrivals</a></li>
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#new">New Arrivals</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#best">Best Sellers</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#hot">Hot Sales</a></li>
           </ul>
 
-          <!-- Tab Content -->
+          <!-- Tab Contents -->
           <div class="tab-content">
 
-            <!-- Best Sellers -->
-            <div id="best" class="tab-pane fade show active">
-              <div class="row g-4">
-                <% for(let i=1; i<=12; i++){ %>
-                  <div class="col-6 col-md-3">
-                    <div class="card product-card h-100">
-                      <img src="/img/product-<%= i %>.png" class="card-img-top" alt="Product <%= i %>">
-                      <div class="card-body text-dark">
-                        <p class="small mb-1">Product <%= i %>
-                        </p>
-                        <h6 class="fw-bold">$99.<%= i %>
-                        </h6>
-                        <div class="text-warning small">★★★★★</div>
+            <!-- 🆕 New Arrivals -->
+            <div id="new" class="tab-pane fade show active">
+              <% if (newArrivals && newArrivals.length> 0) { %>
+                <div class="product-grid">
+                  <% newArrivals.forEach(product=> { %>
+                    <div class="product-card">
+                      <div class="product-img-wrapper">
+                        <img src="<%= product.variantImage %>" alt="<%= product.name %>"
+                          onclick="location.href='/ProductDetails?id=<%=product._id%>'">
+                        <div class="product-actions">
+                          <button class="btn btn-light shadow-sm action-btn"
+                            onclick="addToWishlist('<%= product._id %>')">
+                            <i class="fa-regular fa-heart"></i>
+                          </button>
+                          <button class="btn btn-primary shadow-sm action-btn"
+                            onclick="addToCart('<%= product._id %>')">
+                            <i class="fa-solid fa-cart-plus"></i>
+                          </button>
+                        </div>
                       </div>
+                      <div class="text-center mt-2">
+                        <h6 class="fw-semibold text-truncate mb-1">
+                          <%= product.name %>
+                        </h6>
+                        <p class="text-success fw-bold mb-0">₹<%= product.price.toLocaleString() %>
+                        </p>
+                        <small class="text-warning">★★★★☆</small>
+                      </div>
+                    </div>
+                    <% }) %>
+                </div>
+                <% } else { %>
+                  <p class="text-center text-muted">No new arrivals available.</p>
+                  <% } %>
+            </div>
+
+            <!-- ⭐ Best Sellers -->
+            <div id="best" class="tab-pane fade">
+              <div class="product-grid">
+                <% for (let i=1; i <=8; i++) { %>
+                  <div class="product-card">
+                    <div class="product-img-wrapper">
+                      <img src="/img/product-<%= i %>.png" alt="Product <%= i %>">
+                      <div class="product-actions">
+                        <button class="btn btn-light shadow-sm action-btn"><i class="fa-regular fa-heart"></i></button>
+                        <button class="btn btn-primary shadow-sm action-btn"><i
+                            class="fa-solid fa-cart-plus"></i></button>
+                      </div>
+                    </div>
+                    <div class="text-center mt-2">
+                      <h6 class="fw-semibold text-truncate mb-1">Product <%= i %>
+                      </h6>
+                      <p class="text-success fw-bold mb-0">$99.<%= i %>
+                      </p>
+                      <small class="text-warning">★★★★★</small>
                     </div>
                   </div>
                   <% } %>
               </div>
             </div>
 
-            <!-- New Arrivals -->
-            <div id="new" class="tab-pane fade">
-              <p class="text-center">New arrivals go here...</p>
-            </div>
-
-            <!-- Hot Sales -->
+            <!-- 🔥 Hot Sales -->
             <div id="hot" class="tab-pane fade">
-              <p class="text-center">Hot sales go here...</p>
+              <p class="text-center text-muted">Hot deals will appear here soon...</p>
             </div>
 
           </div>
         </div>
       </section>
 
-      <!-- Features -->
+      <!-- 🚚 Features -->
       <section class="features py-4 bg-light">
         <div class="container d-flex justify-content-around text-center flex-wrap">
           <div class="feature-box">
             <div class="icon"><i class="fas fa-shipping-fast"></i></div>
             <h6>Free & Fast Delivery</h6>
-            <p class="small">Free delivery for all orders over $50</p>
+            <p class="small">Free delivery for all orders over ₹50</p>
           </div>
           <div class="feature-box">
             <div class="icon"><i class="fas fa-headset"></i></div>
@@ -117,9 +188,48 @@
           </div>
         </div>
       </section>
-
     </main>
 
-
-    <!-- Footer Start -->
+    <!-- Footer -->
     <%- include("../partials/user/footer") %>
+
+      <!-- Banner JS -->
+      <script>
+        const slides = document.querySelectorAll('.hero-slide');
+        const dotsContainer = document.querySelector('.hero-dots');
+        let currentSlide = 0;
+        let slideInterval;
+
+        // Create dots
+        slides.forEach((_, i) => {
+          const dot = document.createElement('span');
+          if (i === 0) dot.classList.add('active');
+          dot.addEventListener('click', () => showSlide(i));
+          dotsContainer.appendChild(dot);
+        });
+        const dots = document.querySelectorAll('.hero-dots span');
+
+        function showSlide(index) {
+          slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === index);
+            dots[i].classList.toggle('active', i === index);
+          });
+          currentSlide = index;
+        }
+
+        function nextSlide() {
+          showSlide((currentSlide + 1) % slides.length);
+        }
+
+        function prevSlide() {
+          showSlide((currentSlide - 1 + slides.length) % slides.length);
+        }
+
+        document.getElementById('nextSlide').addEventListener('click', nextSlide);
+        document.getElementById('prevSlide').addEventListener('click', prevSlide);
+
+        function autoPlay() {
+          slideInterval = setInterval(nextSlide, 5000);
+        }
+        autoPlay();
+      </script>

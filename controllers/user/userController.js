@@ -1,5 +1,12 @@
 const HTTP_STATUS = require("../../config/statusCodes.js");
 const userSchema = require("../../models/userSchema.js");
+const productSchema = require("../../models/productSchema.js");
+const categorieSchema = require("../../models/categorySchema.js");
+const offerSchema = require("../../models/OfferSchema.js");
+const brandSchema = require("../../models/brandSchema.js");
+const variantSchema = require("../../models/variantSchema.js");
+const bannerSchema = require("../../models/bannerSchema.js");
+
 const nodemailer = require("nodemailer");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
@@ -8,19 +15,90 @@ const checkSession = async (_id) => {
   return _id ? await userSchema.findById(_id) : null;
 };
 
-// Home page Loader
+// Home Page Loader
 const loadHomePage = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
 
-    res
-      .status(HTTP_STATUS.OK)
-      .render("auth/home", { user, cartCount: req.cartCount || null });
+    // Fetch listed categories
+    const categories = await categorieSchema.find({ status: "listed" });
+    const bannerData = await bannerSchema.find({});
+    // Extract category IDs
+    const categoryIds = categories.map((cat) => cat._id);
+   
+    
+
+    // Fetch latest 8 unblocked products
+    const products = await productSchema
+      .find({ isBlocked: false })
+      .populate("brand", "name logo")
+      .populate("category", "name description isListed")
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+
+    // ✅ Fetch variants for these products (includes price)
+    const productIds = products.map((p) => p._id);
+    const variants = await variantSchema
+      .find(
+        { product_id: { $in: productIds } },
+        "product_id product_image price sku specifications color description"
+      )
+      .lean();
+
+    // ✅ Attach variant image and price to each product
+    const newArrivals = products.map((product) => {
+      const variant = variants.find(
+        (v) => v.product_id.toString() === product._id.toString()
+      );
+
+      product.variantImage =
+        variant?.product_image?.length > 0
+          ? variant.product_image[0]
+          : product.Images?.[0] || "/images/no-image.jpg";
+
+      // ✅ Attach price from variant if available
+      product.price = variant?.price.toFixed(2) || "N/A";
+
+      return product;
+    });
+
+    console.log("✅ New Arrivals:", newArrivals.length);
+
+    // Best Sellers
+    const bestSellers = await productSchema
+      .find({ isBlocked: false, category: { $in: categoryIds } })
+      .populate("brand", "name logo")
+      .sort({ salesCount: -1 })
+      .limit(10)
+      .lean();
+
+    // Hot Sales
+    const hotSales = await productSchema
+      .find({ isBlocked: false, category: { $in: categoryIds } })
+      .populate("brand", "name logo")
+      .sort({ views: -1 })
+      .limit(8)
+      .lean();
+
+    // ✅ Render Home Page
+    res.status(HTTP_STATUS.OK).render("auth/home", {
+      user,
+      bannerData,
+      newArrivals,
+      bestSellers,
+      hotSales,
+      cartCount: req.cartCount || null,
+    });
   } catch (error) {
-    console.error("Error loading home page:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+    console.error("❌ Error loading home page:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .send("Internal Server Error");
   }
 };
+
+
 
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {
@@ -466,7 +544,6 @@ const loadProductDetails = async (req, res) => {
     res
       .status(HTTP_STATUS.OK)
       .render("auth/page-404", { user, cartCount: req.cartCount || null });
-  
   } catch (error) {
     console.error("Error loading product details page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
