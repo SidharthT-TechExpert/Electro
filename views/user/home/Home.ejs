@@ -11,53 +11,63 @@
       <section class="hero-banner position-relative">
         <div class="hero-slider">
 
-          <% if (bannerData && bannerData.length> 0) { %>
-            <% bannerData.forEach((banner, index)=> { %>
-              <div class="hero-slide <%= index === 0 ? 'active' : '' %>"
-                style="background-image: url('<%= banner.image %>')">
-                <div class="hero-overlay"></div>
-                <div class="hero-content container text-white">
-                  <h5 class="animate__animated animate__fadeInDown">
-                    <%= banner.subtitle %>
-                  </h5>
-                  <h1 class="animate__animated animate__fadeInUp">
-                    <%= banner.title %>
-                  </h1>
-                  <p class="animate__animated animate__fadeInUp animate__delay-1s">
-                    <%= banner.description %>
-                  </p>
-                  <% if (banner.buttonText && banner.buttonLink) { %>
-                    <a href="<%= banner.buttonLink %>"
-                      class="btn btn-light px-4 py-2 mt-2 animate__animated animate__fadeInUp animate__delay-2s">
-                      <%= banner.buttonText %>
-                    </a>
-                    <% } %>
-                </div>
-              </div>
-              <% }) %>
-                <% } else { %>
-                  <!-- Fallback banner -->
-                  <div class="hero-slide active" style="background-image: url('/img/header-img.jpg')">
+          <% const validBanners=(bannerData || []).filter(banner=> {
+            const now = new Date();
+            const start = new Date(banner.startDate);
+            const end = new Date(banner.endDate);
+            return now >= start && now <= end; }); %>
+
+              <% if (validBanners.length> 0) { %>
+                <% validBanners.forEach((banner, index)=> { %>
+                  <div class="hero-slide <%= index === 0 ? 'active' : '' %>"
+                    style="background-image: url('<%= banner.image %>')">
                     <div class="hero-overlay"></div>
-                    <div class="hero-content container text-white">
-                      <h5>Welcome to ElectroHub</h5>
-                      <h1>Your One-Stop Electronics Store</h1>
-                      <p>Explore the latest gadgets, phones, and accessories at unbeatable prices!</p>
-                      <a href="/shop" class="btn btn-light px-4 py-2 mt-2">Shop Now</a>
+                    <div class="hero-content container">
+                      <% if (banner.subtitle) { %>
+                        <h5>
+                          <%= banner.subtitle %>
+                        </h5>
+                        <% } %>
+                          <% if (banner.title) { %>
+                            <h1>
+                              <%= banner.title %>
+                            </h1>
+                            <% } %>
+                              <% if (banner.description) { %>
+                                <p>
+                                  <%= banner.description %>
+                                </p>
+                                <% } %>
+                                  <% if (banner.buttonText && banner.buttonLink) { %>
+                                    <a href="<%= banner.buttonLink %>" class="shop-btn">
+                                      <%= banner.buttonText %>
+                                    </a>
+                                    <% } %>
                     </div>
                   </div>
-                  <% } %>
+                  <% }) %>
+                    <% } else { %>
+                      <!-- 🖼️ Fallback banner -->
+                      <div class="hero-slide active" style="background-image: url('/img/header-img.jpg')">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content container">
+                          <h5>Welcome to ElectroHub</h5>
+                          <h1>Your One-Stop Electronics Store</h1>
+                          <p>Explore the latest gadgets, phones, and accessories at unbeatable prices!</p>
+                          <a href="/shop" class="shop-btn">Shop Now</a>
+                        </div>
+                      </div>
+                      <% } %>
 
         </div>
 
-        <!-- 🔘 Controls -->
-        <button id="prevSlide" class="hero-nav prev"><i class="fa-solid fa-chevron-left"></i></button>
-        <button id="nextSlide" class="hero-nav next"><i class="fa-solid fa-chevron-right"></i></button>
+        <!-- Navigation -->
+        <button class="hero-nav prev"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="hero-nav next"><i class="fa-solid fa-chevron-right"></i></button>
 
-        <!-- 🟢 Slide Dots -->
+        <!-- Dots -->
         <div class="hero-dots"></div>
       </section>
-
 
 
       <!-- 🧩 Categories -->
@@ -87,7 +97,6 @@
       <!-- 🛍️ Product Section -->
       <section class="products py-5 bg-black text-white">
         <div class="container">
-
           <!-- Tabs -->
           <ul class="nav nav-tabs border-0 mb-4" id="productTabs">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#new">New Arrivals</a></li>
@@ -163,7 +172,6 @@
             <div id="hot" class="tab-pane fade">
               <p class="text-center text-muted">Hot deals will appear here soon...</p>
             </div>
-
           </div>
         </div>
       </section>
@@ -188,6 +196,7 @@
           </div>
         </div>
       </section>
+
     </main>
 
     <!-- Footer -->
@@ -195,41 +204,47 @@
 
       <!-- Banner JS -->
       <script>
-        const slides = document.querySelectorAll('.hero-slide');
-        const dotsContainer = document.querySelector('.hero-dots');
-        let currentSlide = 0;
-        let slideInterval;
 
-        // Create dots
-        slides.forEach((_, i) => {
-          const dot = document.createElement('span');
-          if (i === 0) dot.classList.add('active');
-          dot.addEventListener('click', () => showSlide(i));
-          dotsContainer.appendChild(dot);
-        });
-        const dots = document.querySelectorAll('.hero-dots span');
+        document.addEventListener("DOMContentLoaded", () => {
+          const slides = document.querySelectorAll(".hero-slide");
+          const dotsContainer = document.querySelector(".hero-dots");
+          let currentSlide = 0;
+          let slideInterval;
 
-        function showSlide(index) {
-          slides.forEach((slide, i) => {
-            slide.classList.toggle('active', i === index);
-            dots[i].classList.toggle('active', i === index);
+          if (!slides || slides.length === 0) return;
+
+          // Create dots
+          slides.forEach((_, i) => {
+            const dot = document.createElement("span");
+            if (i === 0) dot.classList.add("active");
+            dot.addEventListener("click", () => showSlide(i));
+            dotsContainer.appendChild(dot);
           });
-          currentSlide = index;
-        }
 
-        function nextSlide() {
-          showSlide((currentSlide + 1) % slides.length);
-        }
+          const dots = document.querySelectorAll(".hero-dots span");
 
-        function prevSlide() {
-          showSlide((currentSlide - 1 + slides.length) % slides.length);
-        }
+          function showSlide(index) {
+            slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+            dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+            currentSlide = index;
+          }
 
-        document.getElementById('nextSlide').addEventListener('click', nextSlide);
-        document.getElementById('prevSlide').addEventListener('click', prevSlide);
+          function nextSlide() {
+            showSlide((currentSlide + 1) % slides.length);
+          }
 
-        function autoPlay() {
-          slideInterval = setInterval(nextSlide, 5000);
-        }
-        autoPlay();
+          function prevSlide() {
+            showSlide((currentSlide - 1 + slides.length) % slides.length);
+          }
+
+          document.querySelector(".hero-nav.next").addEventListener("click", nextSlide);
+          document.querySelector(".hero-nav.prev").addEventListener("click", prevSlide);
+
+          function autoPlay() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000);
+          }
+
+          autoPlay();
+        });
       </script>

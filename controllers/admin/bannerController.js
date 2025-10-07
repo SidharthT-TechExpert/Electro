@@ -7,25 +7,26 @@ const path = require("path");
 // =============== Get Banner Page ===============
 const getBannerPage = async (req, res) => {
   try {
-    const limit = 5;
-    const currentPage = req.query.page || 1;
+    const limit = 3;
+    const Page = parseInt(req.query.page) || 1;
 
     // Fetch all banners
     const bannerData = await bannerSchema
       .find({})
       .sort({ createdAt: -1 })
       .limit(limit)
-      .skip((currentPage - 1) * limit)
+      .skip((Page - 1) * limit)
       .exec();
 
     const count = await bannerSchema.countDocuments();
 
     res.render("Home/banner", {
       bannerData,
-      currentPage,
+      currentPage: Page,
       totalPages: Math.ceil(count / limit),
       title: "Banner Management",
     });
+    
   } catch (error) {
     console.error("Error loading banner page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
@@ -119,7 +120,7 @@ const deleteBanner = async (req, res) => {
         .status(HTTP_STATUS.NOT_FOUND)
         .json({ success: false, message: "Banner not found" });
     }
-    
+
     // Delete image file
     const imagePath = path.join("public", banner.image);
     if (fs.existsSync(imagePath)) {

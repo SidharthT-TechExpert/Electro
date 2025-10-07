@@ -10,7 +10,7 @@ function escapeRegex(s = "") {
 
 const getProductsPage = async (req, res) => {
   try {
-    const limit = 5;
+    const limit = 4;
     const page = parseInt(req.query.page) || 1;
     const search = escapeRegex(req.query.search || "");
     const status = req.query.status || "all";

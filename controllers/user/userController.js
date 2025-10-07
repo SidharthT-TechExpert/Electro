@@ -34,7 +34,7 @@ const loadHomePage = async (req, res) => {
       .populate("brand", "name logo")
       .populate("category", "name description isListed")
       .sort({ createdAt: -1 })
-      .limit(8)
+      .limit(10)
       .lean();
 
     // ✅ Fetch variants for these products (includes price)
@@ -82,7 +82,7 @@ const loadHomePage = async (req, res) => {
       .lean();
 
     // ✅ Render Home Page
-    res.status(HTTP_STATUS.OK).render("auth/home", {
+    res.status(HTTP_STATUS.OK).render("home/home", {
       user,
       bannerData,
       newArrivals,
@@ -90,6 +90,7 @@ const loadHomePage = async (req, res) => {
       hotSales,
       cartCount: req.cartCount || null,
     });
+    
   } catch (error) {
     console.error("❌ Error loading home page:", error);
     res
