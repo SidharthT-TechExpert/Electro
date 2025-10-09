@@ -24,6 +24,17 @@
   .image-upload-placeholder i {
     margin-right: 5px;
   }
+
+  /* Hide arrows in number input */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
 </style>
 
 <%- include("../../partials/admin/sidebar") %>
@@ -35,6 +46,17 @@
         <!-- Page Header -->
         <div class="content-header">
           <h2>Banners</h2>
+          <!-- Filter to show active, inactive, upcoming, or expired banners. -->
+           <div class="page-header mb-3" style="margin-left: auto; background-color: aqua;">
+           <select name="status" id="statusFilter" class="filter-select" onchange="location.href='?status='+this.value">
+            <option value="all" <%= filterStatus === 'all' ? 'selected' : '' %>>All</option>
+            <option value="active" <%= filterStatus === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="inactive" <%= filterStatus === 'inactive' ? 'selected' : '' %>>Inactive</option>
+            <option value="upcoming" <%= filterStatus === 'upcoming' ? 'selected' : '' %>>Upcoming</option>
+            <option value="expired" <%= filterStatus === 'expired' ? 'selected' : '' %>>Expired</option>  
+          </select>
+           </div>
+          <!-- Add Banner Button -->
           <div class="page-header mb-3">
             <a onclick="addBannerModal()" class="btn btn-primary"><i class="fa fa-plus"></i> Add Banner</a>
           </div>
@@ -51,6 +73,7 @@
                 <th>Button Link</th>
                 <th>Start Date</th>
                 <th>End Date</th>
+                <th>Order</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -75,6 +98,9 @@
                   </td>
                   <td class="banner-end">
                     <%= new Date(banner.endDate).toLocaleDateString() %>
+                  </td>
+                  <td class="banner-order">
+                    <%= banner.order %>
                   </td>
                   <td class="status-badge-<%= banner._id %>">
                     <% const today=new Date(); const startDate=new Date(banner.startDate); const endDate=new
@@ -107,7 +133,7 @@
         <div class="pagination">
           <!-- Prev button -->
           <% if (currentPage> 1) { %>
-            <a href="?page=<%= currentPage - 1 %>">
+            <a href="?page=<%= currentPage - 1 %>&status=<%= filterStatus %>">
               <button class="nav-btn">Prev</button>
             </a>
             <% } else { %>
@@ -121,7 +147,7 @@
                       <%= i %>
                     </button>
                     <% } else { %>
-                      <a href="?page=<%= i %>">
+                      <a href="?page=<%= i %>&status=<%= filterStatus %>">
                         <button class="page-btn">
                           <%= i %>
                         </button>
@@ -131,7 +157,7 @@
 
                           <!-- Next button -->
                           <% if (currentPage < totalPages) { %>
-                            <a href="?page=<%= currentPage + 1 %>">
+                            <a href="?page=<%= currentPage + 1 %>&status=<%= filterStatus %>">
                               <button class="nav-btn">Next</button>
                             </a>
                             <% } else { %>

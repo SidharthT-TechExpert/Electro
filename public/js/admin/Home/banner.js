@@ -127,6 +127,12 @@ function editBanner(id) {
             banner.title
           }">
         </div>
+         <div class="mb-3 text-start">
+          <label class="form-label fw-bold">Order</label>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="swal-input-order" value="${
+            banner.order
+          }">
+        </div>
         <div class="mb-3 text-start">
           <label class="form-label fw-bold">Banner Image</label>
           <div id="swal-image-container" class="image-upload-placeholder text-center border rounded p-3 cursor-pointer">
@@ -174,6 +180,7 @@ function editBanner(id) {
       const container = document.getElementById("swal-image-container");
       const fileInput = document.getElementById("swal-input-image");
       const preview = document.getElementById("swal-image-preview");
+      const orderInput = document.getElementById("swal-input-order");
 
       container.addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", (e) => {
@@ -186,7 +193,26 @@ function editBanner(id) {
           reader.readAsDataURL(file);
         }
       });
+
+      orderInput.addEventListener("input", () => {
+        $.ajax({
+          type: "POST",
+          url: "/admin/banner/check-order",
+          data: { order: orderInput.value, id },
+          success: function (response) {
+            if (!response.success) {
+              Swal.showValidationMessage(`❌ ${response.message}`);
+              return false;
+            }
+            Swal.resetValidationMessage();
+          },
+          error: function () {
+            Swal.showValidationMessage("❌ Error validating order!");
+          },
+        });
+      });
     },
+
     preConfirm: () => {
       const title = document.getElementById("swal-input-title").value.trim();
       const fileInput = document.getElementById("swal-input-image");
@@ -198,15 +224,49 @@ function editBanner(id) {
       const endDate = document.getElementById("swal-input-end").value;
       const isActive =
         document.getElementById("swal-input-status").value === "true";
+      const order = document.getElementById("swal-input-order").value;
 
-      if (!title || (!file && !banner.image) || !startDate || !endDate) {
+      if (
+        !title ||
+        (!file && !banner.image) ||
+        !startDate ||
+        !endDate ||
+        !order
+      ) {
         Swal.showValidationMessage(
-          "⚠️ Title, Image, Start Date, and End Date are required!"
+          "⚠️ Title, Order , Image, Start Date, and End Date are required!"
         );
         return false;
       }
 
-      return { id, title, file, buttonLink, startDate, endDate, isActive };
+      $.ajax({
+        type: "POST",
+        url: "/admin/banner/check-Date",
+        data: { startDate, endDate },
+        async: false,
+        success: function (response) {
+          if (!response.valid) {
+            Swal.showValidationMessage(`❌ ${response.message}`);
+            return false;
+          }
+          Swal.resetValidationMessage();
+        },
+        error: function () {
+          Swal.showValidationMessage("❌ Error validating dates!");
+          return false;
+        },
+      });
+
+      return {
+        id,
+        title,
+        order,
+        file,
+        buttonLink,
+        startDate,
+        endDate,
+        isActive,
+      };
     },
   }).then((result) => {
     if (result.isConfirmed) {
@@ -218,9 +278,10 @@ function editBanner(id) {
       formData.append("startDate", result.value.startDate);
       formData.append("endDate", result.value.endDate);
       formData.append("isActive", result.value.isActive);
+      formData.append("order", result.value.order);
 
       $.ajax({
-        type: "PATCH",
+        type: "PUT",
         url: "/admin/banner",
         data: formData,
         processData: false,

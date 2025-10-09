@@ -10,15 +10,8 @@
       <!-- 🌟 Fullscreen Dynamic Banner -->
       <section class="hero-banner position-relative">
         <div class="hero-slider">
-
-          <% const validBanners=(bannerData || []).filter(banner=> {
-            const now = new Date();
-            const start = new Date(banner.startDate);
-            const end = new Date(banner.endDate);
-            return now >= start && now <= end; }); %>
-
-              <% if (validBanners.length> 0) { %>
-                <% validBanners.forEach((banner, index)=> { %>
+              <% if (bannerData.length> 0) { %>
+                <% bannerData.forEach((banner, index)=> { %>
                   <div class="hero-slide <%= index === 0 ? 'active' : '' %>"
                     style="background-image: url('<%= banner.image %>')">
                     <div class="hero-overlay"></div>

@@ -22,11 +22,16 @@ const loadHomePage = async (req, res) => {
 
     // Fetch listed categories
     const categories = await categorieSchema.find({ status: "listed" });
-    const bannerData = await bannerSchema.find({});
+    const bannerData = await bannerSchema
+      .find({
+        isActive: true,
+        startDate: { $lte: new Date() },
+        endDate: { $gte: new Date() },
+      })
+      .sort({ order: 1 })
+      .lean();
     // Extract category IDs
     const categoryIds = categories.map((cat) => cat._id);
-   
-    
 
     // Fetch latest 8 unblocked products
     const products = await productSchema
@@ -90,16 +95,11 @@ const loadHomePage = async (req, res) => {
       hotSales,
       cartCount: req.cartCount || null,
     });
-    
   } catch (error) {
     console.error("❌ Error loading home page:", error);
-    res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .send("Internal Server Error");
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
-
-
 
 // 404 Page Not Found
 const pageNotFound = async (req, res) => {

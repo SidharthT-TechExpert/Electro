@@ -3,7 +3,7 @@ const routes = express.Router();
 const passport = require("passport");
 const userController = require("../controllers/user/userController.js");
 const checkSession = require("../middlewares/session.js");
-
+const DetailController = require('../controllers/user/DetailController.js')
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
 
@@ -37,13 +37,23 @@ routes.get("/logOut", checkSession.userLogOut, userController.logOut);
 // Home Page Route
 routes.get("/", checkSession.homeAuth, userController.loadHomePage);
 
-// Post Request
 // Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
 // Reset Password Route
 routes.post("/passReset", userController.passReset);
 // Update Password Route
 routes.post("/update-password", userController.updatePass);
+
+
+// Profile 
+routes.get('/myProfile', DetailController.Profile)
+
+//Update Name 
+routes.put('/myProfile/name',DetailController.UpdateName);
+routes.post('/change-password',DetailController.updatePass)
+routes.post('/send-otp',DetailController.send_otp)
+routes.post('/verifyOTP',DetailController.verify_Otp)
+
 
 // Product Details Page route
 routes.get("/products/Details/:id", userController.loadProductDetails);

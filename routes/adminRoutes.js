@@ -103,9 +103,12 @@ routes
   .route("/banner")
   .get(bannerController.getBannerPage)
   .post(bannerUpload.single("image"), bannerController.addBanner)
-  .patch(bannerUpload.single("image"), bannerController.updateBanner)
+  .put(bannerUpload.single("image"), bannerController.updateBanner)
   .delete(bannerController.deleteBanner);
-  
+
+// New Route for Banner Order Validation
+routes.post('/banner/check-order' , bannerController.checkBannerOrder);
+routes.post('/banner/check-Date', bannerController.checkDate);
 
 // Orders Management
 routes.get("/orders", categorieController.categories);

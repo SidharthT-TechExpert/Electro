@@ -1,0 +1,276 @@
+<link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<%- include("../partials/user/header") %>
+<%- include("../partials/user/messages") %>
+
+<main class="profile-page container my-5">
+  <div class="row">
+    <!-- Sidebar -->
+    <aside class="col-md-3">
+      <div class="account-sidebar">
+        <h6 class="fw-bold mb-3">Manage My Account</h6>
+        <ul class="list-unstyled">
+          <li><a href="/profile" class="active">My Profile</a></li>
+          <li><a href="/address-book">Address Book</a></li>
+          <li><a href="/payment-options">My Payment Options</a></li>
+          <li><a href="/wallet">My Wallet</a></li>
+        </ul>
+        <h6 class="fw-bold mt-4 mb-3">My Orders</h6>
+        <ul class="list-unstyled">
+          <li><a href="/orders">My Returns</a></li>
+          <li><a href="/cancellations">My Cancellations</a></li>
+        </ul>
+        <h6 class="fw-bold mt-4 mb-3">My Wishlist</h6>
+        <ul class="list-unstyled">
+          <li><a href="/wishlist">View Wishlist</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Profile Section -->
+    <section class="col-md-9">
+      <div class="card shadow-sm p-4 border-0">
+        <h5 class="text-danger fw-semibold mb-4">Edit Your Profile</h5>
+
+        <!-- Name -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Name <a onclick="editName('<%= user.name %>')" class="text-primary small ms-1">Edit</a></label>
+          <input type="text" class="form-control" value="<%= user.name %>" readonly>
+        </div>
+
+        <!-- Password Changes -->
+        <h6 class="fw-bold mt-4 mb-3">Password Changes</h6>
+        <form id="passwordForm" onsubmit=" return ChangePassword(this)" >
+          <div class="mb-3">
+            <input type="password" name="cPassword" class="form-control" placeholder="Current Password">
+          </div>
+          <div class="mb-3">
+            <input type="password" name="Password" class="form-control" placeholder="New Password">
+          </div>
+          <div class="mb-3">
+            <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm New Password">
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" onclick="this.form.reset()" class="btn btn-outline-dark">Cancel</button>
+            <button type="submit" class="btn btn-danger fw-semibold">Update Password</button>
+          </div>
+        </form>
+
+        <!-- Email & Phone -->
+        <div class="row mt-4">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Email <a href="#" class="text-primary small ms-1">Edit</a></label>
+            <input type="email" class="form-control" value="<%= user.email %>" readonly>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Phone <a onclick="editPhone('<%= user.phone %>')" class="text-primary small ms-1">Edit</a></label>
+            <input type="text" class="form-control" value="<%= user.phone %>" readonly>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include("../partials/user/footer") %>
+
+<style>
+  .account-sidebar a {
+    display: block;
+    color: #444;
+    text-decoration: none;
+    padding: 6px 0;
+  }
+  .account-sidebar a.active {
+    color: #e63946;
+    font-weight: 600;
+  }
+  .account-sidebar h6 {
+    font-size: 0.9rem;
+    color: #333;
+  }
+  .card input[readonly] {
+    background: #f8f8f8;
+  }
+  .btn-danger {
+    background: #e63946;
+    border: none;
+  }
+  .btn-danger:hover {
+    background: #c92c3d;
+  }
+</style>
+
+<!-- Include SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function ChangePassword(f) {
+  const cPassword = f.cPassword.value.trim();   // current password
+  const newPassword = f.Password.value.trim();  // new password
+  const confirmPassword = f.confirmPassword.value.trim(); // confirmation
+
+  // Validation: empty fields
+  if (!cPassword || !newPassword || !confirmPassword) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Fields",
+      text: "Please fill in all password fields.",
+    });
+    return false;
+  }
+
+  // Validation: minimum length
+  if (newPassword.length < 8) {
+    Swal.fire({
+      icon: "error",
+      title: "Weak Password",
+      text: "Password must be at least 8 characters long.",
+    });
+    return false;
+  }
+
+  // Validation: must contain at least one number and one special character
+  const hasNumber = /[0-9]/.test(newPassword);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+
+  if (!hasNumber || !hasSpecialChar) {
+    Swal.fire({
+      icon: "error",
+      title: "Weak Password",
+      text: "Password must contain at least one number and one special character.",
+    });
+    return false;
+  }
+
+  // Validation: confirm password match
+  if (newPassword !== confirmPassword) {
+    Swal.fire({
+      icon: "error",
+      title: "Password Mismatch",
+      text: "New password and confirmation do not match.",
+    });
+    return false;
+  }
+
+  // Validation: new password should differ from current password
+  if (newPassword === cPassword) {
+    Swal.fire({
+      icon: "info",
+      title: "Same Password",
+      text: "New password must be different from your current password.",
+    });
+    return false;
+  }
+
+  // Send data to backend
+  fetch("/change-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cPassword, newPassword }),
+  })
+    .then((res) => res.json()) // ✅ parse JSON first
+    .then((response) => {
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Password Updated!",
+          text: response.message || "Your password was changed successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        }).then(() => location.reload());
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.message || "Unable to change password.",
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Error changing password:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong. Please try again later.",
+      });
+    });
+
+  return false; // ✅ prevent form reload
+}
+
+async function editPhone(currentPhone) {
+  // Ask for new phone number
+  const { value: newPhone } = await Swal.fire({
+    title: "Enter New Phone Number",
+    input: "text",
+    inputLabel: "We’ll send an OTP to this number",
+    inputValue: currentPhone,
+    inputPlaceholder: "Enter new phone number",
+    confirmButtonText: "Send OTP",
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!/^[0-9]{10}$/.test(value)) {
+        return "Please enter a valid 10-digit phone number.";
+      }
+    },
+  });
+
+  if (!newPhone) return;
+
+  // Step 2: Send OTP request
+  const otpResponse = await fetch("/send-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone: newPhone }),
+  }).then((res) => res.json());
+
+  if (!otpResponse.success) {
+    return Swal.fire("Error", otpResponse.message || "Failed to send OTP", "error");
+  }else{
+        Swal.fire({
+                icon:'success',
+                text:otpResponse.message ,
+                 timer:1500
+        });
+  }
+
+
+
+  // Step 3: Ask user to enter OTP
+  const { value: otp } = await Swal.fire({
+    title: "Enter OTP",
+    input: "text",
+    inputPlaceholder: "Enter 6-digit OTP",
+    confirmButtonText: "Verify OTP",
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!/^[0-9]{6}$/.test(value)) {
+        return "Please enter a valid 6-digit OTP.";
+      }
+    },
+  });
+
+  if (!otp) return;
+
+  // Step 4: Verify OTP
+  const verifyResponse = await fetch("/verifyOTP", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone: newPhone, otp }),
+  }).then((res) => res.json());
+
+  if (verifyResponse.success) {
+    Swal.fire({
+      icon: "success",
+      title: "Phone Updated!",
+      text: "Your phone number has been successfully updated.",
+      timer: 1500,
+      showConfirmButton: false,
+    }).then(() => location.reload());
+  } else {
+    Swal.fire("Error", verifyResponse.message || "Invalid OTP", "error");
+  }
+}
+</script>
