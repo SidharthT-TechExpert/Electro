@@ -123,15 +123,18 @@ const securePassword = async (password) => {
 };
 
 // Get profile page
-const Profile = async (req, res) => {
+const MY_Profile = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
+     const page = 'profile' ;
+     
     if (!user) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).send("User not logged in");
     }
 
     res.status(HTTP_STATUS.OK).render("home/myProfile", {
       user,
+      page,
       cartCount: req.cartCount || null,
     });
   } catch (error) {
@@ -447,7 +450,7 @@ const Profile_photo = async (req, res) => {
 
 
 module.exports = {
-  Profile,
+  MY_Profile,
   UpdateName,
   updatePass,
   send_otp,

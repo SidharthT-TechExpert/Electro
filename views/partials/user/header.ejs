@@ -22,6 +22,7 @@
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/header.css" rel="stylesheet">
   <link href="css/footer.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/home.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -69,7 +70,6 @@
       <div class="d-flex align-items-center gap-3">
         <% if(typeof user !=="undefined" && user?.name ){ %>
           <!-- User Dropdown -->
-          <!-- User Dropdown -->
           <div class="dropdown">
             <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
               data-bs-toggle="dropdown" aria-expanded="false">
@@ -103,17 +103,17 @@
               </li>
 
               <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/orders">
                   <i class="fas fa-box"></i> Orders
                 </a>
               </li>
               <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/wishlist">
                   <i class="fas fa-heart"></i> Wishlist (1)
                 </a>
               </li>
               <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/wallet">
                   <i class="fas fa-wallet"></i> Wallet
                 </a>
               </li>

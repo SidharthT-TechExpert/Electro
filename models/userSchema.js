@@ -12,6 +12,7 @@ const userSchema = new Schema({
   cart: [{ type: Schema.Types.ObjectId, ref: "Cart" }],
   wallet: [{ type: Schema.Types.ObjectId, ref: "Wallet" }],
   orderHistory: [{ type: Schema.Types.ObjectId, ref: "Order" }],
+  addresses:[{type:Schema.Types.ObjectId,ref:'address'}],
   createdOn: { type: Date, default: Date.now },
   referalCode: { type: String },
   redeemed: { type: Boolean, default: false },
