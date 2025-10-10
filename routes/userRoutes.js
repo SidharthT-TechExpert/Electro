@@ -48,6 +48,12 @@ routes.post("/update-password", userController.updatePass);
 // Profile 
 routes.get('/myProfile', DetailController.Profile)
 
+// -------------------- Profile Photo Upload -------------------- //
+routes.post("/upload-profile-photo", DetailController.upload_Profile_photo);
+
+// -------------------- Serve Profile Photo Getting -------------------- //
+routes.get("/profile-photo/:id", DetailController.Profile_photo);
+
 //Update Name 
 routes.put('/myProfile/name',DetailController.UpdateName);
 //Update Password

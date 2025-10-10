@@ -69,22 +69,39 @@
       <div class="d-flex align-items-center gap-3">
         <% if(typeof user !=="undefined" && user?.name ){ %>
           <!-- User Dropdown -->
+          <!-- User Dropdown -->
           <div class="dropdown">
             <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
               data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-user-circle"></i>
-              <span>
-                <%= user?.name %>
-              </span>
-              <i class="fas fa-chevron-down arrow-icon"></i>
+
+              <% if (user && user.profilePhoto) { %>
+                <!-- Show profile photo -->
+                <img src="/profile-photo/<%= user.profilePhoto %>" alt="Profile Photo" class="rounded-circle" width="20"
+                  height="20" style="object-fit: cover;">
+                <% } else { %>
+                  <!-- Default user icon -->
+                  <i class="fas fa-user-circle"></i>
+                  <% } %>
+
+                    <span>
+                      <%= user?.name %>
+                    </span>
+                    <i class="fas fa-chevron-down arrow-icon"></i>
             </button>
+
             <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="/myProfile">
-                  <i class="fas fa-user"></i>
-                  My Profile
+                  <% if (user && user.profilePhoto) { %>
+                    <img src="/profile-photo/<%= user.profilePhoto %>" alt="Profile Photo" class="rounded-circle"
+                      width="20" height="20" style="object-fit: cover;">
+                    <% } else { %>
+                      <i class="fas fa-user"></i>
+                      <% } %>
+                        My Profile
                 </a>
               </li>
+
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="#">
                   <i class="fas fa-box"></i> Orders
@@ -110,6 +127,7 @@
               </li>
             </ul>
           </div>
+
 
           <!-- Cart -->
           <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">

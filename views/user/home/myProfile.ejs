@@ -33,16 +33,30 @@
           <div class="card shadow-sm p-4 border-0">
             <h5 class="text-danger fw-semibold mb-4">Edit Your Profile</h5>
 
+            <!-- ✅ Profile Photo Upload -->
+            <div class="text-center mb-4">
+              <img id="profilePreview"
+                src="<%= user.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/Uploads/img/default-avatar.png' %>"
+                alt="Profile Photo" class="rounded-circle border" width="120" height="120" style="object-fit: cover;">
+              <div class="mt-2">
+                <label class="btn btn-outline-danger btn-sm">
+                  <i class="fa fa-camera"></i> Change Photo
+                  <input type="file" name="profilePhoto" id="profilePhotoInput" accept="image/*" hidden>
+                </label>
+              </div>
+            </div>
+
             <!-- Name -->
             <div class="mb-3">
-              <label class="form-label fw-semibold">Name <a onclick="editName('<%= user.name %>')"
-                  class="text-primary small ms-1">Edit</a></label>
+              <label class="form-label fw-semibold">Name
+                <a onclick="editName('<%= user.name %>')" class="text-primary small ms-1">Edit</a>
+              </label>
               <input type="text" class="form-control" value="<%= user.name %>" readonly>
             </div>
 
             <!-- Password Changes -->
             <h6 class="fw-bold mt-4 mb-3">Password Changes</h6>
-            <form id="passwordForm" onsubmit=" return ChangePassword(this)">
+            <form id="passwordForm" onsubmit="return ChangePassword(this)">
               <div class="mb-3">
                 <input type="password" name="cPassword" class="form-control" placeholder="Current Password">
               </div>
@@ -61,13 +75,15 @@
             <!-- Email & Phone -->
             <div class="row mt-4">
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Email <a onclick="editEmail('<%= user.email %>','<%= user.id %>')"
-                    class="text-primary small ms-1">Edit</a></label>
+                <label class="form-label fw-semibold">Email
+                  <a onclick="editEmail('<%= user.email %>', '<%= user.id %>')" class="text-primary small ms-1">Edit</a>
+                </label>
                 <input type="email" class="form-control" value="<%= user.email %>" readonly>
               </div>
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Phone <a onclick="editPhone('<%= user.phone %>')"
-                    class="text-primary small ms-1">Edit</a></label>
+                <label class="form-label fw-semibold">Phone
+                  <a onclick="editPhone('<%= user.phone %>')" class="text-primary small ms-1">Edit</a>
+                </label>
                 <input type="text" class="form-control" value="<%= user.phone %>" readonly>
               </div>
             </div>
@@ -359,5 +375,36 @@
             Swal.fire("⚠️ Error", "Something went wrong. Please try again.", "error");
           }
         }
+
+        const photoInput = document.getElementById("profilePhotoInput");
+
+        photoInput.addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append("profilePhoto", file); // must match input name
+
+          try {
+            const response = await fetch("/upload-profile-photo", {
+              method: "POST",
+              body: formData
+            });
+            const data = await response.json();
+            console.log(data); // check what server responds
+
+            if (data.success) {
+              Swal.fire({
+                icon: "success",
+                title: "Profile photo Updated!",
+                text: "Your profile photo has been successfully updated.",
+                timer: 1500,
+                showConfirmButton: false,
+              }).then(() => location.reload());
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        });
 
       </script>

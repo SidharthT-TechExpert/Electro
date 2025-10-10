@@ -1,9 +1,24 @@
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
+const mongoose = require('mongoose');
 require("dotenv").config();
 const HTTP_STATUS = require("../../config/statusCodes");
 const userSchema = require("../../models/userSchema.js");
+const fs = require("fs");
+const { GridFSBucket, ObjectId } = require("mongodb");
+const { IncomingForm } = require("formidable");
+const User = require("../../models/userSchema.js");
+
+// Initialize GridFS after DB connection
+let gfs;
+mongoose.connection.once("open", () => {
+  gfs = new GridFSBucket(mongoose.connection.db, {
+    bucketName: "profilePhotos",
+  });
+  console.log("✅ GridFS initialized for profile photos");
+});
+
 
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -324,6 +339,7 @@ const send_Email_otp = async (req, res) => {
   }
 };
 
+
 // Verify OTP and update phone
 const verify_Email_Otp = async (req, res) => {
   try {
@@ -336,7 +352,7 @@ const verify_Email_Otp = async (req, res) => {
 
     // ✅ Validate OTP from session
     const storedOtp = req.session.userOtp;
-    
+
     if (!storedOtp || parseInt(otp) !== parseInt(storedOtp)) {
       return res.json({ success: false, message: "Invalid or expired OTP" });
     }
@@ -357,6 +373,79 @@ const verify_Email_Otp = async (req, res) => {
   }
 };
 
+// Upload profile photo
+const upload_Profile_photo = (req, res) => {
+  if (!gfs)
+    return res
+      .status(503)
+      .json({ success: false, message: "Server not ready" });
+
+  const form = new IncomingForm({ multiples: false });
+
+  form.parse(req, async (err, fields, files) => {
+    if (err)
+      return res.status(500).json({ success: false, message: "Upload error" });
+
+    const file = Array.isArray(files.profilePhoto)
+      ? files.profilePhoto[0]
+      : files.profilePhoto;
+
+    if (!file || !file.filepath) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
+    }
+
+    const readStream = fs.createReadStream(file.filepath);
+
+    const uploadStream = gfs.openUploadStream(
+      `profile_${req.session.userId}_${Date.now()}`,
+      { contentType: file.mimetype }
+    );
+
+    readStream
+      .pipe(uploadStream)
+      .on("error", () =>
+        res.status(500).json({ success: false, message: "Upload failed" })
+      )
+      .on("finish", async () => {
+        // Save fileId to user profile
+        await User.findByIdAndUpdate(req.session.userId, {
+          profilePhoto: uploadStream.id,
+        });
+
+        res.json({
+          success: true,
+          message: "Profile photo uploaded!",
+          fileId: uploadStream.id,
+        });
+      });
+  });
+};
+
+// Download profile photo
+const Profile_photo = async (req, res) => {
+  try {
+    if (!gfs)
+      return res
+        .status(503)
+        .send("Server not ready. Try again later.");
+
+    const fileId = new ObjectId(req.params.id);
+    const downloadStream = gfs.openDownloadStream(fileId);
+
+    downloadStream.on("error", () => {
+      res.status(404).send("File not found");
+    });
+
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};
+
+
 module.exports = {
   Profile,
   UpdateName,
@@ -365,4 +454,6 @@ module.exports = {
   verify_Otp,
   send_Email_otp,
   verify_Email_Otp,
+  Profile_photo,
+  upload_Profile_photo,
 };

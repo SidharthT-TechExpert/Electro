@@ -42,8 +42,9 @@
     <div class="dropdown">
       <a href="#" class="d-flex align-items-center" id="profileDropdown" data-bs-toggle="dropdown"
         aria-expanded="false">
-        <img src="/img/admin/shiyonaSidharth.png" alt="Profile" class="rounded-circle profile-img" width="36"
-          height="36" />
+        <img id="profilePreview"
+          src="<%= user.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/Uploads/img/default-avatar.png' %>"
+          alt="Profile Photo" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
       </a>
       <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
         <li><a class="dropdown-item" href="/admin/profile"><i class="ri-user-line me-2"></i> Profile</a></li>
