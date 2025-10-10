@@ -1,8 +1,9 @@
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
+const twilio = require("twilio");
+require("dotenv").config();
 const HTTP_STATUS = require("../../config/statusCodes");
 const userSchema = require("../../models/userSchema.js");
-require("dotenv").config();
-const twilio = require("twilio");
 
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -21,6 +22,70 @@ async function sendOTP(phone, otp) {
     return false;
   }
 }
+
+// OTP Generater
+const generateOtp = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Email through OTP Send
+const sendVerificationEmail = async (email, OTP) => {
+  try {
+    const transport = nodemailer.createTransport({
+      service: "gmail", // or "hotmail", "yahoo", etc.
+      auth: {
+        user: process.env.NODEMAILER_EMAIL,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+
+    // ✅ Verify connection before sending
+    await transport.verify();
+    console.log("✅ SMTP server verified. Ready to send emails.");
+
+    // ✅ Email content (both plain text & HTML)
+    const mailOptions = {
+      from: `"Electro Verification" <${process.env.NODEMAILER_EMAIL}>`,
+      to: email,
+      subject: "Your Electro verification code",
+      text: `Hi,
+
+Your OTP code is ${OTP}. 
+It’s valid for 10 minutes.
+
+If you didn’t request this, just ignore this message.
+
+– The Electro Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 15px;
+                    border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
+          <p style="font-size: 16px;">Hi,</p>
+          <p style="font-size: 15px;">Your <strong>Electro verification code</strong> is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #2b2b2b;">${OTP}</p>
+          <p style="font-size: 14px;">This code is valid for <strong>10 minutes</strong>.</p>
+          <p style="font-size: 13px; color: #555;">
+            If you didn’t request this, please ignore this email.
+          </p>
+          <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;">
+          <p style="font-size: 12px; color: #999;">© ${new Date().getFullYear()} Electro. All rights reserved.</p>
+        </div>
+      `,
+      headers: {
+        "X-Mailer": "ElectroMailer",
+        "List-Unsubscribe": "<mailto:support@electroshop.com>",
+      },
+    };
+
+    // ✅ Send email
+    const info = await transport.sendMail(mailOptions);
+
+    console.log(`📩 OTP email sent to ${email}: ${info.response}`);
+    return info.accepted.length > 0;
+  } catch (error) {
+    console.error("❌ sendVerificationEmail Error:", error);
+    return false;
+  }
+};
 
 // Check user session and fetch user
 const checkSession = async (id) => {
@@ -143,7 +208,7 @@ const send_otp = async (req, res) => {
       return res.json({ success: false, message: "Phone number required" });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    const otp = generateOtp();
     console.log(`OTP for ${phone}: ${otp}`);
 
     const sent = await sendOTP(phone, otp);
@@ -203,10 +268,101 @@ const verify_Otp = async (req, res) => {
   }
 };
 
+// 📧 Send Email OTP
+const send_Email_otp = async (req, res) => {
+  try {
+    const { email, id } = req.body;
+
+    // ✅ Validate input
+    if (!email) {
+      return res.json({ success: false, message: "Email is required" });
+    }
+
+    // ✅ Check if email already exists for a different user
+    const user = await userSchema.findOne({ email });
+    if (user && user._id.toString() != id) {
+      return res.json({
+        success: false,
+        message: "Email is already registered with another account",
+      });
+    }
+
+    // ✅ Generate OTP
+    const OTP = generateOtp();
+    console.log(`Generated OTP for ${email}: ${OTP}`);
+
+    // ✅ Send email using your mailer function
+    const emailSent = await sendVerificationEmail(email, OTP);
+    if (!emailSent) {
+      return res.json({
+        success: false,
+        message: "Failed to send verification email. Please try again.",
+      });
+    }
+
+    // ✅ Store OTP and email in session
+    req.session.userOtp = OTP;
+    req.session.email = email;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.json({
+          success: false,
+          message: "Session error while saving OTP",
+        });
+      }
+
+      console.log("✅ OTP saved in session:", OTP);
+      res.json({ success: true, message: "OTP sent to your email" });
+    });
+  } catch (error) {
+    console.error("❌ send_Email_otp Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Verify OTP and update phone
+const verify_Email_Otp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const userId = req.session.userId;
+
+    if (!email || !otp) {
+      return res.json({ success: false, message: "Missing email or OTP" });
+    }
+
+    // ✅ Validate OTP from session
+    const storedOtp = req.session.userOtp;
+    
+    if (!storedOtp || parseInt(otp) !== parseInt(storedOtp)) {
+      return res.json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    // ✅ Clear OTP session
+    req.session.userOtp = null;
+    req.session.email = null;
+
+    // ✅ Update user’s email
+    await userSchema.findByIdAndUpdate(userId, { email });
+
+    res.json({ success: true, message: "Email updated successfully" });
+  } catch (error) {
+    console.error("❌ verifyEmail_OTP Error:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   Profile,
   UpdateName,
   updatePass,
   send_otp,
   verify_Otp,
+  send_Email_otp,
+  verify_Email_Otp,
 };

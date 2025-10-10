@@ -50,9 +50,14 @@ routes.get('/myProfile', DetailController.Profile)
 
 //Update Name 
 routes.put('/myProfile/name',DetailController.UpdateName);
+//Update Password
 routes.post('/change-password',DetailController.updatePass)
+//Update Phone number
 routes.post('/send-otp',DetailController.send_otp)
 routes.post('/verifyOTP',DetailController.verify_Otp)
+//Update Email
+routes.post('/send-email-otp',DetailController.send_Email_otp)
+routes.post('/verifyEmail_OTP',DetailController.verify_Email_Otp)
 
 
 // Product Details Page route

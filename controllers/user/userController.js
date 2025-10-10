@@ -60,7 +60,7 @@ const loadHomePage = async (req, res) => {
       product.variantImage =
         variant?.product_image?.length > 0
           ? variant.product_image[0]
-          : product.Images?.[0] || "/images/no-image.jpg";
+          : product.Images?.[0] || "/img/header-img.jpg";
 
       // ✅ Attach price from variant if available
       product.price = variant?.price.toFixed(2) || "N/A";
@@ -160,57 +160,58 @@ const generateOtp = () => {
 // Email through OTP Send
 const sendVerificationEmail = async (email, OTP) => {
   try {
-    // Create reusable transporter
     const transport = nodemailer.createTransport({
-      service: "gmail",
+      service: "gmail", // or "hotmail", "yahoo", etc.
       auth: {
         user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD, // <-- App Password here
+        pass: process.env.NODEMAILER_PASSWORD,
       },
     });
 
-    // Verify SMTP connection before sending
-    transport.verify((error, success) => {
-      if (error) {
-        console.error("SMTP Error:", error);
-        console.log(
-          process.env.NODEMAILER_EMAIL,
-          process.env.NODEMAILER_PASSWORD
-        );
-      } else {
-        console.log("✅ Server is ready to take messages");
-      }
-    });
+    // ✅ Verify connection before sending
+    await transport.verify();
+    console.log("✅ SMTP server verified. Ready to send emails.");
 
-    console.log("✅ SMTP Server is ready to take messages");
-
-    // Email content
+    // ✅ Email content (both plain text & HTML)
     const mailOptions = {
-      from: `"Electro Support ⚡" <${process.env.NODEMAILER_EMAIL}>`,
+      from: `"Electro Verification" <${process.env.NODEMAILER_EMAIL}>`,
       to: email,
-      subject: "🔐 Verify Your Account - Electro",
-      text: `Your OTP is ${OTP}. It will expire in 10 minutes.`,
+      subject: "Your Electro verification code",
+      text: `Hi,
+
+Your OTP code is ${OTP}. 
+It’s valid for 10 minutes.
+
+If you didn’t request this, just ignore this message.
+
+– The Electro Team`,
       html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;
-                    border:1px solid #ddd;border-radius:8px;background:#f9f9f9;">
-          <h2 style="color:#4caf50;">Welcome to Electro ⚡</h2>
-          <p>We received a request to verify your account.</p>
-          <p style="font-size:18px;">Your OTP is:</p>
-          <h1 style="color:#333;letter-spacing:3px;">${OTP}</h1>
-          <p>This OTP will expire in <b>10 minutes</b>.</p>
-          <hr style="margin:20px 0;">
-          <small>If you didn’t request this, you can safely ignore this email.</small>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 15px;
+                    border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
+          <p style="font-size: 16px;">Hi,</p>
+          <p style="font-size: 15px;">Your <strong>Electro verification code</strong> is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #2b2b2b;">${OTP}</p>
+          <p style="font-size: 14px;">This code is valid for <strong>10 minutes</strong>.</p>
+          <p style="font-size: 13px; color: #555;">
+            If you didn’t request this, please ignore this email.
+          </p>
+          <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;">
+          <p style="font-size: 12px; color: #999;">© ${new Date().getFullYear()} Electro. All rights reserved.</p>
         </div>
       `,
+      headers: {
+        "X-Mailer": "ElectroMailer",
+        "List-Unsubscribe": "<mailto:support@electroshop.com>",
+      },
     };
 
-    // Send email
+    // ✅ Send email
     const info = await transport.sendMail(mailOptions);
 
-    console.log(`📩 Email sent to ${email}: ${info.response}`);
+    console.log(`📩 OTP email sent to ${email}: ${info.response}`);
     return info.accepted.length > 0;
   } catch (error) {
-    console.error("sendVerificationEmail Error:", error);
+    console.error("❌ sendVerificationEmail Error:", error);
     return false;
   }
 };
