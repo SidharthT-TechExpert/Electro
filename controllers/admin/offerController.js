@@ -1,5 +1,6 @@
 const offerSchema = require("../../models/OfferSchema");
 const productSchema = require("../../models/productSchema");
+const userSchema = require('../../models/userSchema')
 const categorieSchema = require("../../models/categorySchema");
 
 const HTTP_STATUS = require("../../config/statusCodes");
@@ -10,6 +11,9 @@ const loadOfferPage = async (req, res) => {
     const limit = 4;
     const page = parseInt(req.query.page) || 1;
     const isActive = req.query.status || true;
+    const filter  = req.query.status ;
+
+    const user = await userSchema.findOne({_id:req.session.adminId})
 
     // Fetch active offers
     const offerData = await offerSchema
@@ -25,6 +29,8 @@ const loadOfferPage = async (req, res) => {
 
     res.render("Home/offersPage", {
       offerData,
+      user,
+      filter ,
       products,
       categories,
       title: "Offers Management",
@@ -66,8 +72,7 @@ const addOffer = async (req, res) => {
       !startDate ||
       !endDate ||
       !targetIds ||
-      targetIds.length === 0 ||
-      !maxAmount
+      targetIds.length === 0 
     ) {
       return res.json({ success: false, message: "Missing required fields" });
     }

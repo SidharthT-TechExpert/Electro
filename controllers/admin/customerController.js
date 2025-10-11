@@ -34,9 +34,11 @@ const customer = async (req, res) => {
 
     // Count for pagination
     const count = await userSchema.countDocuments(query);
+    const user = await userSchema.findOne({_id:req.session.adminId});
 
     res.render("Home/customersList", {
       customers,
+      user,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       search: req.query.search || "",

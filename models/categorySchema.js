@@ -18,9 +18,13 @@ const categorySchema = new Schema({
   status: {
     type: String,
     enum: ["listed", "unlisted"],
-    lowercase: true, 
+    lowercase: true,
     trim: true,
-    default:'listed',
+    default: "listed",
+  },
+  productCount: { 
+    type: Number, 
+    default: 0 
   },
   categoryOffer: {
     type: Number,

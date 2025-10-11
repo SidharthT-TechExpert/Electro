@@ -38,6 +38,8 @@ routes.get("/logOut", checkSession.userLogOut, userController.logOut);
 
 // Home Page Route
 routes.get("/", checkSession.homeAuth, userController.loadHomePage);
+routes.get("/shop", checkSession.homeAuth, userController.loadShopPage);
+
 
 // Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
@@ -72,6 +74,12 @@ routes
   .get(AddressController.get_Address_page)
   .post(AddressController.addAddress)
   .delete(AddressController.deleteAddress);
+
+routes
+   .route('/address-book/:id')
+    .get(AddressController.get_Details)
+    .put(AddressController.editAddress)
+
 
 // Product Details Page route
 routes.get("/products/Details/:id", userController.loadProductDetails);

@@ -1,0 +1,93 @@
+/* =============================
+   🛍 SHOP SIDEBAR STYLING
+   ============================= */
+
+/* Sidebar Container */
+.shop__sidebar {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  height: calc(100vh - 180px); /* Sticky height */
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 100px;
+}
+
+/* Scrollbar styling */
+.shop__sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.shop__sidebar::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 4px;
+}
+
+/* Search bar */
+.shop__sidebar__search {
+  margin-bottom: 25px;
+}
+
+/* Accordion / Filters */
+.shop__sidebar__accordion .card {
+  border: none;
+  margin-bottom: 15px;
+  background: transparent;
+}
+
+.shop__sidebar__accordion .card-heading a {
+  font-weight: 600;
+  font-size: 16px;
+  color: #222;
+  cursor: pointer;
+  display: block;
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Filter lists */
+.shop__sidebar__categories ul,
+.shop__sidebar__brand ul,
+.shop__sidebar__price ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 10px;
+}
+
+.shop__sidebar__categories ul li,
+.shop__sidebar__brand ul li,
+.shop__sidebar__price ul li {
+  margin: 8px 0;
+}
+
+/* Filter links */
+.shop__sidebar__categories a,
+.shop__sidebar__brand a,
+.shop__sidebar__price a {
+  color: #555;
+  font-size: 15px;
+  text-decoration: none;
+  display: block;
+  padding: 4px 8px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+}
+
+.shop__sidebar__categories a.active,
+.shop__sidebar__brand a.active,
+.shop__sidebar__price a.active,
+.shop__sidebar__categories a:hover,
+.shop__sidebar__brand a:hover,
+.shop__sidebar__price a:hover {
+  color: #fff;
+  background: #007bff;
+}
+
+/* Responsive sidebar */
+@media (max-width: 991px) {
+  .shop__sidebar {
+    height: auto;
+    position: relative;
+    margin-bottom: 30px;
+  }
+}

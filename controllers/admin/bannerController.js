@@ -1,4 +1,5 @@
 const bannerSchema = require("../../models/bannerSchema.js");
+const userSchema = require('../../models/userSchema');
 const HTTP_STATUS = require("../../config/statusCodes");
 const fs = require("fs");
 const path = require("path");
@@ -9,6 +10,7 @@ const getBannerPage = async (req, res) => {
     const limit = 3;
     const Page = parseInt(req.query.page) || 1;
     const isActive = req.query.status || null;
+
     const filterStatus =
       isActive === "active"
         ? "active"
@@ -55,9 +57,11 @@ const getBannerPage = async (req, res) => {
       .exec();
 
     const count = await bannerSchema.countDocuments(query);
+    const user = await userSchema.findOne({_id:req.session.adminId});
 
     res.render("Home/banner", {
       bannerData,
+      user,
       filterStatus,
       currentPage: Page,
       totalPages: Math.ceil(count / limit),

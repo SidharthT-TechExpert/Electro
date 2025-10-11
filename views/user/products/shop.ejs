@@ -1,0 +1,896 @@
+<%- include("../partials/user/header.ejs") %>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.css">
+
+  <style>
+    /* ==========================
+   FLIPKART/AMAZON STYLE SHOP
+========================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .shop {
+      padding: 20px 0;
+      background: #f1f3f6;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .shop__sidebar {
+      background: #fff;
+      border-radius: 2px;
+      padding: 0;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+    }
+
+    .sidebar-section {
+      border-bottom: 1px solid #f0f0f0;
+      padding: 16px 20px;
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Search Box */
+    #searchInput {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d4d5d9;
+      border-radius: 2px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: #2874f0;
+    }
+
+    /* Sidebar Links */
+    .filter-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .filter-list li {
+      margin-bottom: 8px;
+    }
+
+    .filter-list a {
+      color: #878787;
+      font-size: 14px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .filter-list a:hover {
+      color: #2874f0;
+    }
+
+    .filter-list a.active {
+      color: #410b0b;
+      font-weight: 600;
+    }
+
+    .filter-count {
+      margin-left: auto;
+      color: #878787;
+      font-size: 12px;
+    }
+
+    .scrollable {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .scrollable::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .scrollable::-webkit-scrollbar-track {
+      background: #f0f0f0;
+    }
+
+    .scrollable::-webkit-scrollbar-thumb {
+      background: #c2c2c2;
+      border-radius: 4px;
+    }
+
+    .scrollable::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+
+    /* Brand Logo in Sidebar */
+    .brand-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      background: #f9f9f9;
+      border-radius: 2px;
+      padding: 2px;
+    }
+
+    /* Price Slider */
+    .price-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .price-input-wrapper select {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #d4d5d9;
+      border-radius: 2px;
+      font-size: 13px;
+      color: #212121;
+    }
+
+    .price-input-wrapper select:focus {
+      outline: none;
+      border-color: #2874f0;
+    }
+
+    .price-divider {
+      color: #878787;
+    }
+
+    /* ===== TOP FILTER BAR ===== */
+    .shop__product__option {
+      background: #fff;
+      padding: 12px 20px;
+      margin-bottom: 16px;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .shop__product__option__left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .shop__product__option__left p {
+      font-size: 14px;
+      color: #878787;
+      margin: 0;
+    }
+
+    .shop__product__option__left span {
+      font-size: 14px;
+      color: #212121;
+      font-weight: 600;
+    }
+
+    .shop__product__option__right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .shop__product__option__right p {
+      font-size: 14px;
+      color: #212121;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .shop__product__option__right select {
+      padding: 8px 32px 8px 12px;
+      border: 1px solid #d4d5d9;
+      border-radius: 2px;
+      font-size: 14px;
+      color: #212121;
+      background: #fff;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .shop__product__option__right select:focus {
+      outline: none;
+      border-color: #2874f0;
+    }
+
+    /* ===== PRODUCT CARDS ===== */
+    .product__item {
+      background: #fff;
+      border-radius: 2px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .1);
+    }
+
+    .product__item:hover {
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .12);
+    }
+
+    /* Product Image */
+    .product__item__pic {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      padding: 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .product__item__pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s;
+    }
+
+    .product__item:hover .product__item__pic img {
+      transform: scale(1.05);
+    }
+
+    /* Discount Badge */
+    .product__discount__percent {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #388e3c;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 5;
+    }
+
+    /* Hover Actions */
+    .product__hover {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+
+    .product__item:hover .product__hover {
+      opacity: 1;
+    }
+
+    .product__hover a {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background: #fff;
+      color: #878787;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .product__hover a:hover {
+      transform: scale(1.1);
+    }
+
+    .product__hover a.wishlist-toggle {
+      color: #ff6161;
+    }
+
+    .product__hover a.add-to-cart {
+      color: #2874f0;
+    }
+
+    .product__hover a.wishlist-toggle:hover {
+      background: #ff6161;
+      color: #fff;
+    }
+
+    .product__hover a.add-to-cart:hover {
+      background: #2874f0;
+      color: #fff;
+    }
+
+    /* Product Info */
+    .product__item__text {
+      padding: 16px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product__item__text h6 {
+      font-weight: 400;
+      font-size: 16px;
+      color: #212121;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 44px;
+    }
+
+    .product__item:hover .product__item__text h6 {
+      color: #2874f0;
+    }
+
+    /* Brand Badge */
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .brand-badge img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+
+    .brand-badge span {
+      font-size: 12px;
+      color: #878787;
+      font-weight: 400;
+    }
+
+    /* Rating */
+    .rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #388e3c;
+      color: #fff;
+      padding: 2px 8px 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .rating i {
+      font-size: 11px;
+    }
+
+    .rating .review-count {
+      color: #878787;
+      font-weight: 400;
+      background: transparent;
+      padding: 0;
+      margin-left: 4px;
+    }
+
+    /* Price */
+    .price-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .product__item__text h5 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #212121;
+      margin: 0;
+    }
+
+    .product__item__text .old-price {
+      text-decoration: line-through;
+      color: #878787;
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .product__item__text .discount-percent {
+      color: #388e3c;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Pagination */
+    .product__pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
+    }
+
+    .product__pagination a {
+      min-width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #d4d5d9;
+      border-radius: 2px;
+      color: #212121;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.2s;
+      padding: 0 10px;
+      background: #fff;
+    }
+
+    .product__pagination a:hover {
+      background: #2874f0;
+      color: #fff;
+      border-color: #2874f0;
+    }
+
+    .product__pagination a.active {
+      background: #2874f0;
+      color: #fff;
+      border-color: #2874f0;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+      background: #fff;
+      border-radius: 2px;
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      color: #d4d5d9;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h4 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #212121;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: #878787;
+    }
+
+    /* Clear Filters Button */
+    .clear-filters {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #2874f0;
+      color: #2874f0;
+      border-radius: 2px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      text-decoration: none;
+      margin-top: 12px;
+    }
+
+    .clear-filters:hover {
+      background: #2874f0;
+      color: #fff;
+    }
+
+    /* Responsive */
+    @media(max-width: 991px) {
+      .shop__sidebar {
+        margin-bottom: 20px;
+      }
+
+      .shop__product__option {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .shop__product__option__left,
+      .shop__product__option__right {
+        justify-content: space-between;
+      }
+    }
+
+    @media(max-width: 767px) {
+      .shop {
+        padding: 12px 0;
+      }
+
+      .product__item__pic {
+        padding: 16px;
+      }
+
+      .product__item__text {
+        padding: 12px;
+      }
+
+      .product__item__text h6 {
+        font-size: 14px;
+        min-height: 40px;
+      }
+
+      .product__item__text h5 {
+        font-size: 20px;
+      }
+
+      .shop__product__option__right select {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <section class="shop spad">
+    <div class="container">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+          <div class="shop__sidebar">
+
+            <!-- Search -->
+            <div class="sidebar-section">
+              <div class="sidebar-title">Search Products</div>
+              <input type="text" id="searchInput" placeholder="Search for products..." value="<%= searchQuery || '' %>">
+            </div>
+
+            <!-- Categories -->
+            <div class="sidebar-section">
+              <div class="sidebar-title">Categories</div>
+              <div class="scrollable">
+                <ul class="filter-list">
+                  <% categories.forEach(category=> { %>
+                    <li>
+                      <a style="font-weight: bold;" href="#"
+                        class="category-filter <%= selectedCategory === category._id.toString() ? 'active' : '' %>"
+                        data-id="<%= category._id %>">
+                        <%= category.name %>
+                          <span> (<%= category.productCount || 0 %>)</span>
+                      </a>
+                    </li>
+                    <% }) %>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Brands -->
+            <div class="sidebar-section">
+              <div class="sidebar-title">Brands</div>
+              <div class="scrollable">
+                <ul class="filter-list">
+                  <% brands.forEach(brand=> { %>
+                    <li>
+                      <a href="#" class="brand-filter <%= selectedBrand == brand._id? 'active' : '' %>"
+                        data-_id="<%= brand._id %>">
+                        <div class="brand-item">
+                          <img src="<%= brand.logo %>" alt="<%= brand.name %>" class="brand-logo">
+                          <span style="font-weight: bold;">
+                            <%= brand.name %>(<%= brand.productCount %>)
+                          </span>
+                        </div>
+                      </a>
+                    </li>
+                    <% }) %>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Price Filter -->
+            <div class="sidebar-section">
+              <div class="sidebar-title">Price Range</div>
+              <div class="price-input-wrapper">
+                <select id="minPriceSelect">
+                  <option value="0">Min</option>
+                  <option value="500">₹500</option>
+                  <option value="1000">₹1,000</option>
+                  <option value="2000">₹2,000</option>
+                  <option value="5000">₹5,000</option>
+                  <option value="10000">₹10,000</option>
+                  <option value="20000">₹20,000</option>
+                  <option value="50000">₹50,000</option>
+                </select>
+                <span class="price-divider">to</span>
+                <select id="maxPriceSelect">
+                  <option value="100000">Max</option>
+                  <option value="500">₹500</option>
+                  <option value="1000">₹1,000</option>
+                  <option value="2000">₹2,000</option>
+                  <option value="5000">₹5,000</option>
+                  <option value="10000">₹10,000</option>
+                  <option value="20000">₹20,000</option>
+                  <option value="50000">₹50,000</option>
+                  <option value="100000">₹1,00,000</option>
+                </select>
+              </div>
+              <button class="clear-filters" onclick="applyFilters()">Apply</button>
+            </div>
+
+            <% if(selectedCategory || selectedBrand || minPrice> 0 || maxPrice < 100000) { %>
+                <div class="sidebar-section">
+                  <a href="/shop" class="clear-filters">Clear All Filters</a>
+                </div>
+                <% } %>
+
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="col-lg-9">
+
+          <!-- Top Filter Bar -->
+          <div class="shop__product__option">
+            <div class="shop__product__option__left">
+              <p>Showing <span>
+                  <%= products.length %>
+                </span> of <span>
+                  <%= totalProducts || 0 %>
+                </span> products</p>
+            </div>
+            <div class="shop__product__option__right">
+              <p>Sort by:</p>
+              <select onchange="location = this.value;">
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=relevance"
+                  <%=!sort || sort==='relevance' ? 'selected' : '' %>>Relevance</option>
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=priceLow"
+                  <%=sort==='priceLow' ? 'selected' : '' %>>Price: Low to High</option>
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=priceHigh"
+                  <%=sort==='priceHigh' ? 'selected' : '' %>>Price: High to Low</option>
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=nameAsc"
+                  <%=sort==='nameAsc' ? 'selected' : '' %>>Name: A-Z</option>
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=nameDesc"
+                  <%=sort==='nameDesc' ? 'selected' : '' %>>Name: Z-A</option>
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=newest"
+                  <%=sort==='newest' ? 'selected' : '' %>>Newest First</option>
+                <option
+                  value="/shop?page=<%= currentPage %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=oldest"
+                  <%=sort==='oldest' ? 'selected' : '' %>>Oldest First</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Products Grid -->
+          <div class="row g-3">
+            <% if(products && products.length> 0) { %>
+              <% products.forEach(product=> {
+                const basePrice = product.variants?.[0]?.price || product.price || 0;
+
+                // Only active offers
+                const activeOffers = product.offers?.filter(o => o.isActive) || [];
+
+                // Calculate total discount
+                let totalDiscount = 0;
+                activeOffers.forEach(offer => {
+                if(offer.discountType === 'Percentage'){
+                totalDiscount += (basePrice * offer.discountValue)/100;
+                } else {
+                totalDiscount += offer.discountValue;
+                }
+                });
+
+                const finalPrice = basePrice - totalDiscount;
+                const discountPercent = basePrice > 0 ? Math.round((totalDiscount / basePrice) * 100) : 0;
+                %>
+
+                <div class="col-lg-4 col-md-6 col-sm-6">
+                  <div class="product__item" onclick="window.location='/product/<%= product._id %>'">
+
+                    <!-- Product Image -->
+                    <div class="product__item__pic">
+                      <img src="<%= product.variants[0]?.product_image[0] || '' %>" alt="<%= product.name %>">
+
+                      <% if(discountPercent> 0){ %>
+                        <div class="product__discount__percent">
+                          <%= discountPercent %>% OFF
+                        </div>
+                        <% } %>
+
+                          <div class="product__hover">
+                            <a href="#" class="wishlist-toggle" data-product-id="<%= product._id %>"
+                              onclick="event.stopPropagation();">
+                              <i class="fa fa-heart"></i>
+                            </a>
+                            <a href="#" class="add-to-cart" data-product-id="<%= product._id %>"
+                              onclick="event.stopPropagation();">
+                              <i class="fa fa-shopping-cart"></i>
+                            </a>
+                          </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="product__item__text">
+                      <h6  title="<%= product.name %>">
+                        <%= product.name %>
+                      </h6>
+                       <span style="color: green; font-weight: bold;">FREE delivery!</span>
+                      <div class="price-wrapper">
+                        <% if(totalDiscount > 0){ %>
+                          <h5>₹<%= finalPrice.toFixed(0) %>
+                          </h5>
+                          <span class="old-price">₹<%= basePrice.toFixed(0) %></span>
+                          <span class="discount-percent">
+                            <%= discountPercent %>% off
+                          </span>
+                          <% } else { %>
+                            <h5>₹<%= basePrice.toFixed(0) %>
+                            </h5>
+                            <% } %>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <% }) %>
+
+                  <% } else { %>
+                    <div class="col-12">
+                      <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <h4>No Products Found</h4>
+                        <p>Try adjusting your filters or search criteria</p>
+                      </div>
+                    </div>
+                    <% } %>
+          </div>
+
+          <!-- Pagination -->
+          <% if(totalPages>1) { %>
+            <div class="product__pagination">
+              <% if(currentPage>1) { %>
+                <a
+                  href="/shop?page=<%= currentPage-1 %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort %>">
+                  <i class="fa fa-chevron-left"></i>
+                </a>
+                <% } %>
+                  <% for(let i=1; i<=totalPages; i++){ if(i===1 || i===totalPages || (i>= currentPage - 2 && i <=
+                      currentPage + 2)) { %>
+                      <a href="/shop?page=<%= i %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort %>"
+                        class="<%= i===currentPage?'active':'' %>">
+                        <%= i %>
+                      </a>
+                      <% } else if(i===currentPage - 3 || i===currentPage + 3) { %>
+                        <span style="padding:0 8px; color:#878787;">...</span>
+                        <% } %>
+                          <% } %>
+                            <% if(currentPage<totalPages) { %>
+                              <a
+                                href="/shop?page=<%= currentPage+1 %>&search=<%= searchQuery %>&category=<%= selectedCategory %>&brand=<%= selectedBrand %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>&sort=<%= sort %>">
+                                <i class="fa fa-chevron-right"></i>
+                              </a>
+                              <% } %>
+            </div>
+            <% } %>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Set selected values for price dropdowns
+    document.getElementById('minPriceSelect').value = '<%= minPrice || 0 %>';
+    document.getElementById('maxPriceSelect').value = '<%= maxPrice || 100000 %>';
+
+    // AJAX Filtering
+    function applyFilters() {
+      const search = document.getElementById('searchInput').value;
+      const minPrice = document.getElementById('minPriceSelect').value;
+      const maxPrice = document.getElementById('maxPriceSelect').value;
+      const selectedCategory = document.querySelector('.category-filter.active')?.dataset.id || '';
+      const selectedBrand = document.querySelector('.brand-filter.active')?.dataset._id || '';
+
+      const query = new URLSearchParams({
+        search,
+        minPrice,
+        maxPrice,
+        category: selectedCategory,
+        brand: selectedBrand
+      });
+
+      window.location.href = '/shop?' + query.toString();
+    }
+
+    // Category/Brand click
+    document.querySelectorAll('.category-filter').forEach(el => el.addEventListener('click', function (e) {
+      e.preventDefault();
+
+      // Check if this category is already active
+      const isActive = this.classList.contains('active');
+
+      // Remove active from all categories
+      document.querySelectorAll('.category-filter').forEach(c => c.classList.remove('active'));
+
+      // If it wasn’t active before, make it active
+      if (!isActive) {
+        this.classList.add('active');
+      }
+
+      // Apply filters
+      applyFilters();
+    }));
+
+    // Brand click with toggle/unselect
+    document.querySelectorAll('.brand-filter').forEach(el => el.addEventListener('click', function (e) {
+      e.preventDefault();
+
+      // If this brand is already active, remove selection
+      const isActive = this.classList.contains('active');
+      document.querySelectorAll('.brand-filter').forEach(b => b.classList.remove('active'));
+
+      if (!isActive) {
+        this.classList.add('active'); // only set active if it wasn't active before
+      }
+
+      applyFilters();
+    }));
+
+    // Search enter key
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') applyFilters();
+    });
+
+    // Prevent card click on action buttons
+    document.querySelectorAll('.wishlist-toggle, .add-to-cart').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        console.log('Action clicked:', this.dataset.productId);
+      });
+    });
+
+
+
+  </script>
+
+
+
+  <%- include("../partials/user/footer.ejs") %>

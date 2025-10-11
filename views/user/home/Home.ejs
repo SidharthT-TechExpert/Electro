@@ -1,71 +1,62 @@
 <link rel="stylesheet" href="/css/home.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- Header -->
 <%- include("../partials/user/header") %>
   <%- include("../partials/user/messages") %>
 
     <main class="homepage">
 
-      <!-- 🌟 Fullscreen Dynamic Banner -->
+      <!-- 🌟 Hero Slider -->
       <section class="hero-banner position-relative">
         <div class="hero-slider">
-              <% if (bannerData.length> 0) { %>
-                <% bannerData.forEach((banner, index)=> { %>
-                  <div class="hero-slide <%= index === 0 ? 'active' : '' %>"
-                    style="background-image: url('<%= banner.image %>')">
+          <% if (bannerData.length>0){ %>
+            <% bannerData.forEach((banner,index)=>{ %>
+              <div class="hero-slide <%= index===0?'active':'' %>" style="background-image:url('<%= banner.image %>')">
+                <div class="hero-overlay"></div>
+                <div class="hero-content container">
+                  <% if(banner.subtitle){ %>
+                    <h5>
+                      <%= banner.subtitle %>
+                    </h5>
+                    <% } %>
+                      <% if(banner.title){ %>
+                        <h1>
+                          <%= banner.title %>
+                        </h1>
+                        <% } %>
+                          <% if(banner.description){ %>
+                            <p>
+                              <%= banner.description %>
+                            </p>
+                            <% } %>
+                              <% if(banner.buttonText && banner.buttonLink){ %>
+                                <a href="<%= banner.buttonLink %>" class="shop-btn">
+                                  <%= banner.buttonText %>
+                                </a>
+                                <% } %>
+                </div>
+              </div>
+              <% }) %>
+                <% } else { %>
+                  <div class="hero-slide active" style="background-image:url('/img/header-img.jpg')">
                     <div class="hero-overlay"></div>
                     <div class="hero-content container">
-                      <% if (banner.subtitle) { %>
-                        <h5>
-                          <%= banner.subtitle %>
-                        </h5>
-                        <% } %>
-                          <% if (banner.title) { %>
-                            <h1>
-                              <%= banner.title %>
-                            </h1>
-                            <% } %>
-                              <% if (banner.description) { %>
-                                <p>
-                                  <%= banner.description %>
-                                </p>
-                                <% } %>
-                                  <% if (banner.buttonText && banner.buttonLink) { %>
-                                    <a href="<%= banner.buttonLink %>" class="shop-btn">
-                                      <%= banner.buttonText %>
-                                    </a>
-                                    <% } %>
+                      <h5>Welcome to ElectroHub</h5>
+                      <h1>Your One-Stop Electronics Store</h1>
+                      <p>Explore the latest gadgets, phones, and accessories!</p>
+                      <a href="/shop" class="shop-btn">Shop Now</a>
                     </div>
                   </div>
-                  <% }) %>
-                    <% } else { %>
-                      <!-- 🖼️ Fallback banner -->
-                      <div class="hero-slide active" style="background-image: url('/img/header-img.jpg')">
-                        <div class="hero-overlay"></div>
-                        <div class="hero-content container">
-                          <h5>Welcome to ElectroHub</h5>
-                          <h1>Your One-Stop Electronics Store</h1>
-                          <p>Explore the latest gadgets, phones, and accessories at unbeatable prices!</p>
-                          <a href="/shop" class="shop-btn">Shop Now</a>
-                        </div>
-                      </div>
-                      <% } %>
-
+                  <% } %>
         </div>
-
-        <!-- Navigation -->
         <button class="hero-nav prev"><i class="fa-solid fa-chevron-left"></i></button>
         <button class="hero-nav next"><i class="fa-solid fa-chevron-right"></i></button>
-
-        <!-- Dots -->
         <div class="hero-dots"></div>
       </section>
 
-
       <!-- 🧩 Categories -->
-      <section class="categories py-4 bg-light">
-        <div class="container d-flex justify-content-center flex-wrap gap-3">
+      <section class="categories">
+        <div class="container cat-container">
           <div class="cat-box active"><i class="fas fa-mobile-alt fa-2x"></i>
             <p>Phones</p>
           </div>
@@ -87,157 +78,222 @@
         </div>
       </section>
 
-      <!-- 🛍️ Product Section -->
-      <section class="products py-5 bg-black text-white">
+      <!-- 🛍️ Products -->
+      <section class="products">
         <div class="container">
-          <!-- Tabs -->
-          <ul class="nav nav-tabs border-0 mb-4" id="productTabs">
+          <ul class="nav nav-tabs mb-4" id="productTabs">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#new">New Arrivals</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#best">Best Sellers</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#hot">Hot Sales</a></li>
           </ul>
 
-          <!-- Tab Contents -->
           <div class="tab-content">
 
-            <!-- 🆕 New Arrivals -->
-            <div id="new" class="tab-pane fade show active">
-              <% if (newArrivals && newArrivals.length> 0) { %>
-                <div class="product-grid">
-                  <% newArrivals.forEach(product=> { %>
-                    <div class="product-card">
-                      <div class="product-img-wrapper">
-                        <img src="<%= product.variantImage %>" alt="<%= product.name %>"
-                          onclick="location.href='/ProductDetails?id=<%=product._id%>'">
-                        <div class="product-actions">
-                          <button class="btn btn-light shadow-sm action-btn"
-                            onclick="addToWishlist('<%= product._id %>')">
-                            <i class="fa-regular fa-heart"></i>
-                          </button>
-                          <button class="btn btn-primary shadow-sm action-btn"
-                            onclick="addToCart('<%= product._id %>')">
-                            <i class="fa-solid fa-cart-plus"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="text-center mt-2">
-                        <h6 class="fw-semibold text-truncate mb-1">
-                          <%= product.name %>
-                        </h6>
-                        <p class="text-success fw-bold mb-0">₹<%= product.price.toLocaleString() %>
-                        </p>
-                        <small class="text-warning">★★★★☆</small>
-                      </div>
-                    </div>
-                    <% }) %>
-                </div>
-                <% } else { %>
-                  <p class="text-center text-muted">No new arrivals available.</p>
-                  <% } %>
-            </div>
+            <% function getBestOffer(product){ if(!product.offers || product.offers.length===0) return null; const
+              activeOffers=product.offers.filter(o=> o.isActive);
+              if(activeOffers.length===0) return null;
+              let bestOffer = activeOffers[0];
+              let maxDiscount = 0;
+              activeOffers.forEach(o=>{
+              let discountAmt = 0;
+              if(o.discountType==='Percentage') discountAmt = product.price*(o.discountValue/100);
+              else if(o.discountType==='Fixed') discountAmt = o.discountValue;
+              if(discountAmt > maxDiscount){
+              maxDiscount = discountAmt;
+              bestOffer = o;
+              }
+              });
+              return bestOffer;
+              } %>
 
-            <!-- ⭐ Best Sellers -->
-            <div id="best" class="tab-pane fade">
-              <div class="product-grid">
-                <% for (let i=1; i <=8; i++) { %>
-                  <div class="product-card">
-                    <div class="product-img-wrapper">
-                      <img src="/img/product-<%= i %>.png" alt="Product <%= i %>">
-                      <div class="product-actions">
-                        <button class="btn btn-light shadow-sm action-btn"><i class="fa-regular fa-heart"></i></button>
-                        <button class="btn btn-primary shadow-sm action-btn"><i
-                            class="fa-solid fa-cart-plus"></i></button>
-                      </div>
-                    </div>
-                    <div class="text-center mt-2">
-                      <h6 class="fw-semibold text-truncate mb-1">Product <%= i %>
-                      </h6>
-                      <p class="text-success fw-bold mb-0">$99.<%= i %>
-                      </p>
-                      <small class="text-warning">★★★★★</small>
+              <!-- Loop function for each tab -->
+              <% const tabs={new:newProducts, best:bestSellers, hot:hotSales}; %>
+                <% Object.keys(tabs).forEach(tabName=> { %>
+                  <div id="<%= tabName %>" class="tab-pane fade <%= tabName==='new'?'show active':'' %>">
+                    <div class="product-grid">
+                      <% tabs[tabName].forEach(product=>{
+                        const offer = getBestOffer(product);
+                        let finalPrice = product.price;
+                        if(offer){
+                        if(offer.discountType==='Percentage') finalPrice = product.price*(1-offer.discountValue/100);
+                        else if(offer.discountType==='Fixed') finalPrice = product.price - offer.discountValue;
+                        }
+                        %>
+                        <div class="product-card" onclick="location.href='/product/<%= product._id %>'">
+                          <div class="product-img-wrapper">
+                            <img loading="lazy"
+                              src="<%=  product.variantImage|| product.image %>"
+                              alt="<%= product.name %>">
+                            <% if(offer){ %>
+                              <div class="product-discount-badge">
+                                <% if(offer.discountType==='Percentage' ){ %>-<%= offer.discountValue %>%<% } else { %>
+                                      -₹<%= offer.discountValue %>
+                                        <% } %>
+                              </div>
+                              <% } %>
+                                <div class="product-actions">
+                                  <button class="action-btn"
+                                    onclick="event.stopPropagation(); addToCart('<%= product._id %>')"><i
+                                      class="fa-solid fa-cart-plus"></i></button>
+                                  <button class="action-btn"
+                                    onclick="event.stopPropagation(); addToWishlist('<%= product._id %>')"><i
+                                      class="fa-solid fa-heart"></i></button>
+                                </div>
+                          </div>
+                          <div class="text-center p-3">
+                            <h6>
+                              <%= product.name %>
+                            </h6>
+                            <div class="price-wrapper">
+                              <h5 style="display:inline-block;">₹<%= finalPrice.toFixed(2) %>
+                              </h5>
+                              <% if(offer){ %><span class="old-price">₹<%= product?.variants?.price || product.price %></span>
+                                <% } %>
+                            </div>
+                            <small class="text-warning">
+                              <% for(let i=1;i<=5;i++){ %>
+                                <% if(i <=Math.floor(product.rating)){ %>
+                                  <i class="fa fa-star text-warning"></i>
+                                  <% } else if(i-0.5 <=product.rating){ %>
+                                    <i class="fa fa-star-half-alt text-warning"></i>
+                                    <% } else { %>
+                                      <i class="fa fa-star text-muted"></i>
+                                      <% } %>
+                                        <% } %>
+                            </small>
+                          </div>
+                        </div>
+                        <% }) %>
                     </div>
                   </div>
-                  <% } %>
-              </div>
-            </div>
+                  <% }) %>
 
-            <!-- 🔥 Hot Sales -->
-            <div id="hot" class="tab-pane fade">
-              <p class="text-center text-muted">Hot deals will appear here soon...</p>
-            </div>
           </div>
         </div>
       </section>
 
-      <!-- 🚚 Features -->
-      <section class="features py-4 bg-light">
-        <div class="container d-flex justify-content-around text-center flex-wrap">
+      <!-- 🚀 Features -->
+      <section class="features text-center">
+        <div class="container d-flex flex-wrap justify-content-center">
           <div class="feature-box">
-            <div class="icon"><i class="fas fa-shipping-fast"></i></div>
-            <h6>Free & Fast Delivery</h6>
-            <p class="small">Free delivery for all orders over ₹50</p>
+            <div class="icon"><i class="fas fa-truck"></i></div>
+            <h6>Free Shipping</h6>
+            <p>On all orders over $50</p>
           </div>
           <div class="feature-box">
             <div class="icon"><i class="fas fa-headset"></i></div>
-            <h6>24/7 Customer Service</h6>
-            <p class="small">Friendly 24/7 customer support</p>
+            <h6>24/7 Support</h6>
+            <p>We’re here to help anytime</p>
           </div>
           <div class="feature-box">
-            <div class="icon"><i class="fas fa-undo"></i></div>
-            <h6>Money Back Guarantee</h6>
-            <p class="small">We return money within 30 days</p>
+            <div class="icon"><i class="fas fa-shield-alt"></i></div>
+            <h6>Secure Payment</h6>
+            <p>100% secure payment</p>
           </div>
         </div>
       </section>
 
+      <!-- 🔝 Back to Top -->
+      <button class="back-to-top"><i class="fa-solid fa-chevron-up"></i></button>
+
     </main>
 
-    <!-- Footer -->
     <%- include("../partials/user/footer") %>
 
-      <!-- Banner JS -->
-      <script>
+      <style>
+        .product-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 20px;
+        }
 
+        .product-card {
+          position: relative;
+          transition: transform .3s, box-shadow .3s;
+          cursor: pointer;
+          background: #fff;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .product-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+        }
+
+        .product-img-wrapper {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .product-actions {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+
+        .action-btn {
+          background: #fff;
+          border: none;
+          padding: 8px;
+          border-radius: 50%;
+          cursor: pointer;
+          font-size: 14px;
+        }
+
+        .product-discount-badge {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          background: red;
+          color: #fff;
+          padding: 5px 8px;
+          font-size: 12px;
+          font-weight: bold;
+          border-radius: 4px;
+        }
+
+        .old-price {
+          text-decoration: line-through;
+          color: #888;
+          margin-left: 10px;
+        }
+      </style>
+
+      <script>
+        // Hero slider
         document.addEventListener("DOMContentLoaded", () => {
           const slides = document.querySelectorAll(".hero-slide");
           const dotsContainer = document.querySelector(".hero-dots");
-          let currentSlide = 0;
-          let slideInterval;
-
+          let currentSlide = 0, slideInterval;
           if (!slides || slides.length === 0) return;
-
-          // Create dots
+          const dots = [];
           slides.forEach((_, i) => {
             const dot = document.createElement("span");
             if (i === 0) dot.classList.add("active");
-            dot.addEventListener("click", () => showSlide(i));
             dotsContainer.appendChild(dot);
+            dot.addEventListener("click", () => showSlide(i));
+            dots.push(dot);
           });
-
-          const dots = document.querySelectorAll(".hero-dots span");
-
-          function showSlide(index) {
-            slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
-            dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
-            currentSlide = index;
-          }
-
-          function nextSlide() {
-            showSlide((currentSlide + 1) % slides.length);
-          }
-
-          function prevSlide() {
-            showSlide((currentSlide - 1 + slides.length) % slides.length);
-          }
-
+          function showSlide(index) { slides.forEach((s, i) => s.classList.toggle("active", i === index)); dots.forEach((d, i) => d.classList.toggle("active", i === index)); currentSlide = index; }
+          function nextSlide() { showSlide((currentSlide + 1) % slides.length); }
+          function prevSlide() { showSlide((currentSlide - 1 + slides.length) % slides.length); }
           document.querySelector(".hero-nav.next").addEventListener("click", nextSlide);
           document.querySelector(".hero-nav.prev").addEventListener("click", prevSlide);
-
-          function autoPlay() {
-            clearInterval(slideInterval);
-            slideInterval = setInterval(nextSlide, 5000);
-          }
-
+          function autoPlay() { slideInterval = setInterval(nextSlide, 5000); }
+          document.querySelector(".hero-banner").addEventListener("mouseenter", () => clearInterval(slideInterval));
+          document.querySelector(".hero-banner").addEventListener("mouseleave", autoPlay);
+          document.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") nextSlide(); if (e.key === "ArrowLeft") prevSlide(); });
           autoPlay();
         });
+        // Back to top
+        const backToTop = document.querySelector('.back-to-top');
+        window.addEventListener('scroll', () => backToTop.style.display = window.scrollY > 300 ? 'flex' : 'none');
+        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        // Dummy cart/wishlist
+        function addToCart(id) { alert("Added product " + id + " to cart!"); }
+        function addToWishlist(id) { alert("Added product " + id + " to wishlist!"); }
       </script>

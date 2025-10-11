@@ -26,9 +26,9 @@
               <div class="col-md-6 mb-3">
                 <div class="border rounded p-3 shadow-sm h-100">
                   <h6 class="fw-bold mb-2">
-                    <i class="fa fa-home text-danger"></i>
-                    <%= addr.addressType || "Address" %>
-                  </h6>
+                     <i class="fa <%= addr.addressType === 'Home' ? 'fa-home' : 'fa-building' %> text-danger"></i>
+                         <%= addr.addressType || "Address" %>
+                 </h6>
                   <p class="mb-1"><strong>Name:</strong> <%= addr.name %></p>
                   <p class="mb-1"><strong>Phone:</strong> <%= addr.phone %></p>
                   <% if(addr.altPhone){ %>
@@ -92,7 +92,25 @@ async function loadStates() {
 }
 loadStates();
 
-function addAddressModal() {
+async function addAddressModal() {
+
+ // Show loading first
+  Swal.fire({
+    title: "Loading...",
+    didOpen: () => {
+      Swal.showLoading();
+    },
+    timer: 1000,
+    timerProgressBar: true,
+    allowOutsideClick: false
+  });
+
+  // Wait 2 seconds
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // Close the loading Swal
+
+
   Swal.fire({
     title: "<h5 class='fw-bold text-danger mb-3'>➕ Add New Address</h5>",
     width: "650px",
@@ -221,9 +239,11 @@ function addAddressModal() {
 
     // Filter and create options
     const options = districts
-      .filter(d => d.state_name.toLowerCase() === formattedState)
-      .map(d => `<option value="${d.name}">${d.name}</option>`)
-      .join('');
+         .filter(d => d.state_name.toLowerCase() === formattedState)
+         .sort((a, b) => a.name.localeCompare(b.name)) 
+         .map(d => `<option value="${d.name}">${d.name}</option>`)
+         .join('');
+
 
     districtSelect.innerHTML = `<option value="">Select District</option>` + options;
 
@@ -268,6 +288,188 @@ function deleteAddress(addressId) {
       Swal.fire("❌ Error", "Something went wrong while deleting the address", "error");
     }
   });
+}
+
+async function editAddress(addressId) {
+  if (!addressId) return;
+
+   // Show loading first
+  Swal.fire({
+    title: "Loading...",
+    didOpen: () => {
+      Swal.showLoading();
+    },
+    timer: 1500,
+    timerProgressBar: true,
+    allowOutsideClick: false
+  });
+
+  // Wait 2 seconds
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
+  // Close the loading Swal
+  Swal.close();
+
+
+  try {
+    // Fetch the existing address details from the server
+    const { data } = await axios.get(`/address-book/${addressId}`);
+    if (!data.success || !data.address) {
+      return Swal.fire("❌ Error", "Address not found", "error");
+    }
+
+    const addr = data.address;
+
+    Swal.fire({
+      title: "<h5 class='fw-bold text-danger mb-3'>✏️ Edit Address</h5>",
+      width: "650px",
+      html: `
+        <div class="container-fluid text-start">
+          <div class="row g-2" style="max-height: 60vh; overflow-y: auto;">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Full Name<span class="text-danger">*</span></label>
+              <input id="addr-name" class="form-control mb-2" value="${addr.name || ''}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Phone<span class="text-danger">*</span></label>
+              <input id="addr-phone" class="form-control mb-2" value="${addr.phone || ''}" maxlength="10">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Alt. Phone</label>
+              <input id="addr-altPhone" class="form-control mb-2" value="${addr.altPhone || ''}" maxlength="10">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">City<span class="text-danger">*</span></label>
+              <input id="addr-city" class="form-control mb-2" value="${addr.city || ''}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">State<span class="text-danger">*</span></label>
+              <select id="addr-state" class="form-control mb-2">
+                <option value="">Select State</option>
+                ${statesData.map(s => `<option value="${s.name}" ${s.name === addr.state ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">District<span class="text-danger">*</span></label>
+              <select id="addr-district" class="form-control mb-2">
+                <option value="${addr.district || ''}" selected>${addr.district || 'Select District'}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Landmark</label>
+              <input id="addr-landmark" class="form-control mb-2" value="${addr.landMark || ''}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Pincode<span class="text-danger">*</span></label>
+              <input id="addr-pincode" class="form-control mb-2" value="${addr.pincode || ''}" maxlength="6">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Address Type<span class="text-danger">*</span></label>
+              <div class="d-flex align-items-center mt-1">
+                <div class="form-check me-3">
+                  <input class="form-check-input" type="radio" name="addr-type" value="Home" ${addr.addressType === 'Home' ? 'checked' : ''}>
+                  <label class="form-check-label">Home</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="addr-type" value="Work" ${addr.addressType === 'Work' ? 'checked' : ''}>
+                  <label class="form-check-label">Work</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Update Address",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
+      customClass: { popup: "rounded-4 shadow-lg" },
+      preConfirm: () => {
+        const data = {
+          name: document.getElementById("addr-name").value.trim(),
+          phone: document.getElementById("addr-phone").value.trim(),
+          altPhone: document.getElementById("addr-altPhone").value.trim(),
+          city: document.getElementById("addr-city").value.trim(),
+          state: document.getElementById("addr-state").value.trim(),
+          district: document.getElementById("addr-district").value.trim(),
+          landMark: document.getElementById("addr-landmark").value.trim(),
+          pincode: document.getElementById("addr-pincode").value.trim(),
+          addressType: document.querySelector('input[name="addr-type"]:checked').value
+        };
+
+        if (!data.name || !data.phone || !data.city || !data.state || !data.district || !data.pincode) {
+          Swal.showValidationMessage("⚠️ Please fill all required fields marked with *");
+          return false;
+        }
+        if (!/^[0-9]{10}$/.test(data.phone)) {
+          Swal.showValidationMessage("📞 Enter a valid 10-digit phone number");
+          return false;
+        }
+        if (!/^[0-9]{6}$/.test(data.pincode)) {
+          Swal.showValidationMessage("📮 Enter a valid 6-digit pincode");
+          return false;
+        }
+        return data;
+      }
+    }).then(async result => {
+      if (!result.isConfirmed) return;
+
+      try {
+        const res = await axios.put(`/address-book/${addressId}`, result.value);
+        if (res.data.success) {
+          Swal.fire({ 
+                icon: 'success', 
+                text: res.data.message,
+                 timer: 1500, 
+                 showConfirmButton: false 
+                })
+            .then(() => location.reload());
+        } else {
+          Swal.fire("❌ Error", res.data.message, "error");
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire("❌ Error", "Something went wrong", "error");
+      }
+    });
+
+    // Load districts for the selected state
+    const stateSelect = document.getElementById("addr-state");
+    stateSelect.addEventListener("click", async function () {
+      const stateName = this.value;
+      const districtSelect = document.getElementById("addr-district");
+      districtSelect.innerHTML = `<option>Loading...</option>`;
+
+      if (!stateName) {
+        districtSelect.innerHTML = `<option value="">Select District</option>`;
+        return;
+      }
+
+      try {
+        const formattedState = stateName.trim().toLowerCase();
+        const res = await axios.get(
+          `https://www.india-location-hub.in/api/locations/districts?state_name=${encodeURIComponent(formattedState)}`
+        );
+
+        const districts = res.data?.data?.districts || [];
+        const options = districts
+          .filter(d => d.state_name.toLowerCase() === formattedState)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(d => `<option value="${d.name}">${d.name}</option>`)
+          .join('');
+
+        districtSelect.innerHTML = `<option value="">Select District</option>` + options;
+
+      } catch (err) {
+        console.error("District fetch error:", err);
+        districtSelect.innerHTML = `<option value="">❌ Error loading districts</option>`;
+      }
+    });
+
+  } catch (error) {
+    console.error("Fetch address error:", error);
+    Swal.fire("❌ Error", "Failed to load address details", "error");
+  }
 }
 
 </script>
