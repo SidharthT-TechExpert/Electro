@@ -1,0 +1,177 @@
+<!-- Bootstrap & FontAwesome -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="/css/admin/DashBoard/header.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/customerList.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/category.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/ProductDetails.css">
+<link rel="stylesheet" href="/css/admin/DashBoard/pageNavigation.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<style>
+  .image-upload-placeholder {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #6c757d;
+    padding: 10px;
+    width: 100px;
+    height: 50px;
+  }
+
+  .image-upload-placeholder i {
+    margin-right: 5px;
+  }
+
+  /* Hide arrows in number input */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+</style>
+
+<%- include("../../partials/admin/sidebar") %>
+  <%- include("../../partials/admin/header") %>
+    <%- include("../../partials/user/messages") %>
+
+      <div class="main-content">
+
+        <!-- Page Header -->
+        <div class="content-header">
+          <h2>Banners</h2>
+          <!-- Filter to show active, inactive, upcoming, or expired banners. -->
+           <div class="page-header mb-3" style="margin-left: auto; background-color: aqua;">
+           <select name="status" id="statusFilter" class="filter-select" onchange="location.href='?status='+this.value">
+            <option value="all" <%= filterStatus === 'all' ? 'selected' : '' %>>All</option>
+            <option value="active" <%= filterStatus === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="inactive" <%= filterStatus === 'inactive' ? 'selected' : '' %>>Inactive</option>
+            <option value="upcoming" <%= filterStatus === 'upcoming' ? 'selected' : '' %>>Upcoming</option>
+            <option value="expired" <%= filterStatus === 'expired' ? 'selected' : '' %>>Expired</option>  
+          </select>
+           </div>
+          <!-- Add Banner Button -->
+          <div class="page-header mb-3">
+            <a onclick="addBannerModal()" class="btn btn-primary"><i class="fa fa-plus"></i> Add Banner</a>
+          </div>
+        </div>
+
+        <!-- Banners Table -->
+        <div class="table-wrapper table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Banner Title</th>
+                <th>Image</th>
+                <th>Button Link</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% bannerData.forEach((banner, i)=> { %>
+                <tr>
+                  <td>
+                    <%= i + 1 %>
+                  </td>
+                  <td class="banner-title">
+                    <%= banner.title %>
+                  </td>
+                  <td class="banner-image">
+                    <img src="<%= banner.image %>" alt="<%= banner.title %>" style="width:100px; height:auto;">
+                  </td>
+                  <td class="banner-link">
+                    <%= banner.buttonLink || '-' %>
+                  </td>
+                  <td class="banner-start">
+                    <%= new Date(banner.startDate).toLocaleDateString() %>
+                  </td>
+                  <td class="banner-end">
+                    <%= new Date(banner.endDate).toLocaleDateString() %>
+                  </td>
+                  <td class="banner-order">
+                    <%= banner.order %>
+                  </td>
+                  <td class="status-badge-<%= banner._id %>">
+                    <% const today=new Date(); const startDate=new Date(banner.startDate); const endDate=new
+                      Date(banner.endDate); %>
+                      <% if (!banner.isActive) { %>
+                        <span class="badge bg-secondary">Inactive</span>
+                        <% } else if ( today <=startDate && banner.isActive ) { %>
+                          <span class="badge bg-secondary">Upcoming</span>
+                          <% } else if (today> endDate && banner.isActive) { %>
+                            <span class="badge bg-danger">Expired</span>
+                            <% } else { %>
+                              <span class="badge bg-success">Active</span>
+                              <% } %>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-warning me-1" onclick="editBanner('<%= banner._id %>')">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteBanner('<%= banner._id %>')">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+             <!-- Pagination -->
+        <div class="pagination">
+          <!-- Prev button -->
+          <% if (currentPage> 1) { %>
+            <a href="?page=<%= currentPage - 1 %>&status=<%= filterStatus %>">
+              <button class="nav-btn">Prev</button>
+            </a>
+            <% } else { %>
+              <button class="nav-btn" disabled>Prev</button>
+              <% } %>
+
+                <!-- Page numbers -->
+                <% for (let i=1; i <=totalPages; i++) { %>
+                  <% if (currentPage === i) { %>
+                    <button class="page-btn active">
+                      <%= i %>
+                    </button>
+                    <% } else { %>
+                      <a href="?page=<%= i %>&status=<%= filterStatus %>">
+                        <button class="page-btn">
+                          <%= i %>
+                        </button>
+                      </a>
+                      <% } %>
+                        <% } %>
+
+                          <!-- Next button -->
+                          <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %>&status=<%= filterStatus %>">
+                              <button class="nav-btn">Next</button>
+                            </a>
+                            <% } else { %>
+                              <button class="nav-btn" disabled>Next</button>
+                              <% } %>
+        </div>
+
+
+
+      </div>
+
+      // In banner.ejs
+      <script>
+        window.bannerData = <%- JSON.stringify(bannerData) %>;
+      </script>
+
+      <script src="/js/admin/Home/banner.js"></script>

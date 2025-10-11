@@ -22,6 +22,7 @@
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/header.css" rel="stylesheet">
   <link href="css/footer.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/home.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -32,7 +33,7 @@
     <div class="container d-flex justify-content-between align-items-center">
       <span>
         Summer Sale For All Swim Suits And Free Express Delivery – OFF 50%!
-        <strong><a href="#" class="text-dark text-decoration-none">ShopNow</a></strong>
+        <strong><a href="/shop" class="text-dark text-decoration-none">ShopNow</a></strong>
       </span>
 
       <!-- Language -->
@@ -72,31 +73,47 @@
           <div class="dropdown">
             <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
               data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-user-circle"></i>
-              <span>
-                <%= user?.name %>
-              </span>
-              <i class="fas fa-chevron-down arrow-icon"></i>
+
+              <% if (user && user.profilePhoto) { %>
+                <!-- Show profile photo -->
+                <img src="/profile-photo/<%= user.profilePhoto %>" alt="Profile Photo" class="rounded-circle" width="20"
+                  height="20" style="object-fit: cover;">
+                <% } else { %>
+                  <!-- Default user icon -->
+                  <i class="fas fa-user-circle"></i>
+                  <% } %>
+
+                    <span>
+                      <%= user?.name %>
+                    </span>
+                    <i class="fas fa-chevron-down arrow-icon"></i>
             </button>
+
             <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="/myProfile">
-                  <i class="fas fa-user"></i>
-                  My Profile
+                  <% if (user && user.profilePhoto) { %>
+                    <img src="/profile-photo/<%= user.profilePhoto %>" alt="Profile Photo" class="rounded-circle"
+                      width="20" height="20" style="object-fit: cover;">
+                    <% } else { %>
+                      <i class="fas fa-user"></i>
+                      <% } %>
+                        My Profile
                 </a>
               </li>
+
               <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/orders">
                   <i class="fas fa-box"></i> Orders
                 </a>
               </li>
               <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/wishlist">
                   <i class="fas fa-heart"></i> Wishlist (1)
                 </a>
               </li>
               <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/wallet">
                   <i class="fas fa-wallet"></i> Wallet
                 </a>
               </li>
@@ -110,6 +127,7 @@
               </li>
             </ul>
           </div>
+
 
           <!-- Cart -->
           <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">

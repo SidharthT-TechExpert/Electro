@@ -1,6 +1,14 @@
 const HTTP_STATUS = require("../../config/statusCodes.js");
 const userSchema = require("../../models/userSchema.js");
+const productSchema = require("../../models/productSchema.js");
+const categorieSchema = require("../../models/categorySchema.js");
+const brandSchema = require("../../models/brandSchema.js");
+const variantSchema = require("../../models/variantSchema.js");
+const bannerSchema = require("../../models/bannerSchema.js");
+const wishlistSchema = require("../../models/wishlistSchema.js");
+
 const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 
@@ -8,16 +16,199 @@ const checkSession = async (_id) => {
   return _id ? await userSchema.findById(_id) : null;
 };
 
-// Home page Loader
+const updateCategoryProductCounts = async () => {
+  try {
+    // 🟦 Update category product counts
+    const categories = await categorieSchema.find();
+
+    for (const category of categories) {
+      const count = await productSchema.countDocuments({
+        category: category._id,
+      });
+      await categorieSchema.updateOne(
+        { _id: category._id },
+        { $set: { productCount: count } }
+      );
+      console.log(`✅ Category '${category.name}' count updated: ${count}`);
+    }
+
+    // 🟧 Update brand product counts
+    const brands = await brandSchema.find();
+
+    for (const brand of brands) {
+      const count = await productSchema.countDocuments({ brand: brand._id });
+      await brandSchema.updateOne(
+        { _id: brand._id },
+        { $set: { productCount: count } }
+      );
+      console.log(`✅ Brand '${brand.name}' count updated: ${count}`);
+    }
+
+    console.log("🎉 All category and brand counts updated successfully!");
+  } catch (error) {
+    console.error("❌ Error updating category/brand product counts:", error);
+  }
+};
+
+// Home Page Loader
 const loadHomePage = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
+    const query = { status: "In Stock", isBlocked: false };
 
-    res
-      .status(HTTP_STATUS.OK)
-      .render("auth/home", { user, cartCount: req.cartCount || null });
+    // ✅ Fetch listed categories
+    const categories = await categorieSchema.find({ status: "listed" });
+    const categoryIds = categories.map((cat) => cat._id);
+
+    // ✅ Fetch active banners
+    const bannerData = await bannerSchema
+      .find({
+        isActive: true,
+        startDate: { $lte: new Date() },
+        endDate: { $gte: new Date() },
+      })
+      .sort({ order: 1 })
+      .lean();
+
+    // ------------------------------
+    // 1️⃣ New Arrivals
+    // ------------------------------
+    const newArrivals = await productSchema.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: "variants",
+          localField: "_id",
+          foreignField: "product_id",
+          as: "variants",
+        },
+      },
+      { $unwind: "$variants" },
+      { $match: { "variants.specifications.stock": { $gt: 0 } } },
+      {
+        $lookup: {
+          from: "offers",
+          let: { productId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$appliesTo", "product"] },
+                    { $in: ["$$productId", "$targetIds"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "productOffers",
+        },
+      },
+      {
+        $lookup: {
+          from: "offers",
+          let: { categoryId: "$category" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$appliesTo", "category"] },
+                    { $in: ["$$categoryId", "$targetIds"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "categoryOffers",
+        },
+      },
+      {
+        $addFields: {
+          offers: { $concatArrays: ["$productOffers", "$categoryOffers"] },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          name: { $first: "$name" },
+          price: { $first: "$price" },
+          brand: { $first: "$brand" },
+          category: { $first: "$category" },
+          variants: { $push: "$variants" },
+          mainPrice: { $min: "$variants.price" },
+          Images: { $first: "$Images" },
+          createdAt: { $first: "$createdAt" },
+          offers: { $first: "$offers" },
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 10 },
+    ]);
+
+    // ✅ Enrich newArrivals with variant image & price
+    const newArrivalIds = newArrivals.map((p) => p._id);
+    const variantsNewArrivals = await variantSchema
+      .find(
+        { product_id: { $in: newArrivalIds } },
+        "product_id product_image price specifications"
+      )
+      .lean();
+
+    const enrichedNewArrivals = newArrivals.map((product) => {
+      const variant = variantsNewArrivals.find(
+        (v) => v.product_id.toString() === product._id.toString()
+      );
+      product.variantImage =
+        variant?.product_image?.[0] ||
+        product.Images?.[0] ||
+        "/img/header-img.jpg";
+      product.price =
+        variant?.price?.toFixed(2) || product.price?.toFixed(2) || "N/A";
+      return product;
+    });
+
+    // ------------------------------
+    // 2️⃣ Hot Products / New Products (if needed separately)
+    // ------------------------------
+    const newProducts = enrichedNewArrivals; // you can reuse same array or fetch differently if needed
+
+    // ------------------------------
+    // 3️⃣ Best Sellers
+    // ------------------------------
+    const bestSellers = await productSchema
+      .find({ isBlocked: false, category: { $in: categoryIds } })
+      .populate("brand", "name logo")
+      .sort({ salesCount: -1 })
+      .limit(10)
+      .lean();
+
+    // ------------------------------
+    // 4️⃣ Hot Sales
+    // ------------------------------
+    const hotSales = await productSchema
+      .find({ isBlocked: false, category: { $in: categoryIds } })
+      .populate("brand", "name logo")
+      .sort({ views: -1 })
+      .limit(8)
+      .lean();
+
+    console.log(newArrivals[0]);
+
+    // ------------------------------
+    // Render Home Page
+    // ------------------------------
+    res.status(HTTP_STATUS.OK).render("home/home", {
+      user,
+      bannerData,
+      newArrivals: enrichedNewArrivals,
+      newProducts,
+      bestSellers,
+      hotSales,
+      cartCount: req.cartCount || null,
+    });
   } catch (error) {
-    console.error("Error loading home page:", error);
+    console.error("❌ Error loading home page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
@@ -81,57 +272,58 @@ const generateOtp = () => {
 // Email through OTP Send
 const sendVerificationEmail = async (email, OTP) => {
   try {
-    // Create reusable transporter
     const transport = nodemailer.createTransport({
-      service: "gmail",
+      service: "gmail", // or "hotmail", "yahoo", etc.
       auth: {
         user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD, // <-- App Password here
+        pass: process.env.NODEMAILER_PASSWORD,
       },
     });
 
-    // Verify SMTP connection before sending
-    transport.verify((error, success) => {
-      if (error) {
-        console.error("SMTP Error:", error);
-        console.log(
-          process.env.NODEMAILER_EMAIL,
-          process.env.NODEMAILER_PASSWORD
-        );
-      } else {
-        console.log("✅ Server is ready to take messages");
-      }
-    });
+    // ✅ Verify connection before sending
+    await transport.verify();
+    console.log("✅ SMTP server verified. Ready to send emails.");
 
-    console.log("✅ SMTP Server is ready to take messages");
-
-    // Email content
+    // ✅ Email content (both plain text & HTML)
     const mailOptions = {
-      from: `"Electro Support ⚡" <${process.env.NODEMAILER_EMAIL}>`,
+      from: `"Electro Verification" <${process.env.NODEMAILER_EMAIL}>`,
       to: email,
-      subject: "🔐 Verify Your Account - Electro",
-      text: `Your OTP is ${OTP}. It will expire in 10 minutes.`,
+      subject: "Your Electro verification code",
+      text: `Hi,
+
+Your OTP code is ${OTP}. 
+It’s valid for 10 minutes.
+
+If you didn’t request this, just ignore this message.
+
+– The Electro Team`,
       html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;
-                    border:1px solid #ddd;border-radius:8px;background:#f9f9f9;">
-          <h2 style="color:#4caf50;">Welcome to Electro ⚡</h2>
-          <p>We received a request to verify your account.</p>
-          <p style="font-size:18px;">Your OTP is:</p>
-          <h1 style="color:#333;letter-spacing:3px;">${OTP}</h1>
-          <p>This OTP will expire in <b>10 minutes</b>.</p>
-          <hr style="margin:20px 0;">
-          <small>If you didn’t request this, you can safely ignore this email.</small>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 15px;
+                    border: 1px solid #e0e0e0; border-radius: 8px; background: #ffffff;">
+          <p style="font-size: 16px;">Hi,</p>
+          <p style="font-size: 15px;">Your <strong>Electro verification code</strong> is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #2b2b2b;">${OTP}</p>
+          <p style="font-size: 14px;">This code is valid for <strong>10 minutes</strong>.</p>
+          <p style="font-size: 13px; color: #555;">
+            If you didn’t request this, please ignore this email.
+          </p>
+          <hr style="border:none;border-top:1px solid #ddd;margin:20px 0;">
+          <p style="font-size: 12px; color: #999;">© ${new Date().getFullYear()} Electro. All rights reserved.</p>
         </div>
       `,
+      headers: {
+        "X-Mailer": "ElectroMailer",
+        "List-Unsubscribe": "<mailto:support@electroshop.com>",
+      },
     };
 
-    // Send email
+    // ✅ Send email
     const info = await transport.sendMail(mailOptions);
 
-    console.log(`📩 Email sent to ${email}: ${info.response}`);
+    console.log(`📩 OTP email sent to ${email}: ${info.response}`);
     return info.accepted.length > 0;
   } catch (error) {
-    console.error("sendVerificationEmail Error:", error);
+    console.error("❌ sendVerificationEmail Error:", error);
     return false;
   }
 };
@@ -458,6 +650,310 @@ const logOut = async (req, res) => {
   }
 };
 
+const loadShopPage = async (req, res) => {
+  try {
+    const limit = 6;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    const { category, search, minPrice, maxPrice, brand, sort } = req.query;
+    const user = await checkSession(req.session.userId);
+
+    await updateCategoryProductCounts();
+
+    const categories = await categorieSchema
+      .find({ status: "listed" })
+      .sort({ productCount: -1 })
+      .lean();
+
+    const matchStage = { isBlocked: false, status: "In Stock" };
+
+    if (category && category !== "all") {
+      matchStage.category = mongoose.Types.ObjectId.isValid(category)
+        ? new mongoose.Types.ObjectId(category)
+        : category;
+    }
+
+    if (brand && brand !== "all" && mongoose.Types.ObjectId.isValid(brand)) {
+      matchStage.brand = new mongoose.Types.ObjectId(brand);
+    }
+
+    const priceFilter = {};
+    if (minPrice && !isNaN(minPrice)) priceFilter.$gte = Number(minPrice);
+    if (maxPrice && !isNaN(maxPrice)) priceFilter.$lte = Number(maxPrice);
+
+    let sortOption = {};
+    switch (sort) {
+      case "priceLow":
+        sortOption = { mainPrice: 1 };
+        break;
+      case "priceHigh":
+        sortOption = { mainPrice: -1 };
+        break;
+      case "nameAsc":
+        sortOption = { name: 1 };
+        break;
+      case "nameDesc":
+        sortOption = { name: -1 };
+        break;
+      case "oldest":
+        sortOption = { createdAt: 1 };
+        break;
+      default:
+        sortOption = { createdAt: -1 };
+    }
+
+    const searchStage = [];
+    if (search) {
+      searchStage.push({
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { "variants.description": { $regex: search, $options: "i" } },
+            { "brand.name": { $regex: search, $options: "i" } },
+            { "category.name": { $regex: search, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    const now = new Date();
+
+    // Aggregation pipeline
+    let products = await productSchema
+      .aggregate([
+        { $match: matchStage },
+
+        {
+          $lookup: {
+            from: "variants",
+            localField: "_id",
+            foreignField: "product_id",
+            as: "variants",
+          },
+        },
+        {
+          $lookup: {
+            from: "brands",
+            localField: "brand",
+            foreignField: "_id",
+            as: "brand",
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "category",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+
+        ...searchStage,
+
+        { $unwind: "$variants" },
+        { $match: { "variants.specifications.stock": { $gt: 0 } } },
+
+        // Product offers
+        {
+          $lookup: {
+            from: "offers",
+            let: { productId: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$appliesTo", "product"] },
+                      { $in: ["$$productId", "$targetIds"] },
+                      { $eq: ["$isActive", true] },
+                      { $lte: ["$startDate", now] },
+                      { $gte: ["$endDate", now] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "productOffers",
+          },
+        },
+
+        // Category offers
+        {
+          $lookup: {
+            from: "offers",
+            let: {
+              categoryIds: {
+                $map: { input: "$category", as: "c", in: "$$c._id" },
+              },
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ["$appliesTo", "category"] },
+                      {
+                        $gt: [
+                          {
+                            $size: {
+                              $setIntersection: ["$targetIds", "$$categoryIds"],
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                      { $eq: ["$isActive", true] },
+                      { $lte: ["$startDate", now] },
+                      { $gte: ["$endDate", now] },
+                    ],
+                  },
+                },
+              },
+            ],
+            as: "categoryOffers",
+          },
+        },
+
+        {
+          $addFields: {
+            offers: { $concatArrays: ["$productOffers", "$categoryOffers"] },
+          },
+        },
+
+        {
+          $group: {
+            _id: "$_id",
+            name: { $first: "$name" },
+            mainPrice: { $min: "$variants.price" },
+            price: { $first: "$price" },
+            brand: { $first: "$brand" },
+            category: { $first: "$category" },
+            variants: { $push: "$variants" },
+            Images: { $first: "$Images" },
+            createdAt: { $first: "$createdAt" },
+            offers: { $first: "$offers" },
+          },
+        },
+
+        ...(Object.keys(priceFilter).length
+          ? [{ $match: { mainPrice: priceFilter } }]
+          : []),
+
+        { $sort: sortOption },
+        { $skip: skip },
+        { $limit: limit },
+      ])
+      .exec();
+
+    // After aggregation
+    products = products.map((product) => {
+      product.originalPrice = product.mainPrice; // store original price
+      let maxDiscountValue = 0;
+      let appliedType = "Percentage";
+      let appliedPercentage = 0;
+
+      if (product.offers && product.offers.length > 0) {
+        product.offers.forEach((o) => {
+          if (!o.isActive) return;
+
+          let discountValue = 0;
+          let discountType = o.discountType;
+
+          if (o.discountType === "Percentage") {
+            discountValue = product.mainPrice * (o.discountValue / 100);
+
+            // If maxAmount is applied → Fixed
+            if (o.maxAmount && discountValue > o.maxAmount) {
+              discountValue = o.maxAmount;
+              discountType = "Fixed";
+            }
+          } else {
+            discountValue = o.discountValue;
+            discountType = "Fixed";
+          }
+
+          if (discountValue > maxDiscountValue) {
+            maxDiscountValue = discountValue;
+            appliedType = discountType;
+            // Calculate percentage relative to mainPrice
+            appliedPercentage = (discountValue / product.mainPrice) * 100;
+          }
+        });
+      }
+
+      product.finalPrice = product.mainPrice - maxDiscountValue;
+      product.appliedDiscountValue = maxDiscountValue;
+      product.appliedDiscountType = appliedType;
+      product.discountPercentage = appliedPercentage.toFixed(2); // new field
+
+      // Update variants
+      product.variants = product.variants.map((v) => ({
+        ...v,
+        discountType: appliedType,
+        activeDiscountValue: maxDiscountValue,
+      }));
+
+      return product;
+    });
+
+    // Count total products for pagination
+    const countAggregation = await productSchema.aggregate([
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "variants",
+          localField: "_id",
+          foreignField: "product_id",
+          as: "variants",
+        },
+      },
+      { $unwind: "$variants" },
+      { $match: { "variants.specifications.stock": { $gt: 0 } } },
+      { $group: { _id: "$_id" } },
+    ]);
+
+    const count = countAggregation.length;
+
+    // Wishlist
+    let wishlistItems = [];
+    if (user)
+      wishlistItems = await wishlistSchema.find({ userId: user._id }).lean();
+
+    const brands = await brandSchema
+      .find({ status: "active" })
+      .sort({ productCount: -1 })
+      .lean();
+
+    console.log(products[0]);
+
+    res.status(HTTP_STATUS.OK).render("products/shop", {
+      user,
+      categories,
+      category,
+      products,
+      search,
+      currentPage: page,
+      brands,
+      sort: sort || "relevance",
+      totalPages: Math.ceil(count / limit),
+      cartCount: req.cartCount || null,
+      selectedCategory: category || "all",
+      selectedBrand: brand || "all",
+      selectedSort: sort || "",
+      searchQuery: search || "",
+      minPrice: minPrice || "",
+      maxPrice: maxPrice || "",
+      wishlistItems,
+      perPage: limit,
+      totalProducts: count,
+    });
+  } catch (error) {
+    console.error("❌ Error loading shop page:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  }
+};
+
 // Products Details Page Loader
 const loadProductDetails = async (req, res) => {
   try {
@@ -466,7 +962,6 @@ const loadProductDetails = async (req, res) => {
     res
       .status(HTTP_STATUS.OK)
       .render("auth/page-404", { user, cartCount: req.cartCount || null });
-  
   } catch (error) {
     console.error("Error loading product details page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
@@ -489,4 +984,5 @@ module.exports = {
   updatePass,
   logOut,
   loadProductDetails,
+  loadShopPage,
 };

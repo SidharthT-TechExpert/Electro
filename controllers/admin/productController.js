@@ -1,62 +1,150 @@
 const variantSchema = require("../../models/variantSchema");
 const productSchema = require("../../models/productSchema");
 const categorieSchema = require("../../models/categorySchema");
+const userSchema = require('../../models/userSchema')
 const brandSchema = require("../../models/brandSchema");
 const HTTP_STATUS = require("../../config/statusCodes");
+const categoryFieldsMap = require("../../helpers/variant");
 
-function escapeRegex(s = "") {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+const updateCategoryProductCounts = async () => {
+  try {
+    // 🟦 Update category product counts
+    const categories = await categorieSchema.find();
+
+    for (const category of categories) {
+      const count = await productSchema.countDocuments({
+        category: category._id,
+      });
+      await categorieSchema.updateOne(
+        { _id: category._id },
+        { $set: { productCount: count } }
+      );
+      console.log(`✅ Category '${category.name}' count updated: ${count}`);
+    }
+
+    // 🟧 Update brand product counts
+    const brands = await brandSchema.find();
+
+    for (const brand of brands) {
+      const count = await productSchema.countDocuments({ brand: brand._id });
+      await brandSchema.updateOne(
+        { _id: brand._id },
+        { $set: { productCount: count } }
+      );
+      console.log(`✅ Brand '${brand.name}' count updated: ${count}`);
+    }
+
+    console.log("🎉 All category and brand counts updated successfully!");
+  } catch (error) {
+    console.error("❌ Error updating category/brand product counts:", error);
+  }
+};
 
 const getProductsPage = async (req, res) => {
   try {
-    const limit = 5;
+    const limit = 4;
     const page = parseInt(req.query.page) || 1;
-    const search = escapeRegex(req.query.search || "");
+    const search = req.query.search || "";
     const status = req.query.status || "all";
 
-    // Base query
-    let query = {
-      $or: [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ],
-    };
+    const matchStage = {};
 
-    // Apply status filter
-    if (status === "In Stock") query.status = "In Stock";
-    if (status === "Out of Stock") query.status = "Out of Stock";
-    if (status === "Not Listed") query.status = "Not Listed";
+    // Status filter
+    if (status !== "all") matchStage.status = status;
 
-    // Fetch paginated categories
-    const products = await productSchema
-      .find(query)
-      .populate("brand", "name logo")
-      .populate("category", "name")
-      .sort({ createAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit)
-      .exec();
+    // Aggregation pipeline
+    const pipeline = [
+      // Match status first
+      { $match: matchStage },
 
-    // Count for pagination
-    const count = await productSchema.countDocuments(query);
+      // Join category
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      { $unwind: "$category" }, // flatten the category array
+
+      // Apply search on name, description, or category.name
+      {
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+            { "category.name": { $regex: search, $options: "i" } }
+          ]
+        }
+      },
+
+      // Sort, paginate
+      { $sort: { createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+
+      // Join brand
+      {
+        $lookup: {
+          from: "brands",
+          localField: "brand",
+          foreignField: "_id",
+          as: "brand"
+        }
+      },
+      { $unwind: "$brand" }
+    ];
+
+    const products = await productSchema.aggregate(pipeline);
+
+    // Count total documents (for pagination)
+    const countPipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      { $unwind: "$category" },
+      {
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+            { "category.name": { $regex: search, $options: "i" } }
+          ]
+        }
+      },
+      { $count: "total" }
+    ];
+
+    const countResult = await productSchema.aggregate(countPipeline);
+    const totalCount = countResult[0]?.total || 0;
+
     const categories = await categorieSchema.find({});
     const brands = await brandSchema.find({});
+    const user = await userSchema.findOne({ _id: req.session.adminId });
 
     res.render("Home/products", {
       productData: products,
       categories,
       brands,
-      totalPages: Math.ceil(count / limit),
+      user,
+      totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
-      search: req.query.search || "",
-      status, // ✅ pass to frontend
+      search,
+      status
     });
   } catch (error) {
-    console.log("Get Products Page Error :", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+    console.log("Get Products Page Error:", error);
+    res.status(500).send("Server Error");
   }
 };
+
 
 const addProduct = async (req, res) => {
   try {
@@ -88,19 +176,20 @@ const addProduct = async (req, res) => {
     });
 
     await newProduct.save();
+    await updateCategoryProductCounts();
 
     res.json({
       success: true,
       message: "Brand created successfully",
       brand: newProduct,
     });
+
   } catch (error) {
     console.log("Add Product Error :", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
 
-const categoryFieldsMap = require("../../helpers/variant");
 
 const loadProductDetails = async (req, res) => {
   try {
@@ -123,9 +212,16 @@ const loadProductDetails = async (req, res) => {
     // 4️⃣ Get allowed variant fields based on category
     const variantField = categoryFieldsMap[product.category.name] || [];
 
+    const brands = await brandSchema.find({});
+    const categories = await categorieSchema.find({});
+    const user = await userSchema.findOne({_id:req.session.adminId})
+
     // 5️⃣ Render view
     res.render("Home/productsDetails", {
       product,
+      brands,
+      user,
+      categories,
       variants, // all variants for this product
       variantField, // dynamic fields (e.g. ram, size, etc.)
       activePage: "products", // Set active page for sidebar
@@ -173,6 +269,8 @@ const deleteProduct = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     }
 
+    await updateCategoryProductCounts();
+
     res.json({
       success: true,
       message: "Product Deleted successfully",
@@ -183,10 +281,47 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const editProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, brand, category, status } = req.body;
+
+    const update = await productSchema.findByIdAndUpdate(
+      id,
+      {
+        $set: { name, brand, category, status }
+      },
+      { new: true }
+    );
+
+    if (!update) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+    
+    await updateCategoryProductCounts();
+
+    res.json({
+      success: true,
+      message: "Product edited successfully",
+      product: update, // send updated product
+    });
+  } catch (error) {
+    console.error("Edit Product Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProductsPage,
   addProduct,
   loadProductDetails,
   toggleStatus,
   deleteProduct,
+  editProduct,
 };

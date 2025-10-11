@@ -1,0 +1,41 @@
+<style>
+    .account-sidebar a {
+        display: block;
+        color: #444;
+        text-decoration: none;
+        padding: 6px 0;
+    }
+
+    .account-sidebar a.active {
+        color: #e63946;
+        font-weight: 600;
+    }
+
+    .account-sidebar h6 {
+        font-size: 0.9rem;
+        color: #333;
+    }
+</style>
+
+<aside class="col-md-3">
+    <div class="account-sidebar">
+        <h6 class="fw-bold mb-3">Manage My Account</h6>
+        <ul class="list-unstyled">
+            <li><a href="/myProfile" class="<%= page === 'profile' ? 'active' : '' %>">My Profile</a></li>
+            <li><a href="/address-book" class="<%= page === 'address-book' ? 'active' : '' %>">Address Book</a></li>
+            <li><a href="/payment-options" class="<%= page === 'payment-options' ? 'active' : '' %>">My Payment Options</a></li>
+            <li><a href="/wallet" class="<%= page === 'wallet' ? 'active' : '' %>">My Wallet</a></li>
+        </ul>
+
+        <h6 class="fw-bold mt-4 mb-3">My Orders</h6>
+        <ul class="list-unstyled">
+            <li><a href="/orders" class="<%= page === 'orders' ? 'active' : '' %>">My Returns</a></li>
+            <li><a href="/cancellations" class="<%= page === 'cancellations' ? 'active' : '' %>">My Cancellations</a></li>
+        </ul>
+
+        <h6 class="fw-bold mt-4 mb-3">My Wishlist</h6>
+        <ul class="list-unstyled">
+            <li><a href="/wishlist" class="<%= page === 'wishlist' ? 'active' : '' %>">View Wishlist</a></li>
+        </ul>
+    </div>
+</aside>

@@ -13,6 +13,10 @@ const brandSchema = new Schema(
       type: String,
       required: true,
     },
+    productCount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ["active", "blocked"],

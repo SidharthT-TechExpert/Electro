@@ -1,5 +1,6 @@
 const brandSchema = require("../../models/brandSchema");
 const HTTP_STATUS = require("../../config/statusCodes");
+const userSchema = require('../../models/userSchema');
 const fs = require("fs");
 const path = require("path");
 
@@ -13,6 +14,8 @@ const getBranchPage = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const search = escapeRegex(req.query.search || "");
     const status = req.query.status || "all";
+
+    const user = await userSchema.findOne({_id:req.session.adminId});
 
     // Base query
     let query = {
@@ -39,6 +42,7 @@ const getBranchPage = async (req, res) => {
 
     res.render("Home/brand", {
       brandData,
+      user,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       search: req.query.search || "",

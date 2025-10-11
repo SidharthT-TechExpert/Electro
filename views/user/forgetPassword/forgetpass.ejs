@@ -10,10 +10,14 @@
         <!-- Enter Email-->
         <div class="reset-step active" id="step-1">
           <h2>🔐 Reset Password</h2>
-          <form method="post" action="/forgetpass">
+          <form onsubmit="Reset(this)">
             <p class="subtitle">Enter your <b>Email</b> to continue.</p>
             <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email " />
-            <button class="rc-btn" type="submit" id="toStep2">Next</button>
+            <a href="/logIn">Login?</a>
+            <div style="text-align: end;" class="signup-link">
+              <a href="/signUp">Sign Up?</a>
+            </div>
+            <button class="rc-btn" name="submit" type="submit" id="toStep2">Next</button>
           </form>
         </div>
 
@@ -36,6 +40,11 @@
             <div class="rc-timer-bar">
               <div id="timerFill"></div>
             </div>
+          </div>
+
+          <a href="/logIn">Login?</a>
+          <div style="text-align: end;" class="signup-link">
+            <a href="/signUp">Sign Up?</a>
           </div>
 
           <p id="otpError" class="rc-error">❌ Invalid OTP. Please try again.</p>
@@ -66,6 +75,11 @@
             <div class="password-wrapper">
               <input id="confirmPass" class="rc-input" type="password" placeholder="Confirm password" />
               <i class="fa fa-eye toggle-pass" data-target="confirmPass"></i>
+            </div>
+
+            <a href="/logIn">Login?</a>
+            <div style="text-align: end;" class="signup-link">
+              <a href="/signUp">Sign Up?</a>
             </div>
 
             <p id="passError" class="rc-error">❌ Passwords do not match.</p>

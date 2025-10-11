@@ -1,3 +1,41 @@
+function Reset(f) {
+  f.submit.disabled = true;
+  url = "/forgetPass";
+  method = "POST";
+  data = { email: f.email.value.trim() };
+  $.ajax({
+    type: method,
+    url: url,
+    data: data,
+    success: function (response) {
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: response.message,
+          showConfirmButton: false,
+          timer: 1500,
+        }).then(() => {
+          $("#step-1").removeClass("active");
+          $("#step-2").addClass("active");
+          $(".rc-otp").first().focus();
+          startTimer();
+        });
+      } else {
+        f.submit.disabled = false;
+        Swal.fire({ icon: "error", title: "Error", text: response.message });
+      }
+    },
+    error: function () {
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Please try again!",
+      });
+      f.submit.disabled = false;
+    },
+  });
+}
+
 // Toggle password visibility using Font Awesome
 $(".toggle-pass").on("click", function () {
   const targetId = $(this).data("target");
@@ -193,57 +231,60 @@ $(document).ready(function () {
     label.text(v ? texts[s] : "");
   });
 
-// ----------------- Reset Password Submit with Strength Check -----------------
-resetBtn.on("click", function (e) {
-  e.preventDefault();
-  const a = newPass.val().trim(),
-        b = confirmPass.val().trim();
+  // ----------------- Reset Password Submit with Strength Check -----------------
+  resetBtn.on("click", function (e) {
+    e.preventDefault();
+    const a = newPass.val().trim(),
+      b = confirmPass.val().trim();
 
-  if (!a || !b) {
-    passError.show().text("Fill both fields");
-    return;
-  }
-  if (a !== b) {
-    passError.show().text("❌ Passwords do not match.");
-    return;
-  }
+    if (!a || !b) {
+      passError.show().text("Fill both fields");
+      return;
+    }
+    if (a !== b) {
+      passError.show().text("❌ Passwords do not match.");
+      return;
+    }
 
-  // --- Strength Check ---
-  let strength = 0;
-  if (a.length >= 6) strength++;
-  if (/[A-Z]/.test(a)) strength++;
-  if (/[0-9]/.test(a)) strength++;
-  if (/[^A-Za-z0-9]/.test(a)) strength++;
+    // --- Strength Check ---
+    let strength = 0;
+    if (a.length >= 6) strength++;
+    if (/[A-Z]/.test(a)) strength++;
+    if (/[0-9]/.test(a)) strength++;
+    if (/[^A-Za-z0-9]/.test(a)) strength++;
 
-  if (strength < 4) {
-    passError.show().text("❌ Password is not strong enough. Use uppercase, number, special character, and at least 6 characters.");
-    return;
-  }
+    if (strength < 4) {
+      passError
+        .show()
+        .text(
+          "❌ Password is not strong enough. Use uppercase, number, special character, and at least 6 characters."
+        );
+      return;
+    }
 
-  passError.hide();
+    passError.hide();
 
-  $.ajax({
-    type: "POST",
-    url: "/update-password",
-    data: { password: a },
-    success: function (response) {
-      if (response.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Password updated!",
-          showConfirmButton: false,
-          timer: 1500,
-        }).then(() => {
-          window.location.href = "/login";
-        });
-      } else {
-        passError.show().text(response.message || "Something went wrong");
-      }
-    },
-    error: function () {
-      passError.show().text("Server error. Try again.");
-    },
+    $.ajax({
+      type: "POST",
+      url: "/update-password",
+      data: { password: a },
+      success: function (response) {
+        if (response.success) {
+          Swal.fire({
+            icon: "success",
+            title: "Password updated!",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => {
+            window.location.href = "/login";
+          });
+        } else {
+          passError.show().text(response.message || "Something went wrong");
+        }
+      },
+      error: function () {
+        passError.show().text("Server error. Try again.");
+      },
+    });
   });
-});
-
 });

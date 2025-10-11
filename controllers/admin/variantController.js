@@ -169,10 +169,20 @@ const uploadVariantImage = async (req, res) => {
 
     // Check variant exists
     const variant = await variantSchema.findById(variantId);
+
     if (!variant) {
       return res
         .status(HTTP_STATUS.NOT_FOUND)
         .json({ success: false, message: "Variant not found" });
+    }
+
+    if (variant.product_image && variant.product_image.length >= 6) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({
+          success: false,
+          message: "Maximum 6 images are allowed per variant",
+        });
     }
 
     // Multer upload

@@ -1,5 +1,6 @@
 const HTTP_STATUS = require("../../config/statusCodes");
 const categorieSchema = require("../../models/categorySchema");
+const userSchema = require('../../models/userSchema');
 
 function escapeRegex(s = "") {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -11,6 +12,8 @@ const categories = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const search = escapeRegex(req.query.search || "");
     const status = req.query.status || "all";
+
+    const user = await userSchema.findOne({_id:req.session.adminId});
 
     // Base query
     let query = {
@@ -34,8 +37,10 @@ const categories = async (req, res) => {
 
     // Count for pagination
     const count = await categorieSchema.countDocuments(query);
+    
     res.render("Home/category", {
       categories,
+      user,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       search: req.query.search || "",

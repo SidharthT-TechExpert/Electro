@@ -26,8 +26,11 @@ const loadForgetPage = async (req, res) => {
 
 const loadDashBoardPage = async (req, res) => {
   try {
+    const id = req.session.adminId ;
+    const user = await userSchema.findById(id);
+    
     res.status(HTTP_STATUS.OK).render("Home/dashboard", {
-      user: "Sidharth",
+      user,
       activePage: "dashboard",
       pageTitle: "Dashboard",
       brandInitial: "Brand",
