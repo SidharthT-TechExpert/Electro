@@ -21,8 +21,8 @@ const homeAuth = async (req, res, next) => {
 
       if (user.isBlocked) {
         req.flash("error_msg", "Blocked User. Please contact Customer Care!");
-        req.session.userId;
-        res.redirect("/logIn");
+        req.session.userId = null ;
+        res.redirect("/login");
         return;
       }
 
@@ -45,12 +45,29 @@ const isAuth = async (req, res, next) => {
       if (data && !data.isBlocked) {
         res.redirect("/");
       } else {
-         req.flash(
+        req.flash(
           "error_msg",
           "Blocked User , You must Contact With Our costomer care!"
         );
-        req.session.destroy()
-        res.redirect("/logIn");
+        req.session.destroy();
+        res.redirect("/");
+      }
+    });
+  } else next();
+};
+
+const isValid = async (req, res, next) => {
+  console.log(req.session.userId);
+  if (req.session && req.session.userId) {
+    userSchema.findById(req.session.userId).then((data) => {
+      if (data && !data.isBlocked) {
+        next();
+      } else {
+        res.json({
+          success: false ,
+          message: "Blocked User! You must contact our customer care.",
+        });
+        req.session.destroy();
       }
     });
   } else next();
@@ -116,4 +133,5 @@ module.exports = {
   userLogOut,
   isAdmin,
   isChecker,
+  isValid,
 };

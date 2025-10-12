@@ -39,7 +39,7 @@ routes.get("/logOut", checkSession.userLogOut, userController.logOut);
 // Home Page Route
 routes.get("/", checkSession.homeAuth, userController.loadHomePage);
 routes.get("/shop", checkSession.homeAuth, userController.loadShopPage);
-
+routes.post("/shop/wishlist", checkSession.isValid);
 
 // Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
