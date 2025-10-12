@@ -12,11 +12,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-
   <!-- Icon Font Stylesheet -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-
 
   <!-- Customized Bootstrap Stylesheet -->
   <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -74,60 +72,49 @@
             <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
               data-bs-toggle="dropdown" aria-expanded="false">
 
-              <% if (user && user.profilePhoto) { %>
-                <!-- Show profile photo -->
-                <img src="/profile-photo/<%= user.profilePhoto %>" alt="Profile Photo" class="rounded-circle" width="20"
-                  height="20" style="object-fit: cover;">
-                <% } else { %>
-                  <!-- Default user icon -->
-                  <i class="fas fa-user-circle"></i>
-                  <% } %>
+              <!-- Show profile photo -->
+              <img
+                src="<%= user && user.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/uploads/img/user.png' %>"
+                alt="Profile Photo" class="rounded-circle" width="20" height="20" style="object-fit: cover;">
 
-                    <span>
-                      <%= user?.name %>
-                    </span>
-                    <i class="fas fa-chevron-down arrow-icon"></i>
+              <span>
+                <%= user?.name %>
+              </span>
+              <i class="fas fa-chevron-down arrow-icon"></i>
             </button>
 
             <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="/myProfile">
-                  <% if (user && user.profilePhoto) { %>
-                    <img src="/profile-photo/<%= user.profilePhoto %>" alt="Profile Photo" class="rounded-circle"
-                      width="20" height="20" style="object-fit: cover;">
-                    <% } else { %>
-                      <i class="fas fa-user"></i>
-                      <% } %>
-                        My Profile
+                  <img
+                    src="<%= user && user.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/uploads/img/user.png' %>"
+                    alt="Profile Photo" class="rounded-circle" width="20" height="20" style="object-fit: cover;">
+                  My Profile
                 </a>
               </li>
-
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="/orders">
-                  <i class="fas fa-box"></i> Orders
-                </a>
+              <li><a class="dropdown-item d-flex align-items-center gap-2" href="/orders"><i class="fas fa-box"></i>
+                  Orders</a>
               </li>
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="/wishlist">
-                  <i class="fas fa-heart"></i> Wishlist (1)
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="/wallet">
-                  <i class="fas fa-wallet"></i> Wallet
-                </a>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/wishlist">
+                <i class="fas fa-heart"></i> Wishlist (<span id="wishlist-count">
+                  <%= user?.wishlists?.products?.length || 0%>
+                </span>)
+              </a>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="/wishlist">
+                <i class="fas fa-heart"></i> Cart (<span id="wishlist-count">
+                  <%= user?.cart.products?.length || 0%>
+                </span>)
+              </a>
+              <li><a class="dropdown-item d-flex align-items-center gap-2" href="/wallet"><i class="fas fa-wallet"></i>
+                  Wallet</a>
               </li>
               <li>
                 <hr class="dropdown-divider">
               </li>
-              <li>
-                <a onclick="logout()" class="dropdown-item d-flex align-items-center gap-2">
-                  <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-              </li>
+              <li><a onclick="logout()" class="dropdown-item d-flex align-items-center gap-2"><i
+                    class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
           </div>
-
 
           <!-- Cart -->
           <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">
@@ -135,112 +122,136 @@
             <% if (typeof cartCount !=="undefined" && cartCount> 0) { %>
               <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
                 <%= cartCount %>
-                  <% } else { %>
-
-                    <% } %>
               </span>
+              <% } %>
           </a>
-
-          <% } else {%>
-            <!-- User Dropdown -->
+          <% } else { %>
+            <!-- Sign Up/Login -->
             <div class="dropdown">
               <button class="btn btn-dark d-flex align-items-center gap-2 rounded user-btn" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-user-circle"></i>
-                <span>
-                  SignUp
-                </span>
+                <span>SignUp</span>
                 <i class="fas fa-chevron-down arrow-icon"></i>
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow dropdown-dark">
-                <li>
-                  <a class="dropdown-item d-flex align-items-center gap-2" href="/signUp">
-                    <i class="bi bi-person-plus"></i>
-                    SignUp
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item d-flex align-items-center gap-2" href="/logIn">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    LogIn
-                  </a>
-                </li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2" href="/signUp"><i
+                      class="bi bi-person-plus"></i> SignUp</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2" href="/logIn"><i
+                      class="bi bi-box-arrow-in-right"></i> LogIn</a></li>
               </ul>
             </div>
-
-            <%}%>
-
-
+            <% } %>
 
               <!-- Notification Dropdown -->
               <div class="dropdown">
                 <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="dropdown">
                   <i class="fas fa-bell"></i>
-                  <!-- Notification Count -->
-                  <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
-                    3
-                  </span>
+                  <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">3</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2">
-                  <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                      <i class="fas fa-bell text-warning"></i>
-                      New order placed
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                      <i class="fas fa-box text-primary"></i>
-                      Order #2345 shipped
-                    </a>
-                  </li>
+                  <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
+                        class="fas fa-bell text-warning"></i> New order placed</a></li>
+                  <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
+                        class="fas fa-box text-primary"></i> Order #2345 shipped</a></li>
                   <li>
                     <hr class="dropdown-divider">
                   </li>
-                  <li>
-                    <a class="dropdown-item text-center small text-muted" href="#">
-                      View all notifications
-                    </a>
-                  </li>
+                  <li><a class="dropdown-item text-center small text-muted" href="#">View all notifications</a></li>
                 </ul>
               </div>
 
-              <!-- Customer Contact Dropdown -->
+              <!-- Contact -->
               <div class="dropdown ms-2">
                 <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="dropdown">
                   <i class="fas fa-headset"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2">
-                  <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="tel:+1800123456">
-                      <i class="fas fa-phone-alt text-success"></i>
-                      Call Us
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="mailto:support@electro.com">
-                      <i class="fas fa-envelope text-primary"></i>
-                      Email Support
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="/chat">
-                      <i class="fas fa-comments text-info"></i>
-                      Live Chat
-                    </a>
-                  </li>
+                  <li><a class="dropdown-item d-flex align-items-center gap-2" href="tel:+1800123456"><i
+                        class="fas fa-phone-alt text-success"></i> Call Us</a></li>
+                  <li><a class="dropdown-item d-flex align-items-center gap-2" href="mailto:support@electro.com"><i
+                        class="fas fa-envelope text-primary"></i> Email Support</a></li>
+                  <li><a class="dropdown-item d-flex align-items-center gap-2" href="/chat"><i
+                        class="fas fa-comments text-info"></i> Live Chat</a></li>
                   <li>
                     <hr class="dropdown-divider">
                   </li>
-                  <li>
-                    <span class="dropdown-item-text small text-muted">
-                      24 × 7 Customer Support
-                    </span>
-                  </li>
+                  <li><span class="dropdown-item-text small text-muted">24 × 7 Customer Support</span></li>
                 </ul>
               </div>
-
-
       </div>
     </div>
   </header>
+
+  <script>
+    const user = <% - user ? JSON.stringify(user) : 'null' %>;
+    const wishlistLock = {};
+
+    async function addToWishlist(productId, variantId) {
+      if (!user) {
+        return Swal.fire({
+          icon: 'info',
+          title: "Please login first!",
+          showConfirmButton: true
+        }).then(() => location.href = '/logIn');
+      }
+
+      if (!productId || !variantId) {
+        return Swal.fire({
+          icon: 'error',
+          title: 'Product or variant not selected!',
+          showConfirmButton: true
+        });
+      }
+
+      const key = `${productId}-${variantId}`;
+      if (wishlistLock[key]) return;
+      wishlistLock[key] = true;
+
+      const wishlistBtn = document.querySelector(`#wishlist-btn-${key}`);
+      if (!wishlistBtn) {
+        wishlistLock[key] = false;
+        return;
+      }
+
+      const heartIcon = wishlistBtn.querySelector('i');
+      const currentlyAdded = heartIcon.classList.contains('fas');
+
+      heartIcon.classList.toggle('fas', !currentlyAdded);
+      heartIcon.classList.toggle('far', currentlyAdded);
+      wishlistBtn.style.color = !currentlyAdded ? 'red' : '#1f1f1f';
+
+      try {
+        const { data } = await axios.post('/shop/wishlist', { productId, variantId });
+        if (data.success) {
+          const removed = !!data.removed;
+          heartIcon.classList.toggle('fas', !removed);
+          heartIcon.classList.toggle('far', removed);
+          wishlistBtn.style.color = removed ? '#1f1f1f' : 'red';
+
+          Swal.fire({
+            icon: 'success',
+            title: data.message || (removed ? 'Removed from wishlist' : 'Added to wishlist'),
+            timer: 1200,
+            showConfirmButton: false
+          });
+        } else {
+          heartIcon.classList.toggle('fas', currentlyAdded);
+          heartIcon.classList.toggle('far', !currentlyAdded);
+          wishlistBtn.style.color = currentlyAdded ? 'red' : '#1f1f1f';
+          Swal.fire({ icon: 'error', title: data.message || 'Something went wrong!', showConfirmButton: true });
+        }
+      } catch (err) {
+        heartIcon.classList.toggle('fas', currentlyAdded);
+        heartIcon.classList.toggle('far', !currentlyAdded);
+        wishlistBtn.style.color = currentlyAdded ? 'red' : '#1f1f1f';
+        console.error('Wishlist update error:', err);
+        Swal.fire({ icon: 'error', title: 'Error updating wishlist', timer: 1500, showConfirmButton: false });
+      } finally {
+        setTimeout(() => { wishlistLock[key] = false; }, 500);
+      }
+    }
+  </script>
+</body>
+
+</html>

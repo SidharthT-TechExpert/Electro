@@ -13,7 +13,24 @@ const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 
 const checkSession = async (_id) => {
-  return _id ? await userSchema.findById(_id) : null;
+  if (!_id) return null;
+
+  const objectId =new mongoose.Types.ObjectId(_id);
+
+  const result = await userSchema.aggregate([
+    { $match: { _id: objectId } },
+    {
+      $lookup: {
+        from: "wishlists", // collection name in MongoDB
+        localField: "_id", // field in userSchema
+        foreignField: "userId", // field in wishlistSchema
+        as: "wishlists", // the array field to store results
+      },
+    },
+    { $unwind: "$wishlists" }
+  ]);
+
+  return result.length ? result[0] : null;
 };
 
 const updateCategoryProductCounts = async () => {
@@ -724,6 +741,7 @@ const loadShopPage = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const { category, search, minPrice, maxPrice, brand, sort } = req.query;
+
     const user = await checkSession(req.session.userId);
 
     await updateCategoryProductCounts();
@@ -792,7 +810,6 @@ const loadShopPage = async (req, res) => {
         ...searchStage,
         { $unwind: "$variants" },
         { $match: { "variants.specifications.stock": { $gt: 0 } } },
-
         // Product offers
         {
           $lookup: {
@@ -816,7 +833,6 @@ const loadShopPage = async (req, res) => {
             as: "productOffers",
           },
         },
-
         // Category offers
         {
           $lookup: {
@@ -853,13 +869,11 @@ const loadShopPage = async (req, res) => {
             as: "categoryOffers",
           },
         },
-
         {
           $addFields: {
             offers: { $concatArrays: ["$productOffers", "$categoryOffers"] },
           },
         },
-
         {
           $group: {
             _id: "$_id",
@@ -874,7 +888,6 @@ const loadShopPage = async (req, res) => {
             offers: { $first: "$offers" },
           },
         },
-        { $sort: { createdAt: -1 } },
       ])
       .exec();
 
@@ -886,7 +899,6 @@ const loadShopPage = async (req, res) => {
         product.offers.forEach((o) => {
           const startDate = new Date(o.startDate);
           const endDate = new Date(o.endDate);
-
           if (!o.isActive || startDate > now || endDate < now) return;
 
           let discountValue = 0;
@@ -909,7 +921,9 @@ const loadShopPage = async (req, res) => {
       const finalPrice = product.mainPrice - totalDiscountValue;
       const discountPercentage = (totalDiscountValue / product.mainPrice) * 100;
 
-      product.finalPrice = Number(finalPrice.toFixed(0));
+      product.finalPrice = Number.isFinite(finalPrice)
+        ? Number(finalPrice.toFixed(0))
+        : 0;
       product.appliedDiscountValue = Number(totalDiscountValue.toFixed(0));
       product.appliedDiscountType = "Percentage";
       product.discountPercentage = Number(discountPercentage.toFixed(0));
@@ -917,13 +931,30 @@ const loadShopPage = async (req, res) => {
       return product;
     });
 
-    // Step 3: Apply minPrice / maxPrice filter on finalPrice
-    if (!isNaN(minPrice))
+    // Step 3: Apply minPrice / maxPrice filter BEFORE sorting
+    if (!isNaN(minPrice) && minPrice !== "")
       products = products.filter((p) => p.finalPrice >= Number(minPrice));
-    if (!isNaN(maxPrice))
+    if (!isNaN(maxPrice) && maxPrice !== "")
       products = products.filter((p) => p.finalPrice <= Number(maxPrice));
 
-    // Step 4: Apply pagination
+    // Step 4: Apply sorting
+    if (sort === "priceLow") {
+      products.sort((a, b) => a.finalPrice - b.finalPrice);
+    } else if (sort === "priceHigh") {
+      products.sort((a, b) => b.finalPrice - a.finalPrice);
+    } else if (sort === "nameAsc") {
+      products.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === "nameDesc") {
+      products.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (sort === "newest") {
+      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sort === "oldest") {
+      products.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else {
+      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    // Step 5: Pagination
     const totalProducts = products.length;
     products = products.slice(skip, skip + limit);
 
@@ -936,6 +967,8 @@ const loadShopPage = async (req, res) => {
       .find({ status: "active" })
       .sort({ productCount: -1 })
       .lean();
+
+    console.log(products[0] , user);
 
     res.status(200).render("products/shop", {
       user,

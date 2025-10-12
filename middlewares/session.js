@@ -57,7 +57,6 @@ const isAuth = async (req, res, next) => {
 };
 
 const isValid = async (req, res, next) => {
-  console.log(req.session.userId);
   if (req.session && req.session.userId) {
     userSchema.findById(req.session.userId).then((data) => {
       if (data && !data.isBlocked) {

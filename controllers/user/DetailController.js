@@ -146,27 +146,30 @@ const MY_Profile = async (req, res) => {
 // Update Name
 const UpdateName = async (req, res) => {
   try {
-    const id = req.session.userId;
-    const { name } = req.body;
+    const { id, name } = req.body;
 
-    if (!id) {
-      return res.json({ success: false, message: "Session expired." });
+    // Validate inputs
+    if (!id || !name || name.trim().length < 3) {
+      return res.json({ success: false, message: "Invalid user ID or name" });
     }
 
-    const update = await userSchema.findByIdAndUpdate(id, { name });
-    if (!update) {
-      return res.json({ success: false, message: "User not found!" });
+    // Check if user exists
+    const user = await userSchema.findById(id);
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
     }
 
-    res.json({ success: true, message: "Name updated successfully" });
+    // Update name
+    user.name = name.trim();
+    await user.save();
+
+    return res.status(200).json({ success: true, message: "Name updated successfully" });
   } catch (error) {
     console.error("Error updating name:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Internal server error",
-    });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
-};
+}
 
 // Update Password
 const updatePass = async (req, res) => {
