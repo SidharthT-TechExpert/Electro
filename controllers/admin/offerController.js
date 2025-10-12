@@ -1,6 +1,6 @@
 const offerSchema = require("../../models/OfferSchema");
 const productSchema = require("../../models/productSchema");
-const userSchema = require('../../models/userSchema')
+const userSchema = require("../../models/userSchema");
 const categorieSchema = require("../../models/categorySchema");
 
 const HTTP_STATUS = require("../../config/statusCodes");
@@ -10,27 +10,43 @@ const loadOfferPage = async (req, res) => {
   try {
     const limit = 4;
     const page = parseInt(req.query.page) || 1;
-    const isActive = req.query.status || true;
-    const filter  = req.query.status ;
+    const status = req.query.status || "all";
 
-    const user = await userSchema.findOne({_id:req.session.adminId})
+    const user = await userSchema.findOne({ _id: req.session.adminId });
 
-    // Fetch active offers
+    // ✅ Build filter condition
+    let query = {};
+
+    const currentDate = new Date();
+    if (status === "active") {
+      query.isActive = true;
+      query.endDate = { $gt: currentDate };
+    } else if (status === "inactive") {
+      query.isActive = false;
+    } else if (status === "expired") {
+      query.endDate = { $lt: currentDate };
+    } else if (status === "upcoming") {
+      query.startDate = { $gt: currentDate };
+    }
+
+    // ✅ Fetch offers based on query
     const offerData = await offerSchema
-      .find({ isActive })
+      .find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
-      .exec();
+      .lean();
 
-    const count = await offerSchema.countDocuments(isActive);
+    // ✅ Count total for pagination
+    const count = await offerSchema.countDocuments(query);
+
     const products = await productSchema.find({ status: "In Stock" });
     const categories = await categorieSchema.find({ status: "listed" });
 
     res.render("Home/offersPage", {
       offerData,
       user,
-      filter ,
+      filter: status,
       products,
       categories,
       title: "Offers Management",
@@ -72,7 +88,7 @@ const addOffer = async (req, res) => {
       !startDate ||
       !endDate ||
       !targetIds ||
-      targetIds.length === 0 
+      targetIds.length === 0
     ) {
       return res.json({ success: false, message: "Missing required fields" });
     }
@@ -205,7 +221,6 @@ const editOffer = async (req, res) => {
       message: "Offer updated successfully",
       offer: update,
     });
-
   } catch (error) {
     console.error("Edit Offer Error:", error);
     res
