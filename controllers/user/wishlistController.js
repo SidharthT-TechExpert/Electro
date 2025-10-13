@@ -27,61 +27,79 @@ const addWishlist = async (req, res) => {
       });
     }
 
-    // Find wishlist for user
+    // 🔹 Find wishlist for user
     let wishlist = await wishlistSchema.findOne({ userId });
 
+    // 🔹 If wishlist not found, create it using upsert
     if (!wishlist) {
-      wishlist = new wishlistSchema({
-        userId,
-        products: [{ productId, variantId }],
+      await wishlistSchema.updateOne(
+        { userId },
+        {
+          $push: {
+            products: { productId, variantId },
+          },
+        },
+        { upsert: true }
+      );
+
+      const WishlistS = await wishlistSchema.findOne({ userId });
+      const wishlistCount = WishlistS?.products?.length || 0;
+
+      return res.status(200).json({
+        success: true,
+        wishlistCount,
+        message: "Product added to wishlist",
+        wishlist: WishlistS,
       });
-      await wishlist.save();
-      return res
-        .status(200)
-        .json({
-          success: true,
-          removed: false,
-          message: "Product added to wishlist",
-          wishlist,
-        });
     }
 
-    if (!wishlist.products) wishlist.products = [];
+    // 🔹 Ensure products array exists
+    if (!Array.isArray(wishlist.products)) wishlist.products = [];
 
-    // Find product in wishlist
+    // 🔹 Check if product already exists
     const index = wishlist.products.findIndex(
       (item) =>
         item.productId.toString() === productId.toString() &&
         item.variantId.toString() === variantId.toString()
     );
 
+    // 🔹 If product exists → remove it
     if (index !== -1) {
-      // Product + variant exists → remove it
       wishlist.products.splice(index, 1);
-
       await wishlist.save();
-      
-      return res
-        .status(200)
-        .json({
-          success: true,
-          removed:true,
-          wishlist,
-        });
+
+      const WishlistS = await wishlistSchema.findOne({ userId });
+      const wishlistCount = WishlistS?.products?.length || 0;
+
+      return res.status(200).json({
+        success: true,
+        wishlistCount,
+        removed: true,
+        message: "Product removed from wishlist",
+        wishlist: WishlistS,
+      });
     }
 
-    // Product + variant doesn't exist → add it
+    // 🔹 Otherwise add it
     wishlist.products.push({ productId, variantId });
-
     await wishlist.save();
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Product added to wishlist", wishlist });
-  
-    } catch (error) {
+    const WishlistS = await wishlistSchema.findOne({ userId });
+    const wishlistCount = WishlistS?.products?.length || 0;
+
+    return res.status(200).json({
+      success: true,
+      wishlistCount,
+      message: "Product added to wishlist",
+      wishlist: WishlistS,
+    });
+  } catch (error) {
     console.error("❌ Error adding/removing from wishlist:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    if (!res.headersSent) {
+      res
+        .status(500)
+        .json({ success: false, message: "Internal Server Error" });
+    }
   }
 };
 

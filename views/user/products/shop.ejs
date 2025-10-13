@@ -1,8 +1,8 @@
 <%- include("../partials/user/header.ejs") %>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.css">
-
   <style>
+    
     /* ==========================
    FLIPKART/AMAZON STYLE SHOP
 ========================== */
@@ -559,7 +559,9 @@
         width: 100%;
       }
     }
+ 
   </style>
+
 
   <section class="shop spad">
     <div class="container">
@@ -619,7 +621,7 @@
             <div class="sidebar-section">
               <div class="sidebar-title">Price Range</div>
               <div class="price-input-wrapper">
-                <select id="minPriceSelect">
+                <select id="minPriceSelect" value="MIn">
                   <option value="0">Min</option>
                   <option value="500">₹500</option>
                   <option value="1000">₹1,000</option>
@@ -630,7 +632,7 @@
                   <option value="50000">₹50,000</option>
                 </select>
                 <span class="price-divider">to</span>
-                <select id="maxPriceSelect">
+                <select id="maxPriceSelect" value="Max">
                   <option value="100000">Max</option>
                   <option value="500">₹500</option>
                   <option value="1000">₹1,000</option>
@@ -704,7 +706,9 @@
 
                     <!-- Product Image -->
                     <div class="product__item__pic">
-                      <img src="<%= product.variants[0]?.product_image[0] || '' %>" alt="<%= product.name %>">
+                      <img
+                        src="<%= (product.variants && product.variants.length > 0 && product.variants[0].product_image.length > 0) ? product.variants[0].product_image[0] : '/images/placeholder.png' %>"
+                        alt="<%= product.name %>">
 
                       <% if(product.discountPercentage> 0){ %>
                         <div class="product__discount__percent">
@@ -712,24 +716,20 @@
                         </div>
                         <% } %>
                           <div class="product__hover">
-                            <button href="#" id="wishlist-btn-<%= product._id %>-<%= product.variants[0]?._id %>"
-                              class="wishlist-toggle" data-product-id="<%= product._id %>"
-                              data-variant-id="<%= product.variants[0]?._id %>" style="color: <%= user?.wishlists?.products?.some(p => 
-       String(p.productId) === String(product._id) && 
-       String(p.variantId) === String(product.variants[0]?._id)
-     ) ? 'red' : '#1f1f1f' %>;">
-                              <i class="<%= user?.wishlists?.products?.some(p => 
-       String(p.productId) === String(product._id) && 
-       String(p.variantId) === String(product.variants[0]?._id)
-     ) ? 'fas' : 'far' %> fa-heart"></i>
-                            </button>
-                            <button href="#" class="add-to-cart" data-product-id="<%= product._id %>"
-                              data-variant-id="<%= product.variants[0]?._id %>" onclick="event.stopPropagation();">
-                              <i class="fa fa-shopping-cart"></i>
-                            </button
-                            >
-                          </div>
 
+                            <button
+                              id="wishlist-btn-<%= product._id %>-<%= product.variants && product.variants[0]._id %>"
+                              class="wishlist-toggle" data-product-id="<%= product._id %>"
+                              data-variant-id="<%= product.variants && product.variants[0]._id %>">
+                              <i class="far fa-heart"></i>
+                            </button>
+
+                            <button class="add-to-cart" data-product-id="<%= product._id %>"
+                              data-variant-id="<%= product.variants && product.variants.length > 0 ? product.variants[0]._id : '' %>">
+                              <i class="fa fa-shopping-cart"></i>
+                            </button>
+
+                          </div>
                     </div>
 
                     <!-- Product Info -->
@@ -801,6 +801,7 @@
       </div>
     </div>
   </section>
+
   <!-- jQuery first -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -823,137 +824,10 @@
 
   <script>
     const user = <%- user ? JSON.stringify(user) : 'null' %>;
-
-    // Wishlist button AJAX with SweetAlert
-    let wishlistLock = {}; // prevent rapid repeated clicks
-
-    async function addToWishlist(productId, variantId) {
-      if (!user) {
-        return Swal.fire({
-          icon: 'info',
-          title: "Please login first!",
-          showConfirmButton: true
-        }).then(() => location.href = '/logIn');
-      }
-
-      if (!productId || !variantId) {
-        return Swal.fire({
-          icon: 'error',
-          title: 'Product or variant not selected!',
-          showConfirmButton: true
-        });
-      }
-
-      const key = `${productId}-${variantId}`;
-      if (wishlistLock[key]) return;
-      wishlistLock[key] = true;
-
-      const wishlistBtn = document.querySelector(`#wishlist-btn-${key}`);
-      if (!wishlistBtn) {
-        wishlistLock[key] = false;
-        return;
-      }
-
-      const heartIcon = wishlistBtn.querySelector('i');
-      const currentlyAdded = heartIcon.classList.contains('fas');
-
-      // TEMP UI toggle
-      heartIcon.classList.toggle('fas', !currentlyAdded);
-      heartIcon.classList.toggle('far', currentlyAdded);
-      wishlistBtn.style.color = !currentlyAdded ? 'red' : '#1f1f1f';
-
-      try {
-        const { data } = await axios.post('/shop/wishlist', { productId, variantId });
-        const countEl = document.getElementById('wishlist-count');
-
-        if (data.success) {
-          const removed = !!data.removed;
-
-          heartIcon.classList.toggle('fas', !removed);
-          heartIcon.classList.toggle('far', removed);
-          wishlistBtn.style.color = removed ? '#1f1f1f' : 'red';
-
-          // ✅ Update wishlist count dynamically
-          if (countEl) {
-            let current = parseInt(countEl.innerText) || 0;
-            countEl.innerText = removed ? Math.max(current - 1, 0) : current + 1;
-          }
-
-        } else {
-          heartIcon.classList.toggle('fas', currentlyAdded);
-          heartIcon.classList.toggle('far', !currentlyAdded);
-          wishlistBtn.style.color = currentlyAdded ? 'red' : '#1f1f1f';
-          Swal.fire({ icon: 'error', title: data.message || 'Something went wrong!', showConfirmButton: true });
-        }
-      } catch (err) {
-        heartIcon.classList.toggle('fas', currentlyAdded);
-        heartIcon.classList.toggle('far', !currentlyAdded);
-        wishlistBtn.style.color = currentlyAdded ? 'red' : '#1f1f1f';
-        console.error('Wishlist update error:', err);
-        Swal.fire({ icon: 'error', title: 'Error updating wishlist', timer: 1500, showConfirmButton: false });
-      } finally {
-        setTimeout(() => { wishlistLock[key] = false; }, 500);
-      }
-    }
-
-    // Prevent card click on action buttons and call Axios functions
-    document.querySelectorAll('.wishlist-toggle').forEach(btn => {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        addToWishlist(this.dataset.productId, this.dataset.variantId);
-      });
-    });
-
-
-    // Add to Cart button AJAX with SweetAlert
-    async function addToCart(productId, variantId) {
-
-      if (!user) {
-        await Swal.fire({
-          icon: 'info',
-          title: "Please login first!",
-          showConfirmButton: true,
-        }).then(() => location.href = '/logIn');
-        return;
-      }
-
-      if (!productId || !variantId) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Product or variant not selected!',
-          showConfirmButton: true,
-        });
-        return;
-      }
-
-      try {
-        const response = await axios.post('/cart/add', { productId, quantity: 1 });
-        Swal.fire({
-          icon: response.data.success ? 'success' : 'error',
-          title: response.data.message || (response.data.success ? 'Added to cart!' : 'Error'),
-          timer: 1500,
-          showConfirmButton: false
-        });
-      } catch (err) {
-        console.error(err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error adding to cart',
-          timer: 1500,
-          showConfirmButton: false
-        });
-      }
-    }
-
-
-
-
-    document.querySelectorAll('.add-to-cart').forEach(btn => {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        addToCart(this.dataset.productId, this.dataset.variantId);
-      });
-    });
+    const userWishlist = <%- JSON.stringify(user?.wishlists?.products || []) %>;
   </script>
+
+  <script src="/js/addTocart_WishlistCode.js"></script>
+
 
   <%- include("../partials/user/footer.ejs") %>

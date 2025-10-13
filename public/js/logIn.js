@@ -79,6 +79,15 @@ getId("submit").addEventListener("click", (e) => {
     url: "/logIn",
     data: { email, password, rememberMe },
     success: function (response) {
+      if(response.blocked){
+        return Swal.fire({
+          icon: "info",
+          title: "User Blocked!",
+          text: response.message,
+          showConfirmButton: true,
+        })
+      }
+
       if (response.success) {
         Swal.fire({
           icon: "success",

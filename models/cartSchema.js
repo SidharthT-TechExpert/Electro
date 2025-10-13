@@ -7,17 +7,18 @@ const cartSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      unique: true,
     },
     products: [
       {
         product_id: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          ref: "products",
           required: true,
         },
         variant_id: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Variant",
+          ref: "Variants",
           required: true,
         },
         quantity: {
@@ -34,7 +35,7 @@ const cartSchema = new Schema(
     total: {
       type: Number,
       default: 0,
-    }
+    },
   },
   { timestamps: true }
 );

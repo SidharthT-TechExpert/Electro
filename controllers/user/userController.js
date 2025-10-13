@@ -6,16 +6,18 @@ const brandSchema = require("../../models/brandSchema.js");
 const variantSchema = require("../../models/variantSchema.js");
 const bannerSchema = require("../../models/bannerSchema.js");
 const wishlistSchema = require("../../models/wishlistSchema.js");
+const categoryVariant = require("../../helpers/variant.js");
 
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
+const categoryVariantFields = require("../../helpers/variant.js");
 
 const checkSession = async (_id) => {
   if (!_id) return null;
 
-  const objectId =new mongoose.Types.ObjectId(_id);
+  const objectId = new mongoose.Types.ObjectId(_id);
 
   const result = await userSchema.aggregate([
     { $match: { _id: objectId } },
@@ -27,7 +29,16 @@ const checkSession = async (_id) => {
         as: "wishlists", // the array field to store results
       },
     },
-    { $unwind: "$wishlists" }
+    {
+      $lookup: {
+        from: "carts", // collection name in MongoDB
+        localField: "_id", // field in userSchema
+        foreignField: "userId", // field in wishlistSchema
+        as: "cart", // the array field to store results
+      },
+    },
+    { $unwind: { path: "$cart", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$wishlists", preserveNullAndEmptyArrays: true } },
   ]);
 
   return result.length ? result[0] : null;
@@ -574,6 +585,14 @@ const userLogIn = async (req, res) => {
     // Find user with password field
     const user = await userSchema.findOne({ email }).select("+password");
 
+    if (user.isBlocked) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        blocked: true,
+        message: "Blocked User , You must Contact With Our costomer care!",
+      });
+    }
+
     if (!user) {
       return res
         .status(HTTP_STATUS.NOT_FOUND)
@@ -734,6 +753,7 @@ const logOut = async (req, res) => {
   }
 };
 
+// Shop Page Loader
 const loadShopPage = async (req, res) => {
   try {
     const limit = 6;
@@ -968,7 +988,7 @@ const loadShopPage = async (req, res) => {
       .sort({ productCount: -1 })
       .lean();
 
-    console.log(products[0] , user);
+    console.log(products[0], user);
 
     res.status(200).render("products/shop", {
       user,
@@ -1001,10 +1021,231 @@ const loadShopPage = async (req, res) => {
 const loadProductDetails = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
+    const productId = req.params.id;
 
-    res
-      .status(HTTP_STATUS.OK)
-      .render("auth/page-404", { user, cartCount: req.cartCount || null });
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).send("Invalid product ID");
+    }
+
+    const now = new Date();
+
+    let productAgg = await productSchema.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(productId) } },
+
+      // Lookup brand
+      {
+        $lookup: {
+          from: "brands",
+          localField: "brand",
+          foreignField: "_id",
+          as: "brand",
+        },
+      },
+      { $unwind: { path: "$brand", preserveNullAndEmptyArrays: true } },
+
+      // Lookup category
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+
+      // Lookup variants
+      {
+        $lookup: {
+          from: "variants",
+          localField: "_id",
+          foreignField: "product_id",
+          as: "variants",
+        },
+      },
+
+      // Filter variants with stock > 0
+      {
+        $addFields: {
+          variants: {
+            $filter: {
+              input: "$variants",
+              as: "v",
+              cond: { $gt: ["$$v.specifications.stock", 0] },
+            },
+          },
+        },
+      },
+
+      // Compute mainPrice
+      {
+        $addFields: {
+          mainPrice: { $min: "$variants.price" },
+        },
+      },
+
+      // Product offers
+      {
+        $lookup: {
+          from: "offers",
+          let: { productId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$appliesTo", "product"] },
+                    { $in: ["$$productId", "$targetIds"] },
+                    { $eq: ["$isActive", true] },
+                    { $lte: ["$startDate", now] },
+                    { $gte: ["$endDate", now] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "productOffers",
+        },
+      },
+
+      // Category offers
+      {
+        $lookup: {
+          from: "offers",
+          let: {
+            categoryIds: {
+              $ifNull: [
+                { $map: { input: "$category", as: "c", in: "$$c._id" } },
+                [],
+              ],
+            },
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$appliesTo", "category"] },
+                    {
+                      $gt: [
+                        {
+                          $size: {
+                            $setIntersection: ["$targetIds", "$$categoryIds"],
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                    { $eq: ["$isActive", true] },
+                    { $lte: ["$startDate", now] },
+                    { $gte: ["$endDate", now] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "categoryOffers",
+        },
+      },
+
+      // Combine offers
+      {
+        $addFields: {
+          offers: { $concatArrays: ["$productOffers", "$categoryOffers"] },
+        },
+      },
+
+      // Final projection
+      {
+        $project: {
+          name: 1,
+          brand: 1,
+          category: 1,
+          variants: 1,
+          Images: 1,
+          createdAt: 1,
+          offers: 1,
+          mainPrice: 1,
+        },
+      },
+    ]);
+
+    // Compute finalPrice after offers
+    productAgg = productAgg.map((product) => {
+      const now = new Date();
+
+      const variantsWithPrice = (product.variants || []).map((variant) => {
+        let totalDiscountValue = 0;
+
+        if (product.offers?.length) {
+          product.offers.forEach((o) => {
+            const startDate = new Date(o.startDate);
+            const endDate = new Date(o.endDate);
+
+            if (!o.isActive || startDate > now || endDate < now) return;
+
+            let discountValue = 0;
+
+            if (o.discountType === "Percentage") {
+              discountValue = variant.price * (o.discountValue / 100);
+              if (o.maxAmount && discountValue > o.maxAmount)
+                discountValue = o.maxAmount;
+            } else if (o.discountType === "Fixed") {
+              discountValue = o.maxAmount || o.discountValue;
+            }
+
+            totalDiscountValue += discountValue;
+          });
+        }
+
+        if (totalDiscountValue > variant.price)
+          totalDiscountValue = variant.price;
+
+        const finalPrice = variant.price - totalDiscountValue;
+        const discountPercentage = (totalDiscountValue / variant.price) * 100;
+
+        return {
+          ...variant,
+          finalPrice: Number.isFinite(finalPrice)
+            ? Number(finalPrice.toFixed(0))
+            : 0,
+          appliedDiscountValue: Number(totalDiscountValue.toFixed(0)),
+          appliedDiscountType: "Percentage",
+          discountPercentage: Number(discountPercentage.toFixed(0)),
+        };
+      });
+
+      // Compute mainPrice based on the lowest variant price AFTER discount
+      const mainPrice =
+        variantsWithPrice.length > 0
+          ? Math.min(...variantsWithPrice.map((v) => v.finalPrice))
+          : 0;
+
+      // Also compute product-level appliedDiscountValue if needed
+      const productDiscountValue = product.mainPrice - mainPrice;
+      const productDiscountPercentage =
+        (productDiscountValue / product.mainPrice) * 100;
+
+      return {
+        ...product,
+        variants: variantsWithPrice,
+      };
+    });
+
+    if (!productAgg || productAgg.length === 0) {
+      return res.status(404).send("Product not found");
+    }
+
+    const product = productAgg[0];
+
+    const categoryFields = categoryVariant[product?.category[0]?.name || ""];
+
+    console.log(product.variants);
+
+    res.status(HTTP_STATUS.OK).render("products/detailsPage", {
+      user,
+      product,
+      categoryFields,
+    });
   } catch (error) {
     console.error("Error loading product details page:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");

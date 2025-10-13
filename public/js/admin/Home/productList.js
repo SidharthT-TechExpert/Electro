@@ -307,15 +307,22 @@ function addImg(variantId) {
         }, "image/jpeg");
       });
     },
-  })
-    .then((result) => {
+  }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({
-          icon: "success",
-          title: "Image Uploaded",
-          showConfirmButton: false,
-          timer: 1500,
-        }).then(() => location.reload());
+        if (result.success)
+          Swal.fire({
+            icon: "success",
+            title: "Image Uploaded",
+            showConfirmButton: false,
+            timer: 1500,
+          }).then(() => location.reload());
+        else
+          Swal.fire({
+            icon: "error",
+            title:result.data.message,
+            showConfirmButton: true,
+            confirmButtonText: "OK",
+          });
       }
     })
     .catch((err) =>

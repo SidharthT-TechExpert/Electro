@@ -177,12 +177,10 @@ const uploadVariantImage = async (req, res) => {
     }
 
     if (variant.product_image && variant.product_image.length >= 6) {
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({
-          success: false,
-          message: "Maximum 6 images are allowed per variant",
-        });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Maximum 6 images are allowed per variant",
+      });
     }
 
     // Multer upload
@@ -197,6 +195,12 @@ const uploadVariantImage = async (req, res) => {
         return res
           .status(HTTP_STATUS.BAD_REQUEST)
           .json({ success: false, message: "No image file provided" });
+      }
+
+      if (!req.file.mimetype.startsWith("image/")) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ success: false, message: "Invalid image file Formate!" });
       }
 
       try {

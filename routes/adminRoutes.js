@@ -14,6 +14,7 @@ const session = require("../middlewares/session");
 const passport = require("passport");
 const upload = require("../helpers/multer.js");
 const bannerUpload = require("../helpers/bannerMulter.js");
+
 // Login Menagement admin
 routes
   .route("/login")
@@ -25,6 +26,7 @@ routes
   .get(session.isAdmin, adminController.loadForgetPage)
   .post(adminController.forgetPass);
 
+//Login management
 routes.get("/", session.isAdmin, adminController.loadLogin);
 routes.get("/dashboard", session.isChecker, adminController.loadDashBoardPage);
 routes.post("/passReset", adminController.OTP_Verify);
@@ -117,6 +119,10 @@ routes
 // New Route for Banner Order Validation
 routes.post("/banner/check-order", bannerController.checkBannerOrder);
 routes.post("/banner/check-Date", bannerController.checkDate);
+
+// Admin Management
+routes.get('/manage', adminController.LoadAdminPage)
+
 
 // Orders Management
 routes.get("/orders", categorieController.categories);

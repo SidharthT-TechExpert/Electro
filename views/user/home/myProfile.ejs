@@ -22,7 +22,7 @@
                 <div class="mt-2">
                   <label class="btn btn-outline-danger btn-sm">
                     <i class="fa fa-camera"></i> Change Photo
-                    <input type="file" name="profilePhoto" id="profilePhotoInput" accept="image/*" hidden>
+                    <input name="profilePhoto" id="profilePhotoInput" hidden>
                   </label>
                 </div>
               </div>
@@ -77,6 +77,26 @@
     <%- include("../partials/user/footer") %>
 
       <style>
+        .swal-popup-professional {
+          font-family: 'Segoe UI', sans-serif;
+          font-size: 16px;
+        }
+
+        .swal-title-professional {
+          font-weight: 600;
+          font-size: 18px;
+        }
+
+        .swal-text-professional {
+          color: #555;
+        }
+
+        .swal-btn-professional {
+          background-color: #007bff !important;
+          color: #fff !important;
+          font-weight: 500;
+        }
+
         .card input[readonly] {
           background: #f8f8f8;
         }
@@ -91,8 +111,11 @@
         }
       </style>
 
-      <!-- Include SweetAlert2 CDN -->
+      <!-- Include SweetAlert2 + Cropper.js -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+      <script src="/js/main.js"></script>
 
       <script>
         function ChangePassword(f) {
@@ -343,33 +366,118 @@
 
         const photoInput = document.getElementById("profilePhotoInput");
 
-        photoInput.addEventListener("change", async (event) => {
-          const file = event.target.files[0];
-          if (!file) return;
+        let cropper = null;
 
-          const formData = new FormData();
-          formData.append("profilePhoto", file); // must match input name
+        photoInput.addEventListener("click", async () => {
+          let cropper;
 
-          try {
-            const response = await fetch("/upload-profile-photo", {
-              method: "POST",
-              body: formData
-            });
-            const data = await response.json();
-            console.log(data); // check what server responds
+          Swal.fire({
+            title: "Upload & Crop Image",
+            html: `
+      <input type="file" id="swalImageFile" accept="image/*" class="swal2-input">
+      <div id="previewContainer" style="margin-top:15px; display:none;">
+        <img id="previewImage" style="max-width:100%; border-radius:10px;"/>
+      </div>
+    `,
+            showCancelButton: true,
+            confirmButtonText: "Upload",
+            allowOutsideClick: false,   // ❌ Only close via Cancel
+            allowEscapeKey: false,      // ❌ Disable ESC close
+            didOpen: () => {
+              const fileInput = document.getElementById("swalImageFile");
+              const previewContainer = document.getElementById("previewContainer");
+              const previewImage = document.getElementById("previewImage");
 
-            if (data.success) {
-              Swal.fire({
-                icon: "success",
-                title: "Profile photo Updated!",
-                text: "Your profile photo has been successfully updated.",
-                timer: 1500,
-                showConfirmButton: false,
-              }).then(() => location.reload());
+              fileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // ✅ Accept only valid image formats
+                if (!file.type.startsWith("image/")) {
+                  Swal.close();
+                  Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Image File',
+                    text: 'Please upload a valid image file (JPEG, PNG, GIF, WebP) and try again.',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    customClass: {
+                      popup: 'swal-popup-professional',
+                      title: 'swal-title-professional',
+                      content: 'swal-text-professional',
+                      confirmButton: 'swal-btn-professional'
+                    }
+                  });
+                  return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                  previewContainer.style.display = "block";
+                  previewImage.src = reader.result;
+
+                  // Destroy old cropper if exists
+                  if (cropper) cropper.destroy();
+
+                  cropper = new Cropper(previewImage, {
+                    aspectRatio: 1,
+                    viewMode: 2,
+                    autoCropArea: 1,
+                    responsive: true,
+                  });
+                };
+                reader.readAsDataURL(file);
+              });
+            },
+            willClose: () => {
+              // ✅ Just destroy cropper, no overflow change
+              if (cropper) cropper.destroy();
+            },
+            preConfirm: () => {
+              if (!cropper) {
+                Swal.showValidationMessage("Please select and crop an image!");
+                return false;
+              }
+
+              return new Promise((resolve, reject) => {
+                cropper.getCroppedCanvas().toBlob(async (blob) => {
+                  try {
+                    const formData = new FormData();
+                    formData.append("profilePhoto", blob, "profile.jpg");
+
+                    const res = await fetch("/upload-profile-photo", {
+                      method: "POST",
+                      body: formData,
+                    });
+
+                    const json = await res.json();
+                    if (json.success) resolve(json);
+                    else reject(json.message);
+                  } catch (err) {
+                    reject(err.message);
+                  }
+                }, "image/jpeg");
+              });
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              if (result.value.success) {
+                Swal.fire({
+                  icon: "success",
+                  title: "Profile Photo Updated!",
+                  timer: 1500,
+                  showConfirmButton: false,
+                }).then(() => location.reload());
+              } else {
+                Swal.fire({
+                  icon: "info",
+                  title: "Profile photo updating failed!",
+                  text: result.value.message + ', Try again!',
+                  showConfirmButton: true,
+                })
+              }
             }
-          } catch (err) {
-            console.error(err);
-          }
+          });
         });
 
         async function editName(currentName, userId) {

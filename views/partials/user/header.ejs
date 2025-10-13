@@ -100,11 +100,6 @@
                   <%= user?.wishlists?.products?.length || 0%>
                 </span>)
               </a>
-              <a class="dropdown-item d-flex align-items-center gap-2" href="/wishlist">
-                <i class="fas fa-heart"></i> Cart (<span id="wishlist-count">
-                  <%= user?.cart.products?.length || 0%>
-                </span>)
-              </a>
               <li><a class="dropdown-item d-flex align-items-center gap-2" href="/wallet"><i class="fas fa-wallet"></i>
                   Wallet</a>
               </li>
@@ -119,11 +114,9 @@
           <!-- Cart -->
           <a href="/cart" class="btn btn-outline-secondary d-flex align-items-center gap-2 position-relative">
             <i class="fas fa-shopping-cart"></i> Cart
-            <% if (typeof cartCount !=="undefined" && cartCount> 0) { %>
-              <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
-                <%= cartCount %>
+              <span id="cart-count" class="badge  bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                <%= user?.cart?.products?.length || 0 %>
               </span>
-              <% } %>
           </a>
           <% } else { %>
             <!-- Sign Up/Login -->
@@ -147,17 +140,17 @@
               <div class="dropdown">
                 <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="dropdown">
                   <i class="fas fa-bell"></i>
-                  <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">3</span>
+                  <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">0</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 p-2">
-                  <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
+                  <!-- <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
                         class="fas fa-bell text-warning"></i> New order placed</a></li>
                   <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
                         class="fas fa-box text-primary"></i> Order #2345 shipped</a></li>
                   <li>
                     <hr class="dropdown-divider">
                   </li>
-                  <li><a class="dropdown-item text-center small text-muted" href="#">View all notifications</a></li>
+                  <li><a class="dropdown-item text-center small text-muted" href="#">View all notifications</a></li> -->
                 </ul>
               </div>
 
@@ -183,75 +176,6 @@
     </div>
   </header>
 
-  <script>
-    const user = <% - user ? JSON.stringify(user) : 'null' %>;
-    const wishlistLock = {};
-
-    async function addToWishlist(productId, variantId) {
-      if (!user) {
-        return Swal.fire({
-          icon: 'info',
-          title: "Please login first!",
-          showConfirmButton: true
-        }).then(() => location.href = '/logIn');
-      }
-
-      if (!productId || !variantId) {
-        return Swal.fire({
-          icon: 'error',
-          title: 'Product or variant not selected!',
-          showConfirmButton: true
-        });
-      }
-
-      const key = `${productId}-${variantId}`;
-      if (wishlistLock[key]) return;
-      wishlistLock[key] = true;
-
-      const wishlistBtn = document.querySelector(`#wishlist-btn-${key}`);
-      if (!wishlistBtn) {
-        wishlistLock[key] = false;
-        return;
-      }
-
-      const heartIcon = wishlistBtn.querySelector('i');
-      const currentlyAdded = heartIcon.classList.contains('fas');
-
-      heartIcon.classList.toggle('fas', !currentlyAdded);
-      heartIcon.classList.toggle('far', currentlyAdded);
-      wishlistBtn.style.color = !currentlyAdded ? 'red' : '#1f1f1f';
-
-      try {
-        const { data } = await axios.post('/shop/wishlist', { productId, variantId });
-        if (data.success) {
-          const removed = !!data.removed;
-          heartIcon.classList.toggle('fas', !removed);
-          heartIcon.classList.toggle('far', removed);
-          wishlistBtn.style.color = removed ? '#1f1f1f' : 'red';
-
-          Swal.fire({
-            icon: 'success',
-            title: data.message || (removed ? 'Removed from wishlist' : 'Added to wishlist'),
-            timer: 1200,
-            showConfirmButton: false
-          });
-        } else {
-          heartIcon.classList.toggle('fas', currentlyAdded);
-          heartIcon.classList.toggle('far', !currentlyAdded);
-          wishlistBtn.style.color = currentlyAdded ? 'red' : '#1f1f1f';
-          Swal.fire({ icon: 'error', title: data.message || 'Something went wrong!', showConfirmButton: true });
-        }
-      } catch (err) {
-        heartIcon.classList.toggle('fas', currentlyAdded);
-        heartIcon.classList.toggle('far', !currentlyAdded);
-        wishlistBtn.style.color = currentlyAdded ? 'red' : '#1f1f1f';
-        console.error('Wishlist update error:', err);
-        Swal.fire({ icon: 'error', title: 'Error updating wishlist', timer: 1500, showConfirmButton: false });
-      } finally {
-        setTimeout(() => { wishlistLock[key] = false; }, 500);
-      }
-    }
-  </script>
 </body>
 
 </html>

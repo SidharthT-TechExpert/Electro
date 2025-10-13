@@ -1,6 +1,6 @@
   // Set selected values for price dropdowns
-    document.getElementById('minPriceSelect').value = '<%= minPrice || 0 %>';
-    document.getElementById('maxPriceSelect').value = '<%= maxPrice || 100000 %>';
+document.getElementById('minPriceSelect').value = '<%= minPrice || 0 %>';
+document.getElementById('maxPriceSelect').value = '<%= maxPrice || 100000 %>';
 
     // AJAX Filtering
     function applyFilters() {
