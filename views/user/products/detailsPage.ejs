@@ -395,31 +395,49 @@
 
   function updateProductTitle(variant) {
   const titleEl = document.querySelector(".product-title");
-  const specs = variant.specifications || {};
 
-  console.log("Variant specs:", variant.specifications);
-  
+  if (!titleEl || !variant) return;
+
+  const specs = variant.specifications || {};
+  const brandName = productData.brand?.toUpperCase() || "";
+  const modelDesc = variant.description || "";
+
+  // Start with brand and model
   let html = `
-    <span class="brand">${productData.brand?.toUpperCase() || ''}</span>
-    <span class="model">by ${variant.description || ''}</span>
+    <span class="brand">${brandName}</span>
+    <span class="model"> by ${modelDesc}</span>
   `;
 
-  const fields = ['ram', 'storage', 'battery', 'display' ,'color'];
-    // Loop through all keys that actually exist
-  Object.keys(specs).forEach(f => {
-    const value = specs[f];
+  const fields = ["color",
+  "ram",
+  "storage",
+  "battery",
+  "display",
+  "camera",
+  "processor",
+  "gpu",
+  "os",
+  "screenSize",
+  "resolution",
+  "connectivity"  ];
+  const badges = [];
+
+  // Add only available fields (Flipkart-style short badges)
+  fields.forEach(f => {
+    const value = specs[f] || (f === 'color' ? variant.color : '');
     if (value) {
-      html += `
-        <span class="spec-badge">
-          <strong>${f.toUpperCase()}:</strong> ${value}
-        </span>
-      `;
+      badges.push(`<span class="spec-badge">${f.toUpperCase() + " | " + value}</span>`);
     }
-  });;
+  });
+
+  // Combine everything into one attractive title
+  html += `
+    <span class="specs">(${badges.join(' | ')})</span>
+  `;
 
   titleEl.innerHTML = html.trim();
 }
-  
+
   function updateProductPrice(variant){
         const priceEl = document.querySelector('.price-container');
 
