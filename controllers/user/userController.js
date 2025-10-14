@@ -1239,7 +1239,7 @@ const loadProductDetails = async (req, res) => {
 
     const categoryFields = categoryVariant[product?.category[0]?.name || ""];
 
-    console.log(product.variants);
+    console.log(product.variants , user);
 
     res.status(HTTP_STATUS.OK).render("products/detailsPage", {
       user,

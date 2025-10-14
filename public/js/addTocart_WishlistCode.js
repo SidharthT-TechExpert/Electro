@@ -29,7 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
   addToCartButtons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      addToCart(btn.dataset.productId, btn.dataset.variantId);
+          const productId = btn.dataset.productId;
+          const variantId = btn.dataset.variantId; // read the current value dynamically
+      addToCart(productId, variantId); 
     });
   });
 });
@@ -71,6 +73,7 @@ async function toggleWishlist(productId, variantId, btn) {
       productId,
       variantId,
     });
+    
     const countEl = document.getElementById("wishlist-count");
 
     if (data.success) {

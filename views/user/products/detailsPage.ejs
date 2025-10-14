@@ -1,648 +1,881 @@
 <%- include("../partials/user/header.ejs") %>
 
-<!-- CSS -->
-<link href="/css/bootstrap.min.css" rel="stylesheet">
-<link href="/css/header.css" rel="stylesheet">
-<link href="/css/footer.css" rel="stylesheet">
-<link href="/css/home.css" rel="stylesheet">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
-<link rel="stylesheet" href="/css/user/product-page.css">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<style>
-/* Product title container */
-.product-title {
-  font-weight: bolder;
-  color: #222;
-  line-height: 1.4;
-}
-
-/* Specification badges */
-.spec-badge {
-  display: inline-flex;
-  align-items: center;
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  color: #0d47a1;
-  padding: 5px 12px;
-  margin: 4px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease-in-out;
-}
-
-.spec-badge:hover {
-  background: linear-gradient(135deg, #bbdefb, #90caf9);
-  transform: translateY(-1px);
-}
-
-/* Icon inside spec badge */
-.spec-badge i {
-  margin-right: 5px;
-  font-size: 14px;
-  color: #1565c0;
-}
-
-/* Highlights or features */
-.product-title .highlights {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-top: 5px;
-  font-style: italic;
-}
-
-/* SKU text */
-.product-title .sku {
-  display: block;
-  font-size: 13px;
-  color: #999;
-  margin-top: 4px;
-}
-
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .product-title {
-    font-size: 1.3rem;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .spec-badge {
-    font-size: 12px;
-    padding: 4px 10px;
-  }
-}
-
-.discount {
-  font-size: 16px;
-  color: #388E3C;
-  font-weight: 500;
-}
-
-.variant-section {
-  margin-top: 20px;
-}
-
-.variant-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.variant-options {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.variant-option {
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  padding: 5px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.variant-option.selected {
-  border-color: #2874f0;
-}
-
-.variant-option img {
-  width: 70px;
-  height: 70px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.discount-badge {
-  position: absolute;        /* absolute relative to .main-image-container */
-  top: 15px;                 /* distance from top */
-  left: 15px;                /* distance from left */
-  background-color: #ff3e3e; /* bright red for visibility */
-  color: #fff;
-  font-weight: bold;
-  font-size: 14px;
-  padding: 6px 12px;
-  border-radius: 5px;
-  display: flex;             /* make sure flex works for centering text */
-  align-items: center;
-  justify-content: center;
-  z-index: 10;               /* on top of the image */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-.discount-badge span {
-  font-size: 13px;
-  line-height: 1;
-}
-
-
-
-</style>
-
-
-<section class="product-page">
-  <div class="product-container">
-    
-    <!-- Left Side - Image Gallery -->
-    <div class="product-images-section">
-      <div class="image-gallery">
-        <div class="thumbnail-list" id="thumbnailList">
-          <!-- thumbnails rendered by JS -->
-        </div>
-
-<div class="main-image-container">
-  <img class="main-image" id="mainImage" src="<%= product.variants[0]?.product_image[0] || '/images/placeholder.png' %>" alt="<%= product.name %>">
-
-  <div class="discount-badge" id="discountBadge" style="display:none;">
-    <span id="discountTag"></span>
-  </div>
-</div>
-
-
-
-      </div>
-    </div>
-
-    <!-- Right Side - Product Details -->
-    <div class="product-details-section">
-      <!-- Breadcrumb -->
-      <div class="product-breadcrumb">
-        <a href="/">Home</a> / 
-        <a href="/shop">Products</a> / 
-        <%= product.name %>
-      </div>
-
-      <!-- Product Title -->
-<h1 class="product-title">
-  <% 
-    const brand = product.brand?.name || '';
-    const model = product.description || product.name || '';
-    const display = product.variants[0].specifications?.display || '';
-    const sku = product.sku || '';
-
-    const primaryFields = ['ram', 'storage', 'battery', 'display'];
-    const secondaryFields = ['connectivity', 'os', 'gpu', 'color', 'sim'];
-
-    const specsPrimary = [];
-    const specsSecondary = [];
-    const highlights = [];
-
-    const icons = {
-      ram: "bi-memory",
-      storage: "bi-hdd",
-      battery: "bi-battery-half",
-      display: "bi-display",
-      sim: "bi-sim",
-      connectivity: "bi-wifi",
-      color: "bi-palette",
-      os: "bi-laptop",
-      gpu: "bi-controller"
-    };
-
-    const badgeColors = {
-      ram: "badge-blue",
-      storage: "badge-green",
-      battery: "badge-orange",
-      display: "badge-purple",
-      connectivity: "badge-teal",
-      default: "badge-lightblue"
-    };
-
-    const formatField = (f) => {
-      const map = { ram : "RAM", os : "OS", sim : "SIM", gpu : "GPU", color : "Color" };
-      return map[f.toLowerCase()] || f.charAt(0).toUpperCase() + f.slice(1);
-    };
-
-    categoryFields.forEach(field => {
-      if (['images','sku','price','description','stock'].includes(field)) return;
-      const value = product?.variants[0]?.specifications?.[field] || product?.variants[0]?.[field];
-      if (!value) return;
-      const iconClass = icons[field.toLowerCase()] || "";
-      const colorClass = badgeColors[field.toLowerCase()] || badgeColors.default;
-      if(primaryFields.includes(field.toLowerCase())) {
-        specsPrimary.push({ label: formatField(field), value, iconClass, colorClass });
-      } else if(secondaryFields.includes(field.toLowerCase())) {
-        specsSecondary.push({ label: formatField(field), value, iconClass, colorClass });
-      } else {
-        specsSecondary.push({ label: formatField(field), value, iconClass, colorClass });
-      }
-    });
-
-    const extraFields = ['extraFeatures','specialDesign','modes','gameBooster','audio'];
-    extraFields.forEach(field => {
-      if (product.specifications?.[field]) highlights.push(product.variants.specifications[field]);
-    });
-  %>
-
-  <!-- Brand + Model + Display -->
-  <% if (brand) { %>
-    <span class="brand"><%= brand.toUpperCase() %></span>
-  <% } %>
-  <% if (model) { %>
-    <span class="model">by <%= model %></span>
-  <% } %>
-  <% if (display) { %>
-    <span class="display"><%= display %></span>
-  <% } %>
-
-  <!-- Primary Specs -->
-  <% if (specsPrimary.length) { %>
-    <br>
-    <span class="specs">
-      <% specsPrimary.forEach(spec => { %>
-        <span class="spec-badge <%= spec.colorClass %>" title="<%= spec.value %>">
-          <% if (spec.iconClass) { %><i class="bi <%= spec.iconClass %>"></i><% } %>
-          <strong><%= spec.label %>:</strong> <%= spec.value %>
-        </span>
-      <% }) %>
-    </span>
-  <% } %>
-
-  <!-- Secondary Specs -->
-  <% if (specsSecondary.length) { %>
-    <br>
-    <span class="specs-secondary">
-      <% specsSecondary.forEach(spec => { %>
-        <span class="spec-badge <%= spec.colorClass %>" title="<%= spec.value %>">
-          <% if (spec.iconClass) { %><i class="bi <%= spec.iconClass %>"></i><% } %>
-          <strong><%= spec.label %>:</strong> <%= spec.value %>
-        </span>
-      <% }) %>
-    </span>
-  <% } %>
-
-  <!-- Extra Highlights -->
-  <% if (highlights.length) { %>
-    <br>
-    <span class="highlights"><%= highlights.join(' | ') %></span>
-  <% } %>
-
-  <!-- SKU -->
-  <% if (sku) { %>
-    <br><span class="sku">(<%= sku %>)</span>
-  <% } %>
-</h1>
-
-      <p class="product-subtitle"><%= product.category[0]?.name || 'Product' %></p>
-      
-      <!-- Rating -->
-      <div class="rating-section">
-        <div class="rating-badge">
-          <%= (product.rating || 5.0).toFixed(1) %> <i class="fas fa-star"></i>
-        </div>
-        <span class="rating-count"><%= product.reviewCount || 5 %> Ratings & Reviews</span>
-      </div>
-
-      <!-- Brand -->
-      <% if(product.brand){ %>
-        <div class="brand-section">
-          <img class="brand-logo" src="<%= product.brand.logo || '/images/placeholder.png' %>" alt="<%= product.brand.name %>">
-          <span class="brand-name"><%= product.brand.name %></span>
-        </div>
-      <% } %>
-
-      <!-- Price -->
-      <div class="price-section">
-        <div id="price-Container" class="price-container">
-            <!-- thumbnails rendered by JS -->
-        </div>
-        <h6 style="color: green; font-size: large;">+ Free Delivery</h6>
-      </div>
-
-      <!-- Variants (if multiple) -->
-      <% if (product.variants && product.variants.length > 0) { %>
-  <div class="variant-section">
-    <div class="variant-title">Available Variants</div>
-    <div class="variant-options" id="variantOptions">
-      <% product.variants.forEach((variant, index) => { %>
-        <div 
-          class="variant-option <%= index === 0 ? 'selected' : '' %>" 
-          data-variant-id="<%= variant._id %>"
-          data-variant='<%- JSON.stringify(variant) %>'
-        >
-          <img 
-            src="<%= variant.product_image && variant.product_image[0] ? variant.product_image[0] : '/images/no-image.png' %>" 
-            alt="Variant <%= index + 1 %>"
-          >
-          <div class="variant-color-name"><%= variant.color %></div>
-        </div>
-      <% }) %>
-    </div>
-  </div>
-<% } %>
-
-
-      <!-- Action Buttons -->
-      <div class="action-buttons">
-        <button class="btn-cart add-to-cart" 
-          data-product-id="<%= product._id %>"
-          data-variant-id="<%= product.variants && product.variants.length>0 ? product.variants[0]._id : '' %>">
-          <i class="fas fa-shopping-cart"></i> ADD TO CART
-        </button>
-        
-        <button class="wishlist-btn wishlist-toggle" 
-          id="wishlist-btn-<%= product._id %>-<%= product.variants && product.variants[0]?._id %>"
-          data-product-id="<%= product._id %>"
-          data-variant-id="<%= product.variants && product.variants[0]?._id %>">
-          <i class="far fa-heart"></i>
-        </button>
-      </div>
-
-      <!-- Delivery Info -->
-      <div class="delivery-section">
-        <div class="delivery-item">
-          <i class="fas fa-truck"></i>
-          <div>
-            <strong>Free Delivery</strong> - Get it by tomorrow
-          </div>
-        </div>
-        <div class="delivery-item">
-          <i class="fas fa-undo-alt"></i>
-          <div>
-            <strong>7 Days Return Policy</strong> - Easy returns & exchanges
-          </div>
-        </div>
-        <div class="delivery-item">
-          <i class="fas fa-shield-alt"></i>
-          <div>
-            <strong>Warranty</strong> - 1 Year Manufacturer Warranty
-          </div>
-        </div>
-      </div>
-
-      <!-- Description -->
-
-      <!-- Specifications -->
-      <div class="specifications-section">
-        <h2 class="description-title">Details</h2>
-        <div class="spec-row">
-          <div class="spec-label">Brand</div>
-          <div class="spec-value"><%= product.brand?.name || 'N/A' %></div>
-        </div>
-        <div class="spec-row">
-          <div class="spec-label">Category</div>
-          <div class="spec-value"><%= product.category[0]?.name || 'N/A' %></div>
-        </div>
-        <div class="spec-row">
-          <div class="spec-label">Product ID</div>
-          <div class="spec-value"><%= product._id %></div>
-        </div>
-        <!-- Specifications -->
-<div class="specifications-section">
-  <h2 class="description-title">Specifications</h2>
-</div>
-
-      </div>
-    </div>
-
-  </div>
-</section>
-
-  <!-- jQuery first -->
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <!-- Axios CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-  <!-- Owl Carousel if used -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
-
-  <!-- WOW.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
-
-  <!-- SweetAlert2 -->
+  <!-- CSS -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/header.css" rel="stylesheet">
+  <link href="/css/footer.css" rel="stylesheet">
+  <link href="/css/home.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.23.0/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="/css/user/product-page.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-<!-- Pass variants safely to client: convert _id to string -->
-<script>
-  const productVariants = <%- JSON.stringify((product.variants || []).map(v => ({ ...v, _id: String(v._id) }))) %> || [];
-  const productData = <%- JSON.stringify({ _id: String(product._id), brand ,discountPercentage: product.discountPercentage || 0, appliedDiscountValue: product.appliedDiscountValue || 0, mainPrice: product.mainPrice || 0, finalPrice: product.finalPrice || null }) %>;
- console.log(productData)
-  const user = <%- user ? JSON.stringify(user) : 'null' %>;
-    const userWishlist = <%- JSON.stringify(user?.wishlists?.products || []) %>;
-  </script>
-
- <!-- Then your main.js -->
-  <script src="/js/main.js"></script>
-  <script src="/js/addTocart_WishlistCode.js"></script>
-
-<script>
-// Image + Variant handling
-(function(){
-  const thumbnailList = document.getElementById('thumbnailList');
-  const mainImage = document.getElementById('mainImage');
-  const variantOptionsContainer = document.getElementById('variantOptions');
-  const addToCartBtn = document.querySelector('.add-to-cart');
-  const wishlistBtn = document.querySelector('.wishlist-toggle');
-  const discountBadge = document.getElementById('discountBadge');
-  const discountTag = document.getElementById('discountTag');
-
-  function clearChildren(el){
-         while(el.firstChild) el.removeChild(el.firstChild);
-  }
-
-  function renderThumbnailsForVariant(variant){
-    clearChildren(thumbnailList);
-
-    const images = (variant && Array.isArray(variant.product_image) && variant.product_image.length > 0) ? variant.product_image : ['/images/placeholder.png'];
-
-    images.forEach((img, idx) => {
-      const div = document.createElement('div');
-      div.className = 'thumbnail' + (idx===0? ' active':'');
-      div.setAttribute('data-image', img);
-      div.innerHTML = `<img src="${img}" alt="Product image ${idx+1}">`;
-
-      div.addEventListener('click', function(){
-        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        mainImage.src = img;
-      });
-
-      thumbnailList.appendChild(div);
-    });
-    // set main image to first
-    mainImage.src = images[0];
-  }
-
-  function updateProductTitle(variant) {
-  const titleEl = document.querySelector(".product-title");
-
-  if (!titleEl || !variant) return;
-
-  const specs = variant.specifications || {};
-  const brandName = productData.brand?.toUpperCase() || "";
-  const modelDesc = variant.description || "";
-
-  // Start with brand and model
-  let html = `
-    <span class="brand">${brandName}</span>
-    <span class="model"> by ${modelDesc}</span>
-  `;
-
-  const fields = ["color",
-  "ram",
-  "storage",
-  "battery",
-  "display",
-  "camera",
-  "processor",
-  "gpu",
-  "os",
-  "screenSize",
-  "resolution",
-  "connectivity"  ];
-  const badges = [];
-
-  // Add only available fields (Flipkart-style short badges)
-  fields.forEach(f => {
-    const value = specs[f] || (f === 'color' ? variant.color : '');
-    if (value) {
-      badges.push(`<span class="spec-badge">${f.toUpperCase() + " | " + value}</span>`);
+  <style>
+    /* --- Existing CSS --- */
+    .product-title {
+      font-weight: bolder;
+      color: #222;
+      line-height: 1.4;
     }
-  });
 
-  // Combine everything into one attractive title
-  html += `
-    <span class="specs">(${badges.join(' | ')})</span>
-  `;
-
-  titleEl.innerHTML = html.trim();
-}
-
-  function updateProductPrice(variant) {
-  const priceEl = document.querySelector('.price-container');
-  const discountBadge = document.getElementById('discountBadge');
-  const discountTag = document.getElementById('discountTag');
-
-  priceEl.innerHTML = "";
-
-  const hasDiscount = variant.price > variant.finalPrice && variant.appliedDiscountValue > 0;
-
-  if (hasDiscount) {
-    priceEl.innerHTML = `
-      <span class="current-price">₹${variant.finalPrice.toLocaleString()}</span>
-      <span class="original-price">₹${variant.price.toLocaleString()}</span>
-      <span class="discount-tag">${variant.discountPercentage}% off</span>
-    `;
-
-    if(discountBadge && discountTag){
-      discountBadge.style.display = 'flex';
-      discountTag.textContent = `${variant.discountPercentage}% OFF`;
+    .spec-badge {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      color: #0d47a1;
+      padding: 5px 12px;
+      margin: 4px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+      transition: all .2s ease-in-out;
     }
-  } else {
-    priceEl.innerHTML = `<span class="current-price">₹${variant.price.toLocaleString()}</span>`;
-    if(discountBadge && discountTag) discountBadge.style.display = 'none';
-  }
-}
 
-  function updateSpecifications(variant) {
-  const specContainer = document.querySelector('.specifications-section');
-  if(!specContainer) return;
+    .spec-badge:hover {
+      background: linear-gradient(135deg, #bbdefb, #90caf9);
+      transform: translateY(-1px);
+    }
 
-  const specs = {...(variant.specifications || {})};
+    .spec-badge i {
+      margin-right: 5px;
+      font-size: 14px;
+      color: #1565c0;
+    }
 
-  // Include color
-  if(variant.color) specs.color = variant.color;
+    .product-title .highlights {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
+    }
 
-  let html = '<h2 class="description-title">Specifications</h2>';
+    .product-title .sku {
+      display: block;
+      font-size: 13px;
+      color: #999;
+      margin-top: 4px;
+    }
 
-  for(let key in specs) {
-    if (key === 'stock') continue ;
-    if(specs[key]){
-      html += `
-        <div class="spec-row">
-          <div class="spec-label">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
-          <div class="spec-value">${specs[key]}</div>
+    @media(max-width:768px) {
+      .product-title {
+        font-size: 1.3rem;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .spec-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+      }
+    }
+
+    .discount {
+      font-size: 16px;
+      color: #388E3C;
+      font-weight: 500;
+    }
+
+    .variant-section {
+      margin-top: 20px;
+    }
+
+    .variant-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .variant-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .variant-option {
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 5px;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .variant-option.selected {
+      border-color: #2874f0;
+    }
+
+    .variant-option img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .discount-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: #ff3e3e;
+      color: #fff;
+      font-weight: bold;
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+    }
+
+    .discount-badge span {
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .btn-buy-now {
+      background-color: #ff9800;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      transition: background .3s;
+    }
+
+    .btn-buy-now:hover {
+      background-color: #e68900;
+    }
+
+    .main-image-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      overflow: hidden;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      cursor: crosshair;
+    }
+
+    .zoomContainer {
+      z-index: 1000 !important;
+    }
+
+    .zoomWindow {
+      border: 2px solid #2874f0 !important;
+      border-radius: 4px !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    @media (max-width: 768px) {
+      .main-image-container {
+        height: 400px;
+      }
+
+      .main-image {
+        cursor: default;
+      }
+    }
+
+    /* Cart specific styles */
+    .cart-success {
+      background-color: #4caf50 !important;
+    }
+
+    .cart-error {
+      background-color: #f44336 !important;
+    }
+
+    /* Wishlist active state */
+    .wishlist-btn.active {
+      color: #ff0000 !important;
+    }
+
+    .added-to-cart {
+      background-color: #4caf50 !important;
+      cursor: not-allowed;
+    }
+  </style>
+
+  <section class="product-page">
+    <div class="product-container">
+
+      <!-- Left Side - Images -->
+      <div class="product-images-section">
+        <div class="image-gallery">
+          <div class="thumbnail-list" id="thumbnailList"></div>
+          <div class="main-image-container">
+            <img class="main-image" id="mainImage"
+              src="<%= product.variants[0]?.product_image[0] || '/images/placeholder.png' %>"
+              data-zoom-image="<%= product.variants[0]?.product_image[0] || '/images/placeholder.png' %>"
+              alt="<%= product.name %>">
+            <div class="discount-badge" id="discountBadge" style="display:none;"><span id="discountTag"></span></div>
+          </div>
         </div>
-      `;
+      </div>
+
+      <!-- Right Side - Details -->
+      <div class="product-details-section">
+        <div class="product-breadcrumb">
+          <a href="/">Home</a> / <a href="/shop">Products</a> / <%= product.name %>
+        </div>
+
+        <!-- Product Title -->
+        <h1 class="product-title"></h1>
+
+        <!-- Subtitle, Rating, Brand -->
+        <p class="product-subtitle">
+          <%= product.category[0]?.name || ' Product' %>
+        </p>
+        <div class="rating-section">
+          <div class="rating-badge">
+            <%= (product.rating || 5).toFixed(1) %> <i class="fas fa-star"></i>
+          </div>
+          <span class="rating-count">
+            <%= product.reviewCount || 5 %> Ratings & Reviews
+          </span>
+        </div>
+        <% if(product.brand){ %>
+          <div class="brand-section">
+            <img class="brand-logo" src="<%= product.brand.logo || '/images/placeholder.png' %>"
+              alt="<%= product.brand.name %>">
+            <span class="brand-name">
+              <%= product.brand.name %>
+            </span>
+          </div>
+          <% } %>
+
+            <!-- Price -->
+            <div class="price-section">
+              <div class="price-container" id="price-Container"></div>
+              <h6 style="color: green; font-size: large;">+ Free Delivery</h6>
+            </div>
+
+            <!-- Variants -->
+            <% if (product.variants && product.variants.length>0){ %>
+              <div class="variant-section">
+                <div class="variant-title">Available Variants</div>
+                <div class="variant-options" id="variantOptions">
+                  <% product.variants.forEach((variant,index)=>{ %>
+                    <div class="variant-option <%= index===0?'selected':'' %>" data-variant-id="<%= variant._id %>"
+                      data-variant='<%- JSON.stringify(variant) %>'>
+                      <img src="<%= variant.product_image?.[0] || '/images/no-image.png' %>"
+                        alt="Variant <%= index+1 %>">
+                      <div class="variant-color-name">
+                        <%= variant.color %>
+                      </div>
+                    </div>
+                    <% }) %>
+                </div>
+              </div>
+              <% } %>
+
+                <!-- Buttons -->
+                <div class="action-buttons">
+                  <button class="btn-cart add-to-cart" id="addToCartBtn" data-product-id="<%= product._id %>"><i
+                      class="fas fa-shopping-cart"></i> ADD TO CART</button>
+                  <button class="wishlist-btn wishlist-toggle" id="wishlist-btn" data-product-id="<%= product._id %>"><i
+                      class="far fa-heart"></i></button>
+                  <button class="btn-buy" id="buyNowBtn" data-product-id="<%= product._id %>"><i
+                      class="fas fa-bolt"></i> BUY NOW</button>
+                </div>
+
+                <!-- Delivery -->
+                <div class="delivery-section">
+                  <div class="delivery-item"><i class="fas fa-truck"></i>
+                    <div><strong>Free Delivery</strong> - Get it by tomorrow</div>
+                  </div>
+                  <div class="delivery-item"><i class="fas fa-undo-alt"></i>
+                    <div><strong>7 Days Return Policy</strong> - Easy returns & exchanges</div>
+                  </div>
+                  <div class="delivery-item"><i class="fas fa-shield-alt"></i>
+                    <div><strong>Warranty</strong> - 1 Year Manufacturer Warranty</div>
+                  </div>
+                </div>
+
+                <!-- Specs Section -->
+                <div class="specifications-section"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JS Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js"></script>
+  <!-- ✅ jQuery FIRST -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+  <!-- ✅ Then Owl Carousel JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+  <!-- ✅ Then WOW.js (optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/wowjs@1.1.3/dist/wow.min.js"></script>
+
+  <!-- ✅ Then your custom JS -->
+  <script src="/js/main.js"></script>
+
+  <!-- Load elevateZoom from a reliable CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/elevatezoom-plus@1.2.3/jquery.elevatezoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    const productVariants = <%- JSON.stringify((product.variants || []).map(v => ({ ...v, _id: String(v._id) }))) %> || [];
+    const productData = <%- JSON.stringify({ _id: String(product._id), brand: product.brand?.name || '' }) %>;
+    const user = <%- user ? JSON.stringify(user) : 'null' %>;
+    const userWishlist = <%- JSON.stringify(user?.wishlists?.products || []) %>;
+    let userCart = user?.cart?.products?.map(item => ({ productId: String(item.product_id), variantId: String(item.variant_id) })) || [];
+
+    const mainImage = $("#mainImage");
+    const thumbnailList = $("#thumbnailList");
+    const variantOptionsContainer = $("#variantOptions");
+    const discountBadge = $("#discountBadge");
+    const discountTag = $("#discountTag");
+    const addToCartBtn = $("#addToCartBtn");
+    const wishlistBtn = $("#wishlist-btn");
+    const buyNowBtn = $("#buyNowBtn");
+
+    let currentVariant = productVariants[0] || null;
+    let zoomEnabled = false;
+
+    // Check if elevateZoom is available
+    function checkZoomAvailability() {
+      return typeof $.fn.elevateZoom !== 'undefined';
     }
-  }
 
-  specContainer.innerHTML = html;
-}
+    // Zoom functionality
+    function initZoom() {
+      // Check if zoom is available
+      if (!checkZoomAvailability()) {
+        console.warn('elevateZoom is not available, zoom disabled');
+        zoomEnabled = false;
+        return;
+      }
 
-  function setSelectedVariantByIndex(index){
-    const variant = productVariants[index];
-    if(!variant){
-      // no variant: show placeholder
-      renderThumbnailsForVariant(null);
-      if(addToCartBtn) addToCartBtn.setAttribute('data-variant-id', '');
-      if(wishlistBtn) wishlistBtn.setAttribute('data-variant-id', '');
-      return;
-    }
+      // Destroy existing zoom instance
+      const ez = mainImage.data('elevateZoom');
+      if (ez) {
+        try {
+          ez.destroy();
+        } catch (e) {
+          console.warn('Error destroying zoom:', e);
+        }
+        mainImage.removeData('elevateZoom');
+      }
 
-    // Update UI selected class for variant options
-    if(variantOptionsContainer){
-      const options = variantOptionsContainer.querySelectorAll('.variant-option');
-      options.forEach(opt => opt.classList.remove('selected'));
-      const selectedOpt = Array.from(options).find(o => String(o.getAttribute('data-variant-id')) === String(variant._id));
-      if(selectedOpt) selectedOpt.classList.add('selected');
-    }
+      // Remove any existing zoom containers
+      $('.zoomContainer').remove();
 
-    // Update buttons data-variant-id
-    if(addToCartBtn) addToCartBtn.setAttribute('data-variant-id', variant._id);
-    if(wishlistBtn) wishlistBtn.setAttribute('data-variant-id', variant._id);
-
-    // render thumbnails and main image
-    renderThumbnailsForVariant(variant);
-    updateProductTitle(variant);
-    updateProductPrice(variant);
-    updateSpecifications(variant);
-
-    // If you have variant-specific price/discount values, update them here
-    // Example (uses productData object for product-level pricing):
-    if(productData && productData.appliedDiscountValue > 0){
-      if(discountBadge) discountBadge.style.display = 'block';
-      if(discountTag) discountTag.style.display = 'inline';
-    } else {
-      if(discountBadge) discountBadge.style.display = 'none';
-      if(discountTag) discountTag.style.display = 'none';
-    }
-  }
-
-
-  // attach click handlers to variant-option elements (if any)
-  if(variantOptionsContainer){
-    variantOptionsContainer.addEventListener('click', function(e){
-      const target = e.target.closest('.variant-option');
-      if(!target) return;
-      const variantId = target.getAttribute('data-variant-id');
-      const idx = productVariants.findIndex(v => String(v._id) === String(variantId));
-      if(idx !== -1) setSelectedVariantByIndex(idx);
-    });
-  }
-
-  // wishlist toggle visual feedback
-  if(wishlistBtn){
-    wishlistBtn.addEventListener('click', function(){
-      this.classList.toggle('active');
-      const icon = this.querySelector('i');
-      if(icon){
-        if(this.classList.contains('active')){
-          icon.classList.remove('far');
-          icon.classList.add('fas');
-        } else {
-          icon.classList.remove('fas');
-          icon.classList.add('far');
+      // Only initialize zoom on desktop
+      if (window.innerWidth > 768) {
+        try {
+          mainImage.elevateZoom({
+            zoomType: "window",
+            cursor: "crosshair",
+            zoomWindowWidth: 400,
+            zoomWindowHeight: 400,
+            zoomWindowOffetx: 10,
+            zoomWindowOffety: 0,
+            borderSize: 1,
+            borderColour: "#eaeaea",
+            lensBorderColour: "#eaeaea",
+            lensShape: "round",
+            lensSize: 200,
+            containLensZoom: true,
+            scrollZoom: false,
+            loadingIcon: false,
+            easing: true,
+            zoomWindowPosition: 1,
+            zoomWindowFadeIn: 500,
+            zoomWindowFadeOut: 500,
+            lensFadeIn: 500,
+            lensFadeOut: 500
+          });
+          zoomEnabled = true;
+        } catch (error) {
+          console.error('Zoom initialization error:', error);
+          zoomEnabled = false;
         }
       }
+    }
+
+    function updateMainImage(imgUrl) {
+      // First destroy existing zoom if it was enabled
+      if (zoomEnabled) {
+        const ez = mainImage.data('elevateZoom');
+        if (ez) {
+          try {
+            ez.destroy();
+          } catch (e) {
+            console.warn('Error destroying zoom:', e);
+          }
+          mainImage.removeData('elevateZoom');
+        }
+        $('.zoomContainer').remove();
+      }
+
+      // Update image source
+      mainImage.attr("src", imgUrl);
+      mainImage.attr("data-zoom-image", imgUrl);
+
+      // Reinitialize zoom after image loads if available
+      mainImage.one('load', function () {
+        if (checkZoomAvailability()) {
+          setTimeout(initZoom, 100);
+        }
+      });
+
+      // If image is already loaded, trigger zoom initialization
+      if (mainImage[0].complete) {
+        if (checkZoomAvailability()) {
+          setTimeout(initZoom, 100);
+        }
+      }
+    }
+
+    function renderThumbnails(variant) {
+      thumbnailList.empty();
+      const images = variant?.product_image?.length > 0 ? variant.product_image : ['/images/placeholder.png'];
+
+      images.forEach((img, idx) => {
+        const div = $(`<div class="thumbnail ${idx === 0 ? 'active' : ''}" data-image="${img}"><img src="${img}" alt="Product image ${idx + 1}"></div>`);
+        div.on("click", function () {
+          $(".thumbnail").removeClass("active");
+          $(this).addClass("active");
+          updateMainImage(img);
+        });
+        thumbnailList.append(div);
+      });
+
+      // Set first image as main
+      if (images.length > 0) {
+        updateMainImage(images[0]);
+      }
+    }
+
+    function updateProductTitle(variant) {
+      const titleEl = $(".product-title");
+      if (!titleEl.length || !variant) return;
+
+      const specs = variant.specifications || {};
+      const brandName = productData.brand?.toUpperCase() || "";
+      const modelDesc = variant.description || "";
+
+      let html = `<span class="brand">${brandName}</span><span class="model"> by ${modelDesc}</span>`;
+
+      const fields = ["color", "ram", "storage", "battery", "display", "camera", "processor", "gpu", "os", "screenSize", "resolution", "connectivity"];
+      const badges = [];
+      for (let f of fields) {
+        const value = specs[f] || (f === 'color' ? variant.color : '');
+        if (value && badges.length < 4) badges.push(`<span class="spec-badge"><strong>${f.toUpperCase()}:</strong> ${value}</span>`);
+      }
+
+      if (badges.length) html += `<br><span class="specs bold">(${badges.join(' | ')})</span>`;
+
+      const extraFields = ['extraFeatures', 'specialDesign', 'modes', 'gameBooster', 'audio'];
+      const highlights = extraFields.filter(f => variant.specifications?.[f]).map(f => variant.specifications[f]);
+      if (highlights.length) html += `<br><span class="highlights">${highlights.join(' | ')}</span>`;
+
+      if (variant.sku) html += `<br><span class="sku">(${variant.sku})</span>`;
+
+      titleEl.html(html);
+    }
+
+    function updateProductPrice(variant) {
+      const priceEl = $(".price-container");
+      if (!priceEl.length) return;
+
+      const hasDiscount = variant.price > variant.finalPrice && variant.appliedDiscountValue > 0;
+      if (hasDiscount) {
+        priceEl.html(`
+          <span class="current-price">₹${variant.finalPrice.toLocaleString()}</span>
+          <span class="original-price">₹${variant.price.toLocaleString()}</span>
+          <span class="discount-tag">${variant.discountPercentage}% off</span>
+        `);
+        discountBadge.show();
+        discountTag.text(`${variant.discountPercentage}% OFF`);
+      } else {
+        priceEl.html(`<span class="current-price">₹${variant.price.toLocaleString()}</span>`);
+        discountBadge.hide();
+      }
+    }
+
+    function updateSpecifications(variant) {
+      const specContainer = $(".specifications-section");
+      if (!specContainer.length) return;
+
+      const specs = { ...(variant.specifications || {}) };
+      if (variant.color) specs.color = variant.color;
+
+      let html = '<h2 class="description-title">Specifications</h2>';
+      for (let key in specs) {
+        if (key === 'stock') continue;
+        if (specs[key]) html += `<div class="spec-row"><div class="spec-label">${key.charAt(0).toUpperCase() + key.slice(1)}</div><div class="spec-value">${specs[key]}</div></div>`;
+      }
+      specContainer.html(html);
+    }
+
+    function updateWishlistState(variant) {
+      if (!wishlistBtn.length || !variant) return;
+
+      const icon = wishlistBtn.find("i");
+      const isWishlisted = userWishlist.some(p =>
+        String(p.productId) === String(productData._id) &&
+        String(p.variantId) === String(variant._id)
+      );
+
+      console.log('Wishlist check:', {
+        productId: productData._id,
+        variantId: variant._id,
+        isWishlisted: isWishlisted,
+        userWishlist: userWishlist
+      });
+
+      if (isWishlisted) {
+        wishlistBtn.addClass("active");
+        icon.removeClass("far").addClass("fas");
+        wishlistBtn.css("color", "#ff0000");
+      } else {
+        wishlistBtn.removeClass("active");
+        icon.removeClass("fas").addClass("far");
+        wishlistBtn.css("color", "#1f1f1f");
+      }
+
+      // Update the data-variant-id attribute - FIXED: Use proper jQuery method
+      wishlistBtn.attr("data-variant-id", variant._id);
+      console.log('Updated wishlist button variant ID to:', variant._id);
+    }
+
+    function updateCartState(variant) {
+      // Ensure the button exists
+      if (!addToCartBtn || !addToCartBtn.length) return;
+
+      console.log("🔹 Checking cart state for variant:", variant?._id);
+      console.log("🔹 Current product:", productData?._id);
+      console.log("🔹 Current variant:", currentVariant?._id);
+      console.log("🔹 User cart:", userCart);
+
+      // Ensure we're using correct IDs (string comparison)
+      const isInCart = userCart.some(item =>
+        String(item.productId) === String(productData._id) &&
+        String(item.variantId) === String(variant._id)
+      );
+
+      console.log("🟩 isInCart:", isInCart);
+
+      if (isInCart) {
+        // Already in cart
+        addToCartBtn
+          .html('<i class="fas fa-check"></i> GO TO CART')
+          .removeClass("btn-primary")
+          .addClass("btn-success added-to-cart")
+          .prop("disabled", false)
+          .attr("onclick", "window.location.href='/cart'");
+      } else {
+        // Not in cart yet
+        addToCartBtn
+          .html('<i class="fas fa-shopping-cart"></i> ADD TO CART')
+          .removeClass("btn-success added-to-cart")
+          .addClass("btn-primary")
+          .prop("disabled", false)
+          .removeAttr("onclick");
+      }
+
+      // Update the variant ID attribute for tracking
+      addToCartBtn.attr("data-variant-id", variant._id);
+    }
+
+    function setSelectedVariantByIndex(idx) {
+      const variant = productVariants[idx];
+      if (!variant) return;
+
+      currentVariant = variant;
+      console.log('Current variant set to:', variant._id, variant.color);
+
+      // Update variant selection UI
+      variantOptionsContainer.find(".variant-option").removeClass("selected");
+      variantOptionsContainer.find(`.variant-option[data-variant-id="${variant._id}"]`).addClass("selected");
+
+      // Update main image, title, price, specs, wishlist, cart
+      renderThumbnails(variant);
+      updateProductTitle(variant);
+      updateProductPrice(variant);
+      updateSpecifications(variant);
+      updateWishlistState(variant);
+      updateCartState(variant);
+
+      // Update buy now button variant ID
+      buyNowBtn.attr("data-variant-id", variant._id);
+
+      console.log('All buttons updated with variant ID:', variant._id);
+    }
+
+    // Cart functionality
+    async function addToCart(productId, variantId, quantity = 1) {
+      const addToCartBtn = document.getElementById('addToCartBtn');
+
+      try {
+        if (!user) {
+          Swal.fire({
+            title: 'Login Required',
+            text: 'Please login to add items to cart',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Login',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+
+        // show "Loading..." in red for 1 second
+        addToCartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        addToCartBtn.disabled = true;
+        addToCartBtn.style.backgroundColor = 'red';
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+
+
+        const response = await axios.post('/cart/add', {
+          productId: productId,
+          variantId: variantId,
+          quantity: quantity
+        });
+
+
+        if (response.data.success) {
+
+          addToCartBtn.innerHTML = '<i class="fas fa-check"></i> Going To Cart';
+          addToCartBtn.style.backgroundColor = 'green';
+
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          location.href = '/cart';
+          return;
+        } else {
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Add',
+            text: response.data.message || 'Something went wrong while adding to cart!',
+            confirmButtonColor: '#d33',
+          });
+
+          addToCartBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> ADD TO CART';
+          addToCartBtn.disabled = false;
+          addToCartBtn.style.backgroundColor = '';
+        }
+      } catch (error) {
+        console.error('Cart error:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: error.response?.data?.message || 'Failed to add product to cart',
+          icon: 'error',
+          timer: 3000,
+          showConfirmButton: false,
+          background: '#f44336',
+          color: 'white'
+        });
+      }
+    }
+
+    // Buy Now functionality
+    async function buyNow() {
+      const productId = buyNowBtn.data('product-id');
+      const variantId = currentVariant?._id; // Always use currentVariant
+
+      if (!variantId) {
+        Swal.fire('Error', 'Please select a variant', 'error');
+        return;
+      }
+
+      try {
+        if (!user) {
+          Swal.fire({
+            title: 'Login Required',
+            text: 'Please login to proceed with purchase',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Login',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+
+        // Add to cart first
+        const cartResponse = await axios.post('/cart/add', {
+          productId: productId,
+          variantId: variantId,
+          quantity: 1
+        });
+
+        if (cartResponse.data.success) {
+          // Redirect to checkout
+          window.location.href = '/checkout';
+        } else {
+          throw new Error(cartResponse.data.message || 'Failed to add to cart');
+        }
+      } catch (error) {
+        console.error('Buy now error:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: error.response?.data?.message || 'Failed to process your request',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
+    }
+
+    // Wishlist functionality - FIXED: Use currentVariant instead of data attribute
+    async function toggleWishlist() {
+      const productId = wishlistBtn.data('product-id');
+      const variantId = currentVariant?._id;
+
+      if (!variantId) {
+        Swal.fire('Error', 'Please select a variant', 'error');
+        return;
+      }
+
+      try {
+        if (!user) {
+          Swal.fire({
+            title: 'Login Required',
+            text: 'Please login to manage your wishlist',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Login',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+
+
+        const response = await axios.post('/shop/wishlist', {
+          productId: productId,
+          variantId: variantId
+        });
+
+        console.log('Wishlist response:', response.data);
+
+        if (response.data.success) {
+          if (response.data.removed === true) {
+            // Product was removed from wishlist
+            const wishlistIndex = userWishlist.findIndex(item =>
+              String(item.productId) === String(productId) &&
+              String(item.variantId) === String(variantId)
+            );
+
+            if (wishlistIndex > -1) {
+              userWishlist.splice(wishlistIndex, 1);
+            }
+
+            // Update UI
+            updateWishlistState(currentVariant);
+
+          } else {
+            // Product was added to wishlist
+            const isAlreadyInWishlist = userWishlist.some(item =>
+              String(item.productId) === String(productId) &&
+              String(item.variantId) === String(variantId)
+            );
+
+            if (!isAlreadyInWishlist) {
+              userWishlist.push({ productId: String(productId), variantId: String(variantId) });
+            }
+
+            // Update UI
+            updateWishlistState(currentVariant);
+          }
+        } else {
+          throw new Error(response.data.message || 'Failed to update wishlist');
+        }
+      } catch (error) {
+        console.error('Wishlist error:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: error.response?.data?.message || 'Failed to update wishlist',
+          icon: 'error',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    }
+
+    // Event Handlers - FIXED: Use currentVariant directly
+    addToCartBtn.on('click', function () {
+      const productId = $(this).data('product-id');
+      const variantId = currentVariant?._id; // Always use currentVariant
+
+      if (!variantId) {
+        Swal.fire('Error', 'Please select a variant', 'error');
+        return;
+      }
+
+      addToCart(productId, variantId);
     });
-  }
 
-  // Initialize: select first variant if exists, else fallback
-  if(productVariants && productVariants.length > 0){
-    setSelectedVariantByIndex(0);
-  } else {
-    setSelectedVariantByIndex(-1);
-  }
+    wishlistBtn.on('click', function () {
+      console.log('Wishlist click - currentVariant:', currentVariant);
+      toggleWishlist();
+    });
 
-})();
-</script>
+    buyNowBtn.on('click', function () {
+      buyNow();
+    });
 
-<%- include("../partials/user/footer.ejs") %>
+    // Variant click
+    variantOptionsContainer.on("click", ".variant-option", function () {
+      const variantId = $(this).data("variant-id");
+      console.log('Variant clicked:', variantId);
+      const idx = productVariants.findIndex(v => String(v._id) === String(variantId));
+      if (idx !== -1) setSelectedVariantByIndex(idx);
+    });
+
+    // Initialize first variant
+    $(document).ready(function () {
+      if (productVariants.length > 0) {
+        setSelectedVariantByIndex(0);
+      }
+
+      // Check zoom availability and initialize
+      setTimeout(() => {
+        if (checkZoomAvailability()) {
+          initZoom();
+        } else {
+          console.warn('Zoom functionality not available');
+        }
+      }, 1000);
+    });
+
+    // Re-init zoom on window resize
+    $(window).on("resize", function () {
+      if (zoomEnabled && checkZoomAvailability()) {
+        setTimeout(initZoom, 300);
+      }
+    });
+  </script>
+
+  <!-- Then your main.js -->
+  <script src="/js/main.js"></script>
+
+  <%- include("../partials/user/footer.ejs") %>

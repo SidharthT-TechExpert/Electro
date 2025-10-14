@@ -55,6 +55,8 @@ const addWishlist = async (req, res) => {
 
     // 🔹 Ensure products array exists
     if (!Array.isArray(wishlist.products)) wishlist.products = [];
+    
+    console.log(variantId)
 
     // 🔹 Check if product already exists
     const index = wishlist.products.findIndex(

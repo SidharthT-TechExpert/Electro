@@ -43,12 +43,15 @@ routes.get("/", checkSession.homeAuth, userController.loadHomePage);
 
 // Shop Page Route
 routes.get("/shop", checkSession.homeAuth, userController.loadShopPage);
+
+// WishList Updating 
 routes.post(
   "/shop/wishlist",
   checkSession.isValid,
   wishlistController.addWishlist
 );
 
+// WishList Adding 
 routes.post("/cart/add", checkSession.isValid, cartController.addToCart);
 
 
