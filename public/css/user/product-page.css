@@ -75,18 +75,7 @@ FLIPKART-STYLE PRODUCT PAGE
   transition: transform 0.3s;
 }
 
-.discount-badge {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: #388e3c;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
+
 
 /* Right Side - Product Info */
 .product-details-section {
@@ -102,6 +91,7 @@ FLIPKART-STYLE PRODUCT PAGE
 .product-breadcrumb a {
   color: #878787;
   text-decoration: none;
+  font-size: medium;
 }
 
 .product-breadcrumb a:hover {
@@ -166,13 +156,13 @@ FLIPKART-STYLE PRODUCT PAGE
 }
 
 .current-price {
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 500;
   color: #212121;
 }
 
 .original-price {
-  font-size: 18px;
+  font-size: 20px;
   color: #878787;
   text-decoration: line-through;
 }

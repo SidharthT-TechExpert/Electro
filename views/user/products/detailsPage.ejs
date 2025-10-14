@@ -75,6 +75,70 @@
   }
 }
 
+.discount {
+  font-size: 16px;
+  color: #388E3C;
+  font-weight: 500;
+}
+
+.variant-section {
+  margin-top: 20px;
+}
+
+.variant-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.variant-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.variant-option {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.variant-option.selected {
+  border-color: #2874f0;
+}
+
+.variant-option img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.discount-badge {
+  position: absolute;        /* absolute relative to .main-image-container */
+  top: 15px;                 /* distance from top */
+  left: 15px;                /* distance from left */
+  background-color: #ff3e3e; /* bright red for visibility */
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 5px;
+  display: flex;             /* make sure flex works for centering text */
+  align-items: center;
+  justify-content: center;
+  z-index: 10;               /* on top of the image */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.discount-badge span {
+  font-size: 13px;
+  line-height: 1;
+}
+
+
 
 </style>
 
@@ -89,17 +153,16 @@
           <!-- thumbnails rendered by JS -->
         </div>
 
-        <div class="main-image-container">
-          <img class="main-image" id="mainImage" src="<%= (product.variants && product.variants[0] && product.variants[0].product_image && product.variants[0].product_image[0]) ? product.variants[0].product_image[0] : '/images/placeholder.png' %>" alt="<%= product.name %>">
+<div class="main-image-container">
+  <img class="main-image" id="mainImage" src="<%= product.variants[0]?.product_image[0] || '/images/placeholder.png' %>" alt="<%= product.name %>">
 
-          <% if(product.discountPercentage > 0){ %>
-            <div class="discount-badge" id="discountBadge">
-              <%= product.discountPercentage %>% OFF
-            </div>
-          <% } else { %>
-            <div class="discount-badge" id="discountBadge" style="display:none;"></div>
-          <% } %>
-        </div>
+  <div class="discount-badge" id="discountBadge" style="display:none;">
+    <span id="discountTag"></span>
+  </div>
+</div>
+
+
+
       </div>
     </div>
 
@@ -108,7 +171,7 @@
       <!-- Breadcrumb -->
       <div class="product-breadcrumb">
         <a href="/">Home</a> / 
-        <a href="/products">Products</a> / 
+        <a href="/shop">Products</a> / 
         <%= product.name %>
       </div>
 
@@ -246,22 +309,31 @@
         <div id="price-Container" class="price-container">
             <!-- thumbnails rendered by JS -->
         </div>
-        <h6 style="color: green;">+ Free Delivery</h6>
+        <h6 style="color: green; font-size: large;">+ Free Delivery</h6>
       </div>
 
       <!-- Variants (if multiple) -->
-      <% if(product.variants && product.variants.length > 0){ %>
-        <div class="variant-section">
-          <div class="variant-title">Available Variants</div>
-          <div class="variant-options" id="variantOptions">
-            <% product.variants.forEach((variant, index) => { %>
-              <div class="variant-option <%= index === 0 ? 'selected' : '' %>" data-variant-id="<%= variant._id %>">
-                Variant <%= index + 1 %>
-              </div>
-            <% }) %>
-          </div>
+      <% if (product.variants && product.variants.length > 0) { %>
+  <div class="variant-section">
+    <div class="variant-title">Available Variants</div>
+    <div class="variant-options" id="variantOptions">
+      <% product.variants.forEach((variant, index) => { %>
+        <div 
+          class="variant-option <%= index === 0 ? 'selected' : '' %>" 
+          data-variant-id="<%= variant._id %>"
+          data-variant='<%- JSON.stringify(variant) %>'
+        >
+          <img 
+            src="<%= variant.product_image && variant.product_image[0] ? variant.product_image[0] : '/images/no-image.png' %>" 
+            alt="Variant <%= index + 1 %>"
+          >
+          <div class="variant-color-name"><%= variant.color %></div>
         </div>
-      <% } %>
+      <% }) %>
+    </div>
+  </div>
+<% } %>
+
 
       <!-- Action Buttons -->
       <div class="action-buttons">
@@ -305,7 +377,7 @@
 
       <!-- Specifications -->
       <div class="specifications-section">
-        <h2 class="description-title">Specifications</h2>
+        <h2 class="description-title">Details</h2>
         <div class="spec-row">
           <div class="spec-label">Brand</div>
           <div class="spec-value"><%= product.brand?.name || 'N/A' %></div>
@@ -318,6 +390,11 @@
           <div class="spec-label">Product ID</div>
           <div class="spec-value"><%= product._id %></div>
         </div>
+        <!-- Specifications -->
+<div class="specifications-section">
+  <h2 class="description-title">Specifications</h2>
+</div>
+
       </div>
     </div>
 
@@ -438,11 +515,58 @@
   titleEl.innerHTML = html.trim();
 }
 
-  function updateProductPrice(variant){
-        const priceEl = document.querySelector('.price-container');
+  function updateProductPrice(variant) {
+  const priceEl = document.querySelector('.price-container');
+  const discountBadge = document.getElementById('discountBadge');
+  const discountTag = document.getElementById('discountTag');
 
+  priceEl.innerHTML = "";
 
+  const hasDiscount = variant.price > variant.finalPrice && variant.appliedDiscountValue > 0;
+
+  if (hasDiscount) {
+    priceEl.innerHTML = `
+      <span class="current-price">₹${variant.finalPrice.toLocaleString()}</span>
+      <span class="original-price">₹${variant.price.toLocaleString()}</span>
+      <span class="discount-tag">${variant.discountPercentage}% off</span>
+    `;
+
+    if(discountBadge && discountTag){
+      discountBadge.style.display = 'flex';
+      discountTag.textContent = `${variant.discountPercentage}% OFF`;
+    }
+  } else {
+    priceEl.innerHTML = `<span class="current-price">₹${variant.price.toLocaleString()}</span>`;
+    if(discountBadge && discountTag) discountBadge.style.display = 'none';
   }
+}
+
+  function updateSpecifications(variant) {
+  const specContainer = document.querySelector('.specifications-section');
+  if(!specContainer) return;
+
+  const specs = {...(variant.specifications || {})};
+
+  // Include color
+  if(variant.color) specs.color = variant.color;
+
+  let html = '<h2 class="description-title">Specifications</h2>';
+
+  for(let key in specs) {
+    if (key === 'stock') continue ;
+    if(specs[key]){
+      html += `
+        <div class="spec-row">
+          <div class="spec-label">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
+          <div class="spec-value">${specs[key]}</div>
+        </div>
+      `;
+    }
+  }
+
+  specContainer.innerHTML = html;
+}
+
   function setSelectedVariantByIndex(index){
     const variant = productVariants[index];
     if(!variant){
@@ -469,6 +593,7 @@
     renderThumbnailsForVariant(variant);
     updateProductTitle(variant);
     updateProductPrice(variant);
+    updateSpecifications(variant);
 
     // If you have variant-specific price/discount values, update them here
     // Example (uses productData object for product-level pricing):
@@ -480,6 +605,7 @@
       if(discountTag) discountTag.style.display = 'none';
     }
   }
+
 
   // attach click handlers to variant-option elements (if any)
   if(variantOptionsContainer){
