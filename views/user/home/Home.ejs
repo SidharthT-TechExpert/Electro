@@ -89,84 +89,58 @@
 
           <div class="tab-content">
 
-            <% function getBestOffer(product){ if(!product.offers || product.offers.length===0) return null; const
-              activeOffers=product.offers.filter(o=> o.isActive);
-              if(activeOffers.length===0) return null;
-              let bestOffer = activeOffers[0];
-              let maxDiscount = 0;
-              activeOffers.forEach(o=>{
-              let discountAmt = 0;
-              if(o.discountType==='Percentage') discountAmt = product.price*(o.discountValue/100);
-              else if(o.discountType==='Fixed') discountAmt = o.discountValue;
-              if(discountAmt > maxDiscount){
-              maxDiscount = discountAmt;
-              bestOffer = o;
-              }
-              });
-              return bestOffer;
-              } %>
-
-              <!-- Loop function for each tab -->
-              <% const tabs={new:newProducts, best:bestSellers, hot:hotSales}; %>
-                <% Object.keys(tabs).forEach(tabName=> { %>
-                  <div id="<%= tabName %>" class="tab-pane fade <%= tabName==='new'?'show active':'' %>">
-                    <div class="product-grid">
-                      <% tabs[tabName].forEach(product=>{
-                        const offer = getBestOffer(product);
-                        let finalPrice = product.price;
-                        if(offer){
-                        if(offer.discountType==='Percentage') finalPrice = product.price*(1-offer.discountValue/100);
-                        else if(offer.discountType==='Fixed') finalPrice = product.price - offer.discountValue;
-                        }
-                        %>
-                        <div class="product-card" onclick="location.href='/product/<%= product._id %>'">
-                          <div class="product-img-wrapper">
-                            <img loading="lazy"
-                              src="<%=  product.variantImage|| product.image %>"
-                              alt="<%= product.name %>">
-                            <% if(offer){ %>
-                              <div class="product-discount-badge">
-                                <% if(offer.discountType==='Percentage' ){ %>-<%= offer.discountValue %>%<% } else { %>
-                                      -₹<%= offer.discountValue %>
-                                        <% } %>
-                              </div>
-                              <% } %>
-                                <div class="product-actions">
-                                  <button class="action-btn"
-                                    onclick="event.stopPropagation(); addToCart('<%= product._id %>')"><i
-                                      class="fa-solid fa-cart-plus"></i></button>
-                                  <button class="action-btn"
-                                    onclick="event.stopPropagation(); addToWishlist('<%= product._id %>')"><i
-                                      class="fa-solid fa-heart"></i></button>
-                                </div>
-                          </div>
-                          <div class="text-center p-3">
-                            <h6>
-                              <%= product.name %>
-                            </h6>
-                            <div class="price-wrapper">
-                              <h5 style="display:inline-block;">₹<%= finalPrice.toFixed(2) %>
-                              </h5>
-                              <% if(offer){ %><span class="old-price">₹<%= product?.variants?.price || product.price %></span>
-                                <% } %>
-                            </div>
-                            <small class="text-warning">
-                              <% for(let i=1;i<=5;i++){ %>
-                                <% if(i <=Math.floor(product.rating)){ %>
-                                  <i class="fa fa-star text-warning"></i>
-                                  <% } else if(i-0.5 <=product.rating){ %>
-                                    <i class="fa fa-star-half-alt text-warning"></i>
-                                    <% } else { %>
-                                      <i class="fa fa-star text-muted"></i>
+            <!-- Loop function for each tab -->
+            <% const tabs={ new: newProducts, best: bestSellers, hot: hotSales }; %>
+              <% Object.keys(tabs).forEach(tabName=> { %>
+                <div id="<%= tabName %>" class="tab-pane fade <%= tabName==='new'?'show active':'' %>">
+                  <div class="product-grid">
+                    <% tabs[tabName].forEach(product=> { %> <!-- ✅ use tabs[tabName] -->
+                      <div class="product-card" onclick="location.href='/product/<%= product._id %>'">
+                        <div class="product-img-wrapper fixed-img"
+                          style="background-image: url('<%= product.variantImage || product.image %>');">
+                          <% if(product.offers){ %>
+                            <div class="product-discount-badgeX">
+                              <% if(product.appliedDiscountType==='Percentage' ){ %>
+                                -<%= product.discountPercentage %>%
+                                  <% } else { %>
+                                    -₹<%= product.discountPercentage %>
                                       <% } %>
-                                        <% } %>
-                            </small>
+                            </div>
+                            <% } %>
+                              <div class="product-actions">
+                                <button class="action-btn"
+                                  onclick="event.stopPropagation(); addToCart('<%= product._id %>')">
+                                  <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                                <button class="action-btn"
+                                  onclick="event.stopPropagation(); addToWishlist('<%= product._id %>')">
+                                  <i class="fa-solid fa-heart"></i>
+                                </button>
+                              </div>
+                        </div>
+                        <div class="text-center p-3">
+                          <h6>
+                            <%= product.name %>
+                          </h6>
+                          <span style="color: green; font-weight: bold;">FREE delivery!</span>
+                          <div class="price-wrapper">
+                            <span style="font-size: larger; font-weight: bold; color: black;">₹<%= (product.finalPrice
+                                || product.price).toFixed(0) %>
+                            </span>
+                            <% if(product.offers?.length> 0){ %>
+                              <span class="old-price">₹<%= product.mainPrice %></span>
+                              <span style="color: green; font-weight: bolder; font-size: smaller;">
+                                <%= product.discountPercentage %>% off
+                              </span>
+                              <% } %>
                           </div>
                         </div>
-                        <% }) %>
-                    </div>
+                      </div>
+                      <% }) %>
                   </div>
-                  <% }) %>
+                </div>
+                <% }) %>
+
 
           </div>
         </div>
@@ -218,7 +192,8 @@
 
         .product-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+          box-shadow: 0 8px 20px rgba(235, 235, 235, 0.15);
+
         }
 
         .product-img-wrapper {
@@ -236,7 +211,7 @@
         }
 
         .action-btn {
-          background: #fff;
+          background: #ffa200;
           border: none;
           padding: 8px;
           border-radius: 50%;
@@ -261,6 +236,25 @@
           color: #888;
           margin-left: 10px;
         }
+
+        .fixed-img {
+          width: 100%;
+          /* or a fixed px value like 300px */
+          height: 250px;
+          /* fixed height */
+          background-size: cover;
+          /* makes image cover entire div */
+          background-position: center;
+          /* centers image */
+          border-radius: 5px;
+          /* optional: rounded corners */
+          overflow: hidden;
+        }
+
+        .product-card:hover .text-center h6 {
+          color: #2874f0;
+        }
+        
       </style>
 
       <script>

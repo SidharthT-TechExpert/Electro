@@ -334,9 +334,9 @@ function editOffer(id) {
       toggleMaxAmountField();
 
       // ✅ Also handle changes dynamically
-      discountTypeSelect.addEventListener("change", toggleMaxAmountField);
+      discountTypeSelect.addEventListener("click", toggleMaxAmountField);
 
-      appliesToSelect.addEventListener("change", function () {
+      appliesToSelect.addEventListener("click", function () {
         const items = this.value === "product" ? products : categories;
         targetSelect.innerHTML = "";
         items.forEach((item) => {
@@ -402,19 +402,6 @@ function editOffer(id) {
           },
         });
       }
-
-      $.ajax({
-        url: "/admin/offers/check-Date",
-        method: "POST",
-        data: { startDate, endDate },
-        async: false,
-        success: function (response) {
-          if (!response.valid) {
-            Swal.showValidationMessage(`⚠️ ${response.message}`);
-            return false;
-          }
-        },
-      });
 
       $.ajax({
         url: "/admin/offers/check-discount",

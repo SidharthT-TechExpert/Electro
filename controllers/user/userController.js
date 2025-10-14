@@ -54,7 +54,7 @@ const updateCategoryProductCounts = async () => {
 const loadHomePage = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
-    const query = { status: "In Stock", isBlocked: false };
+    const now = new Date();
 
     // ✅ Fetch listed categories
     const categories = await categorieSchema.find({ status: "listed" });
@@ -64,16 +64,19 @@ const loadHomePage = async (req, res) => {
     const bannerData = await bannerSchema
       .find({
         isActive: true,
-        startDate: { $lte: new Date() },
-        endDate: { $gte: new Date() },
+        startDate: { $lte: now },
+        endDate: { $gte: now },
       })
       .sort({ order: 1 })
       .lean();
 
+    // Common product query
+    const query = { status: "In Stock", isBlocked: false };
+
     // ------------------------------
-    // 1️⃣ New Arrivals
+    // 1️⃣ Fetch New Arrivals (with active offers)
     // ------------------------------
-    const newArrivals = await productSchema.aggregate([
+    let newArrivals = await productSchema.aggregate([
       { $match: query },
       {
         $lookup: {
@@ -85,6 +88,8 @@ const loadHomePage = async (req, res) => {
       },
       { $unwind: "$variants" },
       { $match: { "variants.specifications.stock": { $gt: 0 } } },
+
+      // ✅ Product offers
       {
         $lookup: {
           from: "offers",
@@ -96,6 +101,9 @@ const loadHomePage = async (req, res) => {
                   $and: [
                     { $eq: ["$appliesTo", "product"] },
                     { $in: ["$$productId", "$targetIds"] },
+                    { $eq: ["$isActive", true] },
+                    { $lte: ["$startDate", now] },
+                    { $gte: ["$endDate", now] },
                   ],
                 },
               },
@@ -104,17 +112,22 @@ const loadHomePage = async (req, res) => {
           as: "productOffers",
         },
       },
+
+      // ✅ Category offers
       {
         $lookup: {
           from: "offers",
-          let: { categoryId: "$category" },
+          let: { categoryIds: "$category" },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
                     { $eq: ["$appliesTo", "category"] },
-                    { $in: ["$$categoryId", "$targetIds"] },
+                    { $in: ["$$categoryIds", "$targetIds"] },
+                    { $eq: ["$isActive", true] },
+                    { $lte: ["$startDate", now] },
+                    { $gte: ["$endDate", now] },
                   ],
                 },
               },
@@ -123,20 +136,22 @@ const loadHomePage = async (req, res) => {
           as: "categoryOffers",
         },
       },
+
+      // Merge both offers
       {
         $addFields: {
           offers: { $concatArrays: ["$productOffers", "$categoryOffers"] },
         },
       },
+
       {
         $group: {
           _id: "$_id",
           name: { $first: "$name" },
-          price: { $first: "$price" },
+          mainPrice: { $min: "$variants.price" },
           brand: { $first: "$brand" },
           category: { $first: "$category" },
           variants: { $push: "$variants" },
-          mainPrice: { $min: "$variants.price" },
           Images: { $first: "$Images" },
           createdAt: { $first: "$createdAt" },
           offers: { $first: "$offers" },
@@ -146,12 +161,72 @@ const loadHomePage = async (req, res) => {
       { $limit: 10 },
     ]);
 
-    // ✅ Enrich newArrivals with variant image & price
+    // ------------------------------
+    // 2️⃣ Apply discount calculation (from shop page)
+    // ------------------------------
+    newArrivals = newArrivals.map((product) => {
+      let totalDiscountValue = 0;
+
+      if (product.offers && product.offers.length > 0) {
+        product.offers.forEach((o) => {
+          const startDate = new Date(o.startDate);
+          const endDate = new Date(o.endDate);
+
+          // 🛑 Skip if inactive / upcoming / expired
+          if (!o.isActive) return;
+          if (startDate > now) return;
+          if (endDate < now) return;
+
+          let discountValue = 0;
+
+          if (o.discountType === "Percentage") {
+            discountValue = product.mainPrice * (o.discountValue / 100);
+
+            // Cap by maxAmount if present
+            if (o.maxAmount && discountValue > o.maxAmount) {
+              discountValue = o.maxAmount;
+            }
+          } else if (o.discountType === "Fixed") {
+            // Use maxAmount if exists, otherwise discountValue
+            discountValue = o.maxAmount ? o.maxAmount : o.discountValue;
+          }
+
+          totalDiscountValue += discountValue;
+        });
+      }
+
+      // Prevent over-discount
+      if (totalDiscountValue > product.mainPrice) {
+        totalDiscountValue = product.mainPrice;
+      }
+
+      const finalPrice = product.mainPrice - totalDiscountValue;
+      const discountPercentage = (totalDiscountValue / product.mainPrice) * 100;
+
+      // Apply final computed values
+      product.finalPrice = Number(finalPrice.toFixed(0));
+      product.appliedDiscountValue = Number(totalDiscountValue.toFixed(0));
+      product.appliedDiscountType = "Percentage";
+      product.discountPercentage = Number(discountPercentage.toFixed(0));
+
+      // Update variant prices
+      product.variants = product.variants.map((v) => ({
+        ...v,
+        discountType: "Percentage",
+        activeDiscountValue: Number(totalDiscountValue.toFixed(0)),
+      }));
+
+      return product;
+    });
+
+    // ------------------------------
+    // 3️⃣ Enrich variant image and price
+    // ------------------------------
     const newArrivalIds = newArrivals.map((p) => p._id);
     const variantsNewArrivals = await variantSchema
       .find(
         { product_id: { $in: newArrivalIds } },
-        "product_id product_image price specifications"
+        "product_id product_image price"
       )
       .lean();
 
@@ -164,17 +239,12 @@ const loadHomePage = async (req, res) => {
         product.Images?.[0] ||
         "/img/header-img.jpg";
       product.price =
-        variant?.price?.toFixed(2) || product.price?.toFixed(2) || "N/A";
+        variant?.price?.toFixed(2) || product.mainPrice?.toFixed(2);
       return product;
     });
 
     // ------------------------------
-    // 2️⃣ Hot Products / New Products (if needed separately)
-    // ------------------------------
-    const newProducts = enrichedNewArrivals; // you can reuse same array or fetch differently if needed
-
-    // ------------------------------
-    // 3️⃣ Best Sellers
+    // 4️⃣ Best Sellers & Hot Sales
     // ------------------------------
     const bestSellers = await productSchema
       .find({ isBlocked: false, category: { $in: categoryIds } })
@@ -183,9 +253,6 @@ const loadHomePage = async (req, res) => {
       .limit(10)
       .lean();
 
-    // ------------------------------
-    // 4️⃣ Hot Sales
-    // ------------------------------
     const hotSales = await productSchema
       .find({ isBlocked: false, category: { $in: categoryIds } })
       .populate("brand", "name logo")
@@ -193,7 +260,7 @@ const loadHomePage = async (req, res) => {
       .limit(8)
       .lean();
 
-    console.log(newArrivals[0]);
+    console.log(enrichedNewArrivals[0]);
 
     // ------------------------------
     // Render Home Page
@@ -202,7 +269,7 @@ const loadHomePage = async (req, res) => {
       user,
       bannerData,
       newArrivals: enrichedNewArrivals,
-      newProducts,
+      newProducts: enrichedNewArrivals,
       bestSellers,
       hotSales,
       cartCount: req.cartCount || null,
@@ -678,31 +745,6 @@ const loadShopPage = async (req, res) => {
       matchStage.brand = new mongoose.Types.ObjectId(brand);
     }
 
-    const priceFilter = {};
-    if (minPrice && !isNaN(minPrice)) priceFilter.$gte = Number(minPrice);
-    if (maxPrice && !isNaN(maxPrice)) priceFilter.$lte = Number(maxPrice);
-
-    let sortOption = {};
-    switch (sort) {
-      case "priceLow":
-        sortOption = { mainPrice: 1 };
-        break;
-      case "priceHigh":
-        sortOption = { mainPrice: -1 };
-        break;
-      case "nameAsc":
-        sortOption = { name: 1 };
-        break;
-      case "nameDesc":
-        sortOption = { name: -1 };
-        break;
-      case "oldest":
-        sortOption = { createdAt: 1 };
-        break;
-      default:
-        sortOption = { createdAt: -1 };
-    }
-
     const searchStage = [];
     if (search) {
       searchStage.push({
@@ -719,11 +761,10 @@ const loadShopPage = async (req, res) => {
 
     const now = new Date();
 
-    // Aggregation pipeline
+    // Step 1: Aggregate products
     let products = await productSchema
       .aggregate([
         { $match: matchStage },
-
         {
           $lookup: {
             from: "variants",
@@ -748,9 +789,7 @@ const loadShopPage = async (req, res) => {
             as: "category",
           },
         },
-
         ...searchStage,
-
         { $unwind: "$variants" },
         { $match: { "variants.specifications.stock": { $gt: 0 } } },
 
@@ -835,85 +874,58 @@ const loadShopPage = async (req, res) => {
             offers: { $first: "$offers" },
           },
         },
-
-        ...(Object.keys(priceFilter).length
-          ? [{ $match: { mainPrice: priceFilter } }]
-          : []),
-
-        { $sort: sortOption },
-        { $skip: skip },
-        { $limit: limit },
+        { $sort: { createdAt: -1 } },
       ])
       .exec();
 
-    // After aggregation
+    // Step 2: Compute finalPrice after offers
     products = products.map((product) => {
-      product.originalPrice = product.mainPrice; // store original price
-      let maxDiscountValue = 0;
-      let appliedType = "Percentage";
-      let appliedPercentage = 0;
+      let totalDiscountValue = 0;
 
       if (product.offers && product.offers.length > 0) {
         product.offers.forEach((o) => {
-          if (!o.isActive) return;
+          const startDate = new Date(o.startDate);
+          const endDate = new Date(o.endDate);
+
+          if (!o.isActive || startDate > now || endDate < now) return;
 
           let discountValue = 0;
-          let discountType = o.discountType;
 
           if (o.discountType === "Percentage") {
             discountValue = product.mainPrice * (o.discountValue / 100);
-
-            // If maxAmount is applied → Fixed
-            if (o.maxAmount && discountValue > o.maxAmount) {
+            if (o.maxAmount && discountValue > o.maxAmount)
               discountValue = o.maxAmount;
-              discountType = "Fixed";
-            }
-          } else {
-            discountValue = o.discountValue;
-            discountType = "Fixed";
+          } else if (o.discountType === "Fixed") {
+            discountValue = o.maxAmount || o.discountValue;
           }
 
-          if (discountValue > maxDiscountValue) {
-            maxDiscountValue = discountValue;
-            appliedType = discountType;
-            // Calculate percentage relative to mainPrice
-            appliedPercentage = (discountValue / product.mainPrice) * 100;
-          }
+          totalDiscountValue += discountValue;
         });
       }
 
-      product.finalPrice = product.mainPrice - maxDiscountValue;
-      product.appliedDiscountValue = maxDiscountValue;
-      product.appliedDiscountType = appliedType;
-      product.discountPercentage = appliedPercentage.toFixed(2); // new field
+      if (totalDiscountValue > product.mainPrice)
+        totalDiscountValue = product.mainPrice;
 
-      // Update variants
-      product.variants = product.variants.map((v) => ({
-        ...v,
-        discountType: appliedType,
-        activeDiscountValue: maxDiscountValue,
-      }));
+      const finalPrice = product.mainPrice - totalDiscountValue;
+      const discountPercentage = (totalDiscountValue / product.mainPrice) * 100;
+
+      product.finalPrice = Number(finalPrice.toFixed(0));
+      product.appliedDiscountValue = Number(totalDiscountValue.toFixed(0));
+      product.appliedDiscountType = "Percentage";
+      product.discountPercentage = Number(discountPercentage.toFixed(0));
 
       return product;
     });
 
-    // Count total products for pagination
-    const countAggregation = await productSchema.aggregate([
-      { $match: matchStage },
-      {
-        $lookup: {
-          from: "variants",
-          localField: "_id",
-          foreignField: "product_id",
-          as: "variants",
-        },
-      },
-      { $unwind: "$variants" },
-      { $match: { "variants.specifications.stock": { $gt: 0 } } },
-      { $group: { _id: "$_id" } },
-    ]);
+    // Step 3: Apply minPrice / maxPrice filter on finalPrice
+    if (!isNaN(minPrice))
+      products = products.filter((p) => p.finalPrice >= Number(minPrice));
+    if (!isNaN(maxPrice))
+      products = products.filter((p) => p.finalPrice <= Number(maxPrice));
 
-    const count = countAggregation.length;
+    // Step 4: Apply pagination
+    const totalProducts = products.length;
+    products = products.slice(skip, skip + limit);
 
     // Wishlist
     let wishlistItems = [];
@@ -925,9 +937,7 @@ const loadShopPage = async (req, res) => {
       .sort({ productCount: -1 })
       .lean();
 
-    console.log(products[0]);
-
-    res.status(HTTP_STATUS.OK).render("products/shop", {
+    res.status(200).render("products/shop", {
       user,
       categories,
       category,
@@ -936,7 +946,7 @@ const loadShopPage = async (req, res) => {
       currentPage: page,
       brands,
       sort: sort || "relevance",
-      totalPages: Math.ceil(count / limit),
+      totalPages: Math.ceil(totalProducts / limit),
       cartCount: req.cartCount || null,
       selectedCategory: category || "all",
       selectedBrand: brand || "all",
@@ -946,11 +956,11 @@ const loadShopPage = async (req, res) => {
       maxPrice: maxPrice || "",
       wishlistItems,
       perPage: limit,
-      totalProducts: count,
+      totalProducts,
     });
   } catch (error) {
     console.error("❌ Error loading shop page:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+    res.status(500).send("Internal Server Error");
   }
 };
 
