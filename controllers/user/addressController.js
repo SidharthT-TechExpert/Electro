@@ -3,23 +3,48 @@ const HTTP_STATUS = require("../../config/statusCodes");
 const addressSchema = require("../../models/addressSchema");
 const axios = require("axios");
 
+
 // Check user session and fetch user
-const checkSession = async (id) => {
-  try {
-    return id ? await userSchema.findById(id) : null;
-  } catch (error) {
-    console.error("Session check error:", error);
-    return null;
-  }
+const mongoose = require('mongoose');
+const checkSession = async (_id) => {
+  if (!_id) return null;
+
+  const objectId = new mongoose.Types.ObjectId(_id);
+
+  const result = await userSchema.aggregate([
+    { $match: { _id: objectId } },
+    {
+      $lookup: {
+        from: "wishlists", // collection name in MongoDB
+        localField: "_id", // field in userSchema
+        foreignField: "userId", // field in wishlistSchema
+        as: "wishlists", // the array field to store results
+      },
+    },
+    {
+      $lookup: {
+        from: "carts", // collection name in MongoDB
+        localField: "_id", // field in userSchema
+        foreignField: "userId", // field in wishlistSchema
+        as: "cart", // the array field to store results
+      },
+    },
+    { $unwind: { path: "$cart", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$wishlists", preserveNullAndEmptyArrays: true } },
+  ]);
+
+  return result.length ? result[0] : null;
 };
 
 const get_Address_page = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
 
-    if (!user) return res.status(401).send("User not logged in");
+    if (!user) return res.redirect('/logIn')
 
     const addresses = await addressSchema.find({ userId: user._id });
+
+    console.log(user)
 
     res.render("home/address-book", {
       user,

@@ -1,9 +1,9 @@
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 require("dotenv").config();
-const HTTP_STATUS = require("../../config/statusCodes");
+const HTTP_STATUS = require("../../config/statusCodes.js");
 const userSchema = require("../../models/userSchema.js");
 const fs = require("fs");
 const { GridFSBucket, ObjectId } = require("mongodb");
@@ -18,7 +18,6 @@ mongoose.connection.once("open", () => {
   });
   console.log("✅ GridFS initialized for profile photos");
 });
-
 
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -103,13 +102,34 @@ If you didn’t request this, just ignore this message.
 };
 
 // Check user session and fetch user
-const checkSession = async (id) => {
-  try {
-    return id ? await userSchema.findById(id) : null;
-  } catch (error) {
-    console.error("Session check error:", error);
-    return null;
-  }
+const checkSession = async (_id) => {
+  if (!_id) return null;
+
+  const objectId = new mongoose.Types.ObjectId(_id);
+
+  const result = await userSchema.aggregate([
+    { $match: { _id: objectId } },
+    {
+      $lookup: {
+        from: "wishlists", // collection name in MongoDB
+        localField: "_id", // field in userSchema
+        foreignField: "userId", // field in wishlistSchema
+        as: "wishlists", // the array field to store results
+      },
+    },
+    {
+      $lookup: {
+        from: "carts", // collection name in MongoDB
+        localField: "_id", // field in userSchema
+        foreignField: "userId", // field in wishlistSchema
+        as: "cart", // the array field to store results
+      },
+    },
+    { $unwind: { path: "$cart", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$wishlists", preserveNullAndEmptyArrays: true } },
+  ]);
+
+  return result.length ? result[0] : null;
 };
 
 // Hash password
@@ -126,8 +146,8 @@ const securePassword = async (password) => {
 const MY_Profile = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
-     const page = 'profile' ;
-     
+    const page = "profile";
+
     if (!user) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).send("User not logged in");
     }
@@ -146,25 +166,30 @@ const MY_Profile = async (req, res) => {
 // Update Name
 const UpdateName = async (req, res) => {
   try {
-    const id = req.session.userId;
-    const { name } = req.body;
+    const { id, name } = req.body;
 
-    if (!id) {
-      return res.json({ success: false, message: "Session expired." });
+    // Validate inputs
+    if (!id || !name || name.trim().length < 3) {
+      return res.json({ success: false, message: "Invalid user ID or name" });
     }
 
-    const update = await userSchema.findByIdAndUpdate(id, { name });
-    if (!update) {
-      return res.json({ success: false, message: "User not found!" });
+    // Check if user exists
+    const user = await userSchema.findById(id);
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
     }
 
-    res.json({ success: true, message: "Name updated successfully" });
+    // Update name
+    user.name = name.trim();
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Name updated successfully" });
   } catch (error) {
     console.error("Error updating name:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Internal server error",
-    });
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -342,7 +367,6 @@ const send_Email_otp = async (req, res) => {
   }
 };
 
-
 // Verify OTP and update phone
 const verify_Email_Otp = async (req, res) => {
   try {
@@ -380,14 +404,17 @@ const verify_Email_Otp = async (req, res) => {
 const upload_Profile_photo = (req, res) => {
   if (!gfs)
     return res
-      .status(503)
+      .status(HTTP_STATUS.SERVICE_UNAVAILABLE)
       .json({ success: false, message: "Server not ready" });
 
   const form = new IncomingForm({ multiples: false });
 
   form.parse(req, async (err, fields, files) => {
     if (err)
-      return res.status(500).json({ success: false, message: "Upload error" });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Upload error",
+      });
 
     const file = Array.isArray(files.profilePhoto)
       ? files.profilePhoto[0]
@@ -395,44 +422,68 @@ const upload_Profile_photo = (req, res) => {
 
     if (!file || !file.filepath) {
       return res
-        .status(400)
+        .status(HTTP_STATUS.BAD_REQUEST)
         .json({ success: false, message: "No file uploaded" });
     }
 
-    const readStream = fs.createReadStream(file.filepath);
-
-    const uploadStream = gfs.openUploadStream(
-      `profile_${req.session.userId}_${Date.now()}`,
-      { contentType: file.mimetype }
-    );
-
-    readStream
-      .pipe(uploadStream)
-      .on("error", () =>
-        res.status(500).json({ success: false, message: "Upload failed" })
-      )
-      .on("finish", async () => {
-        // Save fileId to user profile
-        await User.findByIdAndUpdate(req.session.userId, {
-          profilePhoto: uploadStream.id,
-        });
-
-        res.json({
-          success: true,
-          message: "Profile photo uploaded!",
-          fileId: uploadStream.id,
-        });
+    // ✅ Check if uploaded file is an image
+    if (!file.mimetype.startsWith("image/")) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Only image files are allowed",
       });
+    }
+
+    try {
+      // 1️⃣ Find existing profile photo
+      const user = await userSchema.findById(req.session.userId);
+      if (!user) {
+        return res
+          .status(HTTP_STATUS.NOT_FOUND)
+          .json({ success: false, message: "User not found" });
+      }
+
+      if (user.profilePhoto) {
+        // 2️⃣ Delete old file from GridFS
+        gfs.delete(user.profilePhoto, (err) => {
+          if (err) console.error("Failed to delete old profile photo:", err);
+        });
+      }
+
+      // 3️⃣ Upload new photo
+      const readStream = fs.createReadStream(file.filepath);
+      const uploadStream = gfs.openUploadStream(
+        `profile_${req.session.userId}_${Date.now()}`,
+        { contentType: file.mimetype }
+      );
+
+      readStream
+        .pipe(uploadStream)
+        .on("error", () =>
+          res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Upload failed" })
+        )
+        .on("finish", async () => {
+          // 4️⃣ Save new fileId to user profile
+          user.profilePhoto = uploadStream.id;
+          await user.save();
+
+          res.json({
+            success: true,
+            message: "Profile photo uploaded!",
+            fileId: uploadStream.id,
+          });
+        });
+    } catch (error) {
+      console.error(error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
+    }
   });
 };
 
 // Download profile photo
 const Profile_photo = async (req, res) => {
   try {
-    if (!gfs)
-      return res
-        .status(503)
-        .send("Server not ready. Try again later.");
+    if (!gfs) return res.status(503).send("Server not ready. Try again later.");
 
     const fileId = new ObjectId(req.params.id);
     const downloadStream = gfs.openDownloadStream(fileId);
@@ -447,7 +498,6 @@ const Profile_photo = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
-
 
 module.exports = {
   MY_Profile,

@@ -81,6 +81,7 @@ let statesData = [];
 async function loadStates() {
   try {
     const res = await axios.get('https://www.india-location-hub.in/api/locations/states');
+    
     if (res.data.success && res.data.data?.states) {
       statesData = res.data.data.states;
     } else {
@@ -92,21 +93,20 @@ async function loadStates() {
 }
 loadStates();
 
-async function addAddressModal() {
-
  // Show loading first
   Swal.fire({
     title: "Loading...",
     didOpen: () => {
       Swal.showLoading();
     },
-    timer: 1000,
+    timer: 3000,
     timerProgressBar: true,
     allowOutsideClick: false
   });
 
-  // Wait 2 seconds
-  await new Promise(resolve => setTimeout(resolve, 1000));
+
+async function addAddressModal() {
+
 
   // Close the loading Swal
 

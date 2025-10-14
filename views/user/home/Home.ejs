@@ -107,15 +107,22 @@
                                       <% } %>
                             </div>
                             <% } %>
-                              <div class="product-actions">
-                                <button class="action-btn"
-                                  onclick="event.stopPropagation(); addToCart('<%= product._id %>')">
-                                  <i class="fa-solid fa-cart-plus"></i>
+
+
+                              <div class="product__hover">
+
+                                <button
+                                  id="wishlist-btn-<%= product._id %>-<%= product.variants && product.variants[0]._id %>"
+                                  class="wishlist-toggle" data-product-id="<%= product._id %>"
+                                  data-variant-id="<%= product.variants && product.variants[0]._id %>">
+                                  <i class="far fa-heart"></i>
                                 </button>
-                                <button class="action-btn"
-                                  onclick="event.stopPropagation(); addToWishlist('<%= product._id %>')">
-                                  <i class="fa-solid fa-heart"></i>
+
+                                <button class="add-to-cart" data-product-id="<%= product._id %>"
+                                  data-variant-id="<%= product.variants && product.variants.length > 0 ? product.variants[0]._id : '' %>">
+                                  <i class="fa fa-shopping-cart"></i>
                                 </button>
+
                               </div>
                         </div>
                         <div class="text-center p-3">
@@ -167,14 +174,16 @@
         </div>
       </section>
 
-      <!-- 🔝 Back to Top -->
-      <button class="back-to-top"><i class="fa-solid fa-chevron-up"></i></button>
-
     </main>
 
     <%- include("../partials/user/footer") %>
 
       <style>
+        .product__hover button.add-to-cart:hover {
+          background: #2874f0;
+          color: #fff;
+        }
+
         .product-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -201,23 +210,50 @@
           overflow: hidden;
         }
 
-        .product-actions {
+        .product__hover {
           position: absolute;
-          top: 10px;
-          right: 10px;
+          top: 12px;
+          right: 12px;
           display: flex;
           flex-direction: column;
-          gap: 5px;
+          gap: 8px;
+          opacity: 0;
+          transition: opacity 0.3s;
+          z-index: 10;
         }
 
-        .action-btn {
-          background: #ffa200;
-          border: none;
-          padding: 8px;
-          border-radius: 50%;
-          cursor: pointer;
-          font-size: 14px;
+        .product-card:hover .product__hover {
+          opacity: 1;
         }
+
+        .product__hover button {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          background: #fff;
+          color: #878787;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+          text-decoration: none;
+          transition: all 0.2s;
+        }
+
+        .product__hover button:hover {
+          transform: scale(1.1);
+        }
+
+        .product__hover button.add-to-cart {
+          color: #2874f0;
+        }
+
+        .product__hover button.wishlist-toggle:hover {
+          background: #ff6161;
+          color: #fff;
+        }
+
 
         .product-discount-badge {
           position: absolute;
@@ -254,40 +290,19 @@
         .product-card:hover .text-center h6 {
           color: #2874f0;
         }
-        
       </style>
 
+
+
+      <!-- Axios CDN -->
+      <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+      <script src="/js/main.js"></script>
+
       <script>
-        // Hero slider
-        document.addEventListener("DOMContentLoaded", () => {
-          const slides = document.querySelectorAll(".hero-slide");
-          const dotsContainer = document.querySelector(".hero-dots");
-          let currentSlide = 0, slideInterval;
-          if (!slides || slides.length === 0) return;
-          const dots = [];
-          slides.forEach((_, i) => {
-            const dot = document.createElement("span");
-            if (i === 0) dot.classList.add("active");
-            dotsContainer.appendChild(dot);
-            dot.addEventListener("click", () => showSlide(i));
-            dots.push(dot);
-          });
-          function showSlide(index) { slides.forEach((s, i) => s.classList.toggle("active", i === index)); dots.forEach((d, i) => d.classList.toggle("active", i === index)); currentSlide = index; }
-          function nextSlide() { showSlide((currentSlide + 1) % slides.length); }
-          function prevSlide() { showSlide((currentSlide - 1 + slides.length) % slides.length); }
-          document.querySelector(".hero-nav.next").addEventListener("click", nextSlide);
-          document.querySelector(".hero-nav.prev").addEventListener("click", prevSlide);
-          function autoPlay() { slideInterval = setInterval(nextSlide, 5000); }
-          document.querySelector(".hero-banner").addEventListener("mouseenter", () => clearInterval(slideInterval));
-          document.querySelector(".hero-banner").addEventListener("mouseleave", autoPlay);
-          document.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") nextSlide(); if (e.key === "ArrowLeft") prevSlide(); });
-          autoPlay();
-        });
-        // Back to top
-        const backToTop = document.querySelector('.back-to-top');
-        window.addEventListener('scroll', () => backToTop.style.display = window.scrollY > 300 ? 'flex' : 'none');
-        backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-        // Dummy cart/wishlist
-        function addToCart(id) { alert("Added product " + id + " to cart!"); }
-        function addToWishlist(id) { alert("Added product " + id + " to wishlist!"); }
+        const user = <%- user ? JSON.stringify(user) : 'null' %>;
+        const userWishlist = <%- JSON.stringify(user?.wishlists?.products || []) %>;
       </script>
+
+      <script src="/js/addTocart_WishlistCode.js"> </script>

@@ -8,6 +8,10 @@ const checkSession = async (_id) => {
   return _id ? await userSchema.findById(_id) : null;
 };
 
+function escapeRegex(s = "") {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 const loadLogin = async (req, res) => {
   try {
     res.render("adminAuth/login");
@@ -26,9 +30,9 @@ const loadForgetPage = async (req, res) => {
 
 const loadDashBoardPage = async (req, res) => {
   try {
-    const id = req.session.adminId ;
+    const id = req.session.adminId;
     const user = await userSchema.findById(id);
-    
+
     res.status(HTTP_STATUS.OK).render("Home/dashboard", {
       user,
       activePage: "dashboard",
@@ -350,6 +354,53 @@ const userLogIn = async (req, res) => {
   }
 };
 
+// Load admin management page
+const LoadAdminPage = async (req, res) => {
+  try {
+    const limit = 8;
+    const page = parseInt(req.query.page) || 1;
+    const search = escapeRegex(req.query.search || "");
+    const status = req.query.status || "all";
+
+    // Base query
+    let query = {
+      isAdmin: true,
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    // Apply status filter
+    if (status === "active") query.isBlocked = false;
+    if (status === "blocked") query.isBlocked = true;
+
+    // Fetch paginated customers
+    const customers = await userSchema
+      .find(query)
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .exec();
+
+    // Count for pagination
+    const count = await userSchema.countDocuments(query);
+    const user = await userSchema.findOne({ _id: req.session.adminId });
+
+    res.render("Home/adminList", {
+      customers,
+      user,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      search: req.query.search || "",
+      status, // ✅ pass to frontend
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
+  }
+};
+
+
 // Admin LogOut
 const logOut = async (req, res) => {
   try {
@@ -388,4 +439,5 @@ module.exports = {
   loadDashBoardPage,
   logOut,
   pageNotFound,
+  LoadAdminPage,
 };

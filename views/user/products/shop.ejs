@@ -1,8 +1,8 @@
 <%- include("../partials/user/header.ejs") %>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.0/dist/nouislider.min.css">
-
   <style>
+    
     /* ==========================
    FLIPKART/AMAZON STYLE SHOP
 ========================== */
@@ -296,7 +296,7 @@
       opacity: 1;
     }
 
-    .product__hover a {
+    .product__hover button {
       width: 36px;
       height: 36px;
       border-radius: 50%;
@@ -311,24 +311,20 @@
       transition: all 0.2s;
     }
 
-    .product__hover a:hover {
+    .product__hover button:hover {
       transform: scale(1.1);
     }
 
-    .product__hover a.wishlist-toggle {
-      color: #ff6161;
-    }
-
-    .product__hover a.add-to-cart {
+    .product__hover button.add-to-cart {
       color: #2874f0;
     }
 
-    .product__hover a.wishlist-toggle:hover {
+    .product__hover button.wishlist-toggle:hover {
       background: #ff6161;
       color: #fff;
     }
 
-    .product__hover a.add-to-cart:hover {
+    .product__hover button.add-to-cart:hover {
       background: #2874f0;
       color: #fff;
     }
@@ -563,7 +559,9 @@
         width: 100%;
       }
     }
+ 
   </style>
+
 
   <section class="shop spad">
     <div class="container">
@@ -623,7 +621,7 @@
             <div class="sidebar-section">
               <div class="sidebar-title">Price Range</div>
               <div class="price-input-wrapper">
-                <select id="minPriceSelect">
+                <select id="minPriceSelect" value="MIn">
                   <option value="0">Min</option>
                   <option value="500">₹500</option>
                   <option value="1000">₹1,000</option>
@@ -634,7 +632,7 @@
                   <option value="50000">₹50,000</option>
                 </select>
                 <span class="price-divider">to</span>
-                <select id="maxPriceSelect">
+                <select id="maxPriceSelect" value="Max">
                   <option value="100000">Max</option>
                   <option value="500">₹500</option>
                   <option value="1000">₹1,000</option>
@@ -708,23 +706,29 @@
 
                     <!-- Product Image -->
                     <div class="product__item__pic">
-                      <img src="<%= product.variants[0]?.product_image[0] || '' %>" alt="<%= product.name %>">
+                      <img
+                        src="<%= (product.variants && product.variants.length > 0 && product.variants[0].product_image.length > 0) ? product.variants[0].product_image[0] : '/images/placeholder.png' %>"
+                        alt="<%= product.name %>">
 
                       <% if(product.discountPercentage> 0){ %>
                         <div class="product__discount__percent">
                           <%= product.discountPercentage %>% OFF
                         </div>
                         <% } %>
-
                           <div class="product__hover">
-                            <a href="#" class="wishlist-toggle" data-product-id="<%= product._id %>"
-                              onclick="event.stopPropagation();">
-                              <i class="fa fa-heart"></i>
-                            </a>
-                            <a href="#" class="add-to-cart" data-product-id="<%= product._id %>"
-                              onclick="event.stopPropagation();">
+
+                            <button
+                              id="wishlist-btn-<%= product._id %>-<%= product.variants && product.variants[0]._id %>"
+                              class="wishlist-toggle" data-product-id="<%= product._id %>"
+                              data-variant-id="<%= product.variants && product.variants[0]._id %>">
+                              <i class="far fa-heart"></i>
+                            </button>
+
+                            <button class="add-to-cart" data-product-id="<%= product._id %>"
+                              data-variant-id="<%= product.variants && product.variants.length > 0 ? product.variants[0]._id : '' %>">
                               <i class="fa fa-shopping-cart"></i>
-                            </a>
+                            </button>
+
                           </div>
                     </div>
 
@@ -798,102 +802,32 @@
     </div>
   </section>
 
-  <!-- Include SweetAlert2 -->
+  <!-- jQuery first -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Axios CDN -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <!-- Owl Carousel if used -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+  <!-- WOW.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+
+  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+  <!-- Then your main.js -->
+  <script src="/js/main.js"></script>
+
+  <script src="/js/shop.js"></script>
+
   <script>
-
-    // Inject backend user safely
     const user = <%- user ? JSON.stringify(user) : 'null' %>;
-
-    // Wishlist
-    document.querySelectorAll('.wishlist-toggle').forEach(btn => {
-      btn.addEventListener('click', async function (e) {
-        e.stopPropagation();
-
-        if (!user) {
-          Swal.fire({
-            icon: 'info',
-            title: 'Please login first!',
-            timer: 1500,
-            showConfirmButton: false
-          });
-          return;
-        }
-
-        const productId = this.dataset.productId;
-        try {
-          const res = await axios.post('/shop/wishlist', { productId });
-
-          if (res.data.success) {
-            Swal.fire({
-              icon: 'success',
-              title: res.data.message || 'Wishlist updated!',
-              timer: 1200,
-              showConfirmButton: false
-            });
-            this.classList.toggle('active');
-          }else{
-            Swal.fire({
-            icon: 'error',
-            title: res.data.message || 'Wishlist updated!',
-            showConfirmButton: true,
-          }).then(() => location.reload());
-          }
-
-          // Optionally toggle the icon color
-        } catch (err) {
-          Swal.fire({
-            icon: 'error',
-            title: err.response?.data?.message || 'Something went wrong!',
-          });
-        }
-      });
-    });
-
-    // Add to Cart
-    document.querySelectorAll('.add-to-cart').forEach(btn => {
-      btn.addEventListener('click', async function (e) {
-        e.stopPropagation();
-
-        if (!user) {
-          Swal.fire({
-            icon: 'info',
-            title: 'Please login first!',
-            timer: 1500,
-            showConfirmButton: false
-          });
-          return;
-        }
-
-        const productId = this.dataset.productId;
-        try {
-          const res = await axios.post('/shop/cart/add', { productId, quantity: 1 });
-          Swal.fire({
-            icon: 'success',
-            title: res.data.message || 'Added to cart!',
-            timer: 1200,
-            showConfirmButton: false
-          });
-
-          // Optionally update cart count in navbar
-          const cartCounter = document.getElementById('cartCount');
-          if (cartCounter && res.data.cartCount !== undefined) {
-            cartCounter.innerText = res.data.cartCount;
-          }
-
-        } catch (err) {
-          Swal.fire({
-            icon: 'error',
-            title: err.response?.data?.message || 'Something went wrong!',
-          });
-        }
-      });
-    });
+    const userWishlist = <%- JSON.stringify(user?.wishlists?.products || []) %>;
   </script>
 
-
+  <script src="/js/addTocart_WishlistCode.js"></script>
 
 
   <%- include("../partials/user/footer.ejs") %>

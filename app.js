@@ -47,7 +47,10 @@ app.set("views", [
   path.join(__dirname, "views/admin"),
   path.join(__dirname, "views/partials"),
 ]);
+
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/product", express.static(path.join(__dirname, "public")));
+
 
 // -------------------- Passport -------------------- //
 app.use(passport.initialize());

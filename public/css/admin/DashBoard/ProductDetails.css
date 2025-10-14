@@ -126,11 +126,12 @@
   height: 80px;
 }
 
-.variants-table tbody tr:hover td {
+/* .variants-table tbody tr:hover td {
   padding: 15px;
   font-size: 16px;
   height: 80px;
-}
+  transform: none; 
+} */
 .variants-table tbody tr:nth-child(even) {
   background: var(--table-alt-row, #f9fafb);
 }

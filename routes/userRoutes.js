@@ -3,8 +3,10 @@ const routes = express.Router();
 const passport = require("passport");
 const userController = require("../controllers/user/userController.js");
 const checkSession = require("../middlewares/session.js");
-const DetailController = require("../controllers/user/DetailController.js");
+const DetailController = require("../controllers/user/myProfileController.js");
 const AddressController = require("../controllers/user/addressController.js");
+const wishlistController = require("../controllers/user/wishlistController.js");
+const cartController = require("../controllers/user/cartController.js");
 
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
@@ -38,8 +40,20 @@ routes.get("/logOut", checkSession.userLogOut, userController.logOut);
 
 // Home Page Route
 routes.get("/", checkSession.homeAuth, userController.loadHomePage);
+
+// Shop Page Route
 routes.get("/shop", checkSession.homeAuth, userController.loadShopPage);
-routes.post("/shop/wishlist", checkSession.isValid);
+
+// WishList Updating 
+routes.post(
+  "/shop/wishlist",
+  checkSession.isValid,
+  wishlistController.addWishlist
+);
+
+// WishList Adding 
+routes.post("/cart/add", checkSession.isValid, cartController.addToCart);
+
 
 // Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
@@ -58,7 +72,7 @@ routes.post("/upload-profile-photo", DetailController.upload_Profile_photo);
 routes.get("/profile-photo/:id", DetailController.Profile_photo);
 
 //Update Name
-routes.put("/myProfile/name", DetailController.UpdateName);
+routes.put("/update-name", DetailController.UpdateName);
 //Update Password
 routes.post("/change-password", DetailController.updatePass);
 //Update Phone number
@@ -76,13 +90,12 @@ routes
   .delete(AddressController.deleteAddress);
 
 routes
-   .route('/address-book/:id')
-    .get(AddressController.get_Details)
-    .put(AddressController.editAddress)
-
+  .route("/address-book/:id")
+  .get(AddressController.get_Details)
+  .put(AddressController.editAddress);
 
 // Product Details Page route
-routes.get("/products/Details/:id", userController.loadProductDetails);
+routes.get("/product/:id", userController.loadProductDetails);
 
 // For signUp/SignIn with Google
 routes.get(
