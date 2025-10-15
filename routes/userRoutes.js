@@ -1,12 +1,16 @@
 const express = require("express");
 const routes = express.Router();
 const passport = require("passport");
-const userController = require("../controllers/user/userController.js");
+const { query, validationResult } = require('express-validator');
 const checkSession = require("../middlewares/session.js");
+const userController = require("../controllers/user/userController.js");
 const DetailController = require("../controllers/user/myProfileController.js");
 const AddressController = require("../controllers/user/addressController.js");
 const wishlistController = require("../controllers/user/wishlistController.js");
 const cartController = require("../controllers/user/cartController.js");
+
+//user Session
+const userSession = require("../middlewares/userSession.js");
 
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
@@ -32,10 +36,10 @@ routes
 // Verify OTP Route
 routes
   .route("/verify-Otp")
-  .get(checkSession.isAuth, userController.verify_Otp)
-  .post(userController.post_Verify_Otp);
+  .get(query('redirect').notEmpty(), checkSession.isAuth, userController.verify_Otp)
+  .post(query('otp').notEmpty(),userController.post_Verify_Otp);
 
-routes.post('/resend-Otp', userController.resend_Otp);
+routes.post("/resend-Otp", userController.resend_Otp);
 
 // LogOut Route
 routes.get("/logOut", checkSession.userLogOut, userController.logOut);
@@ -46,16 +50,15 @@ routes.get("/", checkSession.homeAuth, userController.loadHomePage);
 // Shop Page Route
 routes.get("/shop", checkSession.homeAuth, userController.loadShopPage);
 
-// WishList Updating 
+// WishList Updating
 routes.post(
   "/shop/wishlist",
   checkSession.isValid,
   wishlistController.addWishlist
 );
 
-// WishList Adding 
+// WishList Adding
 routes.post("/cart/add", checkSession.isValid, cartController.addToCart);
-
 
 // Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
@@ -99,23 +102,42 @@ routes
 // Product Details Page route
 routes.get("/product/:id", userController.loadProductDetails);
 
-// For signUp/SignIn with Google
+// ==================== Google Auth ====================
+
+// Trigger Google Login
 routes.get(
   "/auth/google",
+  (req, res, next) => {
+    const redirectUrl = req.query.redirect || req.headers.referer || "/";
+    console.log("Redirect URL before Google auth:", redirectUrl);
+
+    req.session.redirectUrl = redirectUrl;
+
+    req.session.save(() => next());
+  },
   passport.authenticate("google-user", { scope: ["profile", "email"] })
 );
 
-// User Google login
+// Handle Google Callback
 routes.get(
   "/auth/google/callback",
+  (req, res, next) => {
+    // Save the redirectUrl before Passport regenerates the session
+    req.savedRedirect = req.session.redirectUrl;
+    next();
+  },
   passport.authenticate("google-user", { failureRedirect: "/signUp" }),
   (req, res) => {
-    if (req.user) {
-      req.session.userId = req.user._id;
-      return res.redirect("/?auth=success");
-    }
-    res.redirect("/signUp?error=unauthorized");
+    if (!req.user) return res.redirect("/signUp?error=unauthorized");
+
+    // Attach userId
+    req.session.userId = req.user._id;
+
+    // Use the saved redirect URL
+    const redirectTo = req.savedRedirect || "/";
+    return res.redirect(redirectTo + "?auth=success");
   }
 );
+
 
 module.exports = routes;

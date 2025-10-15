@@ -149,7 +149,8 @@ const MY_Profile = async (req, res) => {
     const page = "profile";
 
     if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).send("User not logged in");
+      req.flash("warning_msg","User not logged in");
+      return res.status(HTTP_STATUS.UNAUTHORIZED).redirect("/");
     }
 
     res.status(HTTP_STATUS.OK).render("home/myProfile", {

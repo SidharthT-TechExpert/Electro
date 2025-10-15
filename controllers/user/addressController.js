@@ -3,9 +3,8 @@ const HTTP_STATUS = require("../../config/statusCodes");
 const addressSchema = require("../../models/addressSchema");
 const axios = require("axios");
 
-
 // Check user session and fetch user
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const checkSession = async (_id) => {
   if (!_id) return null;
 
@@ -40,11 +39,14 @@ const get_Address_page = async (req, res) => {
   try {
     const user = await checkSession(req.session.userId);
 
-    if (!user) return res.redirect('/logIn')
+    if (!user) {
+      req.flash("warning_msg", "User not logged in");
+      return res.status(HTTP_STATUS.UNAUTHORIZED).redirect("/");
+    }
 
     const addresses = await addressSchema.find({ userId: user._id });
 
-    console.log(user)
+    console.log(user);
 
     res.render("home/address-book", {
       user,
@@ -182,7 +184,7 @@ const editAddress = async (req, res) => {
         pincode,
         addressType,
       },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedAddress) {

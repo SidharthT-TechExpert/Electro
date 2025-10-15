@@ -13,6 +13,7 @@ const mongoose = require("mongoose");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
 const categoryVariantFields = require("../../helpers/variant.js");
+const { query, validationResult } = require("express-validator");
 
 const checkSession = async (_id) => {
   if (!_id) return null;
@@ -433,21 +434,63 @@ const signUp = async (req, res) => {
     req.body;
 
   try {
-    // Check password match
-    if (password !== cPassword) {
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ success: false, message: "Passwords do not match!" });
-    }
-
     // Check if user already exists
     const findUser = await userSchema.findOne({ email });
     if (findUser) {
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
         info: true,
-        message: "You are already our customer. Please login!",
+        message:
+          "You’re already registered with us. Please log in to continue!",
       });
+    }
+
+    //Name Validation
+    let Pattern = /^[A-Za-z\s]{3,30}$/;
+    if (!Pattern.test(name)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        info: true,
+        message:
+          "Please check your entered Name. It must be 3–30 characters long and contain only letters and spaces.",
+      });
+    }
+
+    //Email Validation
+    Pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!Pattern.test(email)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        info: true,
+        message: "Please check your entered email. The format is invalid.",
+      });
+    }
+
+    //Phone Validation
+    Pattern = /^[6-9][0-9]{9}$/;
+    if (!Pattern.test(phone)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        info: true,
+        message: "Please enter a valid 10-digit Indian mobile number.",
+      });
+    }
+
+    //Phone Validation
+    Pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!Pattern.test(email)) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        info: true,
+        message: "Please enter a valid email address.",
+      });
+    }
+
+    // Check password match
+    if (password !== cPassword) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Passwords do not match!" });
     }
 
     // Generate OTP & send email
@@ -483,6 +526,8 @@ const signUp = async (req, res) => {
 
 // Verify page loader
 const verify_Otp = async (req, res) => {
+  const result = validationResult(req);
+if (result.isEmpty()) {
   try {
     const redirect = req.query.redirect || "/";
     res.render("auth/verify-Otp", { user: null, cartCount: null, redirect });
@@ -494,6 +539,11 @@ const verify_Otp = async (req, res) => {
     });
     res.redirect("/veriry-Otp");
   }
+}else{
+    req.flash("warning_msg", result.array()[0].msg);
+    return res.redirect("/signup"); 
+}
+ 
 };
 
 //password convert to hashed formate
@@ -508,36 +558,41 @@ const securePassword = async (password) => {
 //checking OTP & SignUp Data Saving
 const post_Verify_Otp = async (req, res) => {
   try {
-    const { otp , redirect } = req.body;
-    console.log("User enterd otp :", otp);
-    if (otp === req.session.userOtp) {
-      const user = req.session.userData;
-      const passwordHashed = await securePassword(user.password);
-      const saveUserData = new userSchema({
-        name: user.name,
-        email: user.email,
-        phone: user.phone.trim().replace(/^0+/, ""),
-        password: passwordHashed,
-      });
+    const result = validationResult(req);
+    if (result.isEmpty()) {
+      const { otp, redirect } = req.body;
+      console.log("User enterd otp :", otp);
+      if (otp === req.session.userOtp) {
+        const user = req.session.userData;
+        const passwordHashed = await securePassword(user.password);
+        const saveUserData = new userSchema({
+          name: user.name,
+          email: user.email,
+          phone: user.phone.trim().replace(/^0+/, ""),
+          password: passwordHashed,
+        });
 
-      await saveUserData.save();
+        await saveUserData.save();
 
-      req.session.userId = saveUserData._id;
+        req.session.userId = saveUserData._id;
 
-      //  Handle rememberMe with session cookie
-      if (req.session.userData.rememberMe === "true") {
-        req.session.cookie.maxAge = 24 * 60 * 60 * 1000;
+        //  Handle rememberMe with session cookie
+        if (req.session.userData.rememberMe === "true") {
+          req.session.cookie.maxAge = 24 * 60 * 60 * 1000;
+        } else {
+          req.session.cookie.expires = false; // browser close
+        }
+
+        req.flash("success_msg", "User SignUp Successfully");
+        res.json({ success: true, redirectUrl: redirect || "/" });
+        req.session.userData = null;
       } else {
-        req.session.cookie.expires = false; // browser close
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ success: false, message: "Your Enterd OTP Is Invalid!" });
       }
-
-      req.flash("success_msg", "User SignUp Successfully");
-      res.json({ success: true, redirectUrl: redirect || "/" });
-      req.session.userData = null;
-    } else {
-      res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ success: false, message: "Your Enterd OTP Is Invalid!" });
+    }else{
+        res.send({ errors: result.array() });
     }
   } catch (error) {
     console.log("Error occure in post verify otp :", error);
@@ -558,7 +613,7 @@ const resend_Otp = async (req, res) => {
     if (!email) {
       return res
         .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ success: false , message: "Email not found in session!" });
+        .json({ success: false, message: "Email not found in session!" });
     }
 
     const OTP = generateOtp();
@@ -568,9 +623,11 @@ const resend_Otp = async (req, res) => {
 
     if (emailSend) {
       console.log("Resend OTP :", OTP);
-      return res
-        .status(HTTP_STATUS.OK)
-        .json({ success: true, redirectPath , message: "OTP Resend Successfully" });
+      return res.status(HTTP_STATUS.OK).json({
+        success: true,
+        redirectPath,
+        message: "OTP Resend Successfully",
+      });
     } else {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,

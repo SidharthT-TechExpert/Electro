@@ -67,11 +67,12 @@ passwordId.addEventListener("input", () => {
 // Validation functions
 function validateName() {
   const name = nameId.value.trim();
-  const pattern = /^[A-Za-z\s]+$/;
+  const pattern = /^[A-Za-z\s]{3,30}$/;
 
   if (!pattern.test(name)) {
     nameErrorId.style.display = "inline-block";
-    nameErrorId.textContent = "Name can only contain alphabets & spaces!";
+    nameErrorId.textContent =
+      "Name must be 3 – 30 characters long and contain only letters and spaces.";
     return false;
   } else {
     nameErrorId.style.display = "none";
@@ -80,28 +81,40 @@ function validateName() {
   }
 }
 
+// Email validation
 function validateEmail() {
-  const email = emailId.value.trim();
-  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const Regexemail = emailId.value;
+  const email = Regexemail.trim();
 
+  // Check if email starts with a space
+  if (Regexemail.startsWith(' ')) {
+    emailErrorId.style.display = "inline-block";
+    emailErrorId.textContent = "❌ Email cannot start with a space. Please enter a valid email.";
+    return false;
+  }
+
+  // Regex for valid email format
+  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
   if (!pattern.test(email)) {
     emailErrorId.style.display = "inline-block";
-    emailErrorId.textContent = "Invalid email format!";
+    emailErrorId.textContent = "❌ Please enter a valid email (e.g., user@example.com).";
     return false;
-  } else {
-    emailErrorId.style.display = "none";
-    emailErrorId.textContent = "";
-    return true;
   }
+
+  // Clear error if valid
+  emailErrorId.style.display = "none";
+  emailErrorId.textContent = "";
+  return true;
 }
 
 function validatePhone() {
-  let phone = phoneId.value.trim().replace(/^0+/, "");
-  const pattern = /^[0-9]{10}$/;
+  let phone = phoneId.value.trim();
+  const pattern = /^[6-9][0-9]{9}$/;
 
   if (!pattern.test(phone)) {
     phoneErrorId.style.display = "inline-block";
-    phoneErrorId.textContent = "Enter a valid 10-digit phone number!";
+    phoneErrorId.textContent = "Enter a valid 10-digit Indian mobile number !";
     return false;
   } else {
     phoneErrorId.style.display = "none";
@@ -113,36 +126,61 @@ function validatePhone() {
 function validatePassword() {
   const password = passwordId.value.trim();
   const cPassword = cPasswordId.value.trim();
+
   const lower = /[a-z]/,
     upper = /[A-Z]/,
     digit = /\d/,
-    special = /[@$!%*?&]/;
+    special = /[@$!%*?&]/,
+    allowed = /^[A-Za-z\d@$!%*?&]+$/; 
 
-  if (password.length < 8) {
+  // No spaces
+  if (password.includes(" ")) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Password cannot contain spaces!";
+    return false;
+  }
+  // Only allowed characters
+  else if (!allowed.test(password)) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent =
+      "❌ Password contains invalid characters! Only letters, numbers, and @$!%*?& are allowed.";
+    return false;
+  }
+  // Minimum length
+  else if (password.length < 8) {
     passwordErrorId.style.display = "inline-block";
     passwordErrorId.textContent = "❌ Must be at least 8 characters!";
     return false;
-  } else if (!lower.test(password)) {
+  }
+  // Lowercase check
+  else if (!lower.test(password)) {
     passwordErrorId.style.display = "inline-block";
     passwordErrorId.textContent = "❌ Must include a lowercase letter!";
     return false;
-  } else if (!upper.test(password)) {
+  }
+  // Uppercase check
+  else if (!upper.test(password)) {
     passwordErrorId.style.display = "inline-block";
     passwordErrorId.textContent = "❌ Must include an uppercase letter!";
     return false;
-  } else if (!digit.test(password)) {
+  }
+  // Digit check
+  else if (!digit.test(password)) {
     passwordErrorId.style.display = "inline-block";
     passwordErrorId.textContent = "❌ Must include a number!";
     return false;
-  } else if (!special.test(password)) {
+  }
+  // Special character check
+  else if (!special.test(password)) {
     passwordErrorId.style.display = "inline-block";
     passwordErrorId.textContent =
       "❌ Must include a special character (@, $, !, %, *, ?, &)";
     return false;
-  } else {
-    passwordErrorId.style.display = "none";
-    passwordErrorId.textContent = "";
   }
+
+  // All validations passed
+  passwordErrorId.style.display = "none";
+  passwordErrorId.textContent = "";
 
   // Confirm password check
   if (password !== cPassword && cPassword !== "") {
@@ -163,69 +201,83 @@ phoneId.addEventListener("input", validatePhone);
 passwordId.addEventListener("input", validatePassword);
 cPasswordId.addEventListener("input", validatePassword);
 
-// Submit handler
-getId("submit").addEventListener("click", (e) => {
+//Submit Validation
+getId("submit").addEventListener("click", async (e) => {
   e.preventDefault();
+
+  const submitBtn = getId("submit");
+  submitBtn.disabled = true; // prevent double click
 
   // Run validations
   const valid =
-    validateName() && validateEmail() && validatePhone() && validatePassword();
+    validateName() &&
+    validateEmail() &&
+    validatePhone() &&
+    validatePassword();
 
   if (!valid) {
     Swal.fire({
-      icon: "error",
+      icon: "warning", 
       title: "Invalid Input",
       text: "Please fix the errors before submitting!",
+      confirmButtonColor: "#3085d6",
     });
+    submitBtn.disabled = false;
     return;
   }
 
   const data = {
     name: nameId.value.trim(),
     email: emailId.value.trim(),
-    phone: phoneId.value.trim().replace(/^0+/, ""),
+    phone: phoneId.value.trim(),
     password: passwordId.value.trim(),
     cPassword: cPasswordId.value.trim(),
     rememberMe: getId("rememberMe")?.checked || false,
   };
-  console.log(data);
 
-  const redirectPath = document.getElementById("redirectInput").value;
+  const redirectPath = getId("redirectInput").value || "/";
 
-  fetch("/signUp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({ ...data, redirect: redirectPath }),
-  })
-    .then((res) => res.json())
-    .then((response) => {
-      if (response.success) {
-        Swal.fire({
-          icon: "info",
-          title: "OTP Resent Successfully",
-          text: "Please check your email for the new OTP.",
-          showConfirmButton: false,
-          timer: 2000,
-        }).then(() => {
-          // redirect to /Verify-otp with the redirect info
-          const redirectPath = response.redirect || "/";
-          window.location.href = `/Verify-otp?redirect=${encodeURIComponent(
-            redirectPath
-          )}`;
-        });
-      } else {
-        Swal.fire({
-          icon: response.info ? 'warning' : "error",
-          title: response.info ? 'Warning' : "Error",
-          text: response.message,
-        });
-      }
-    })
-    .catch(() => {
-      Swal.fire({
-        icon: "error",
-        title: "Server Error",
-        text: "Failed to create an account. Try again!",
-      });
+  try {
+    const res = await fetch("/signUp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, redirect: redirectPath }),
     });
+
+    const response = await res.json();
+
+    if (response.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Account Validated",
+        text: "Please check your email for the OTP.",
+        showConfirmButton: false,
+        timer: 2500,
+      }).then(() => {
+        // Redirect to OTP verification page
+        const redirectUrl = response.redirect || "/";
+        window.location.href = `/Verify-otp?redirect=${encodeURIComponent(
+          redirectUrl
+        )}`;
+      });
+    } else {
+      Swal.fire({
+        icon: response.info ? "warning" : "error",
+        title: response.info ? "Warning" : "Error",
+        text: response.message,
+        confirmButtonColor: "#3085d6",
+      });
+    }
+  } catch (err) {
+    console.error("Signup failed:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Server Error",
+      text: "Failed to create an account. Try again!",
+      confirmButtonColor: "#3085d6",
+    });
+  } finally {
+    submitBtn.disabled = false; // re-enable button
+  }
 });
+

@@ -5,7 +5,8 @@
         icon: "success",
         title: "Success",
         text: "<%= msg %>",
-        timer: 2500
+        timer: 2500,
+        showConfirmButton: false
       });
     </script>
   <% }) %>
@@ -18,7 +19,7 @@
         icon: "error",
         title: "Error",
         text: "<%= msg %>",
-        showConformButton:true
+        showConfirmButton: true
       });
     </script>
   <% }) %>
@@ -31,7 +32,21 @@
         icon: "error",
         title: "Error",
         text: "<%= msg %>",
-        showConformButton:true
+        showConfirmButton: true
+      });
+    </script>
+  <% }) %>
+<% } %>
+
+<% if (warning_msg && warning_msg.length) { %>
+  <% warning_msg.forEach(msg => { %>
+    <script>
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "<%= msg %>",
+        timer: 2500,
+        showConfirmButton: false
       });
     </script>
   <% }) %>
