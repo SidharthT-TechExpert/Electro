@@ -1,4 +1,3 @@
-// app.js
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -72,7 +71,6 @@ connectDB()
 // -------------------- Routes -------------------- //
 app.use("/", userRoutes);
 app.use("/admin", adminRoutes);
-app.use("/user", userRoutes);
 
 // -------------------- Start Server -------------------- //
 const PORT = process.env.PORT || 3000;

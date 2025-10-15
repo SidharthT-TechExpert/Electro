@@ -592,7 +592,7 @@
         const titleEl = $(".product-title");
         const brandName = productData.brand?.toUpperCase() || "";
         const modelDesc = variant.description || "";
-        let html = `<span class="brand">${brandName}</span><span class="model"> ${modelDesc}</span>`;
+        let html = `<span class="brand">${brandName}</span><span class="model"> by_${modelDesc}</span>`;
         titleEl.html(html);
 
         // Price
@@ -742,7 +742,8 @@
             cancelButtonColor: '#d33'
           }).then((result) => {
             if (result.isConfirmed) {
-              window.location.href = '/login'; // Redirect to login page
+              // Redirect with return URL
+              window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
             }
           });
           return;
@@ -757,7 +758,13 @@
             addToCartBtn.html('<i class="fas fa-check"></i> GO TO CART');
             setTimeout(() => window.location.href = '/cart', 1000);
           } else {
-            throw new Error(res.data.message);
+            Swal.fire({
+              icon: 'error',
+              title: 'Add To Cart Failed!',
+              text: response.message || '',
+              showConfirmButton: true,
+              confirmButtonColor: '#d33',
+            });
           }
         } catch (err) {
           Swal.fire('Error', err.response?.data?.message || 'Failed to add product', 'error');
@@ -778,7 +785,8 @@
             cancelButtonColor: '#d33'
           }).then((result) => {
             if (result.isConfirmed) {
-              window.location.href = '/login'; // Redirect to login page
+              // Redirect with return URL
+              window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
             }
           });
           return;
@@ -806,7 +814,7 @@
           Swal.fire({
             icon: 'warning',
             title: 'Login Required',
-            text: 'Please login to add items to cart',
+            text: 'Please login to add items to Wishlist',
             showCancelButton: true,
             confirmButtonText: 'Login Now',
             cancelButtonText: 'Cancel',
@@ -814,9 +822,11 @@
             cancelButtonColor: '#d33'
           }).then((result) => {
             if (result.isConfirmed) {
-              window.location.href = '/login'; // Redirect to login page
+              // Redirect with return URL
+              window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
             }
           });
+          return;
         }
 
         try {
@@ -830,10 +840,14 @@
             String(p.variantId) === String(currentVariant._id)
           );
 
+          const wishCount = document.getElementById('wishlist-count');
+
           if (res.data.removed && index > -1) {
             userWishlist.splice(index, 1);
+            wishCount.innerHTML = res.data.wishlistCount;
           } else if (!res.data.removed && index === -1) {
             userWishlist.push({ productId: productData._id, variantId: currentVariant._id });
+            wishCount.innerHTML = res.data.wishlistCount;
           }
 
           updateWishlistState();
@@ -851,23 +865,6 @@
       console.log('🖼️ Image load error, using placeholder');
       $(this).attr('src', '/images/placeholder.png');
     });
-
-
-    // Temporary test - add this after your existing JavaScript to test the zoom
-    setTimeout(() => {
-      console.log('Testing zoom container visibility');
-      console.log('Zoom container exists:', $('#zoomPreviewContainer').length > 0);
-      console.log('Zoom container CSS:', $('#zoomPreviewContainer').css('display'));
-
-      // Manually show the zoom container for testing
-      $('#zoomPreviewContainer').addClass('active');
-      console.log('Zoom container manually activated - check if visible');
-
-      // Hide after 3 seconds
-      setTimeout(() => {
-        $('#zoomPreviewContainer').removeClass('active');
-      }, 3000);
-    }, 2000);
   </script>
 
   <%- include("../partials/user/footer.ejs") %>

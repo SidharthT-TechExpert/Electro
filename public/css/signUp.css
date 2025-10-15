@@ -107,18 +107,22 @@ body {
   transform: translateY(-2px);
 }
 
-.btn-google {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #444;
-  background: #222;
-  color: #fff;
-  transition: 0.3s;
+ .btn-google {
+  display: block;
+  width: 100% !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid #444 !important;
+  background: #222 !important;
+  color: #fff !important;
+  transition: 0.3s !important;
+  
 }
 
 .btn-google:hover {
-  background: #333;
+  background: rgb(67, 64, 64) !important;
+  color: rgb(26, 209, 13) !important;
+  transform: translateY(-5px);
 }
 
 .password-strength {

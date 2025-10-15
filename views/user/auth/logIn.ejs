@@ -1,56 +1,67 @@
 <link rel="stylesheet" href="/css/logIn.css">
 <%- include('../partials/user/header') %>
-  <%- include("../partials/user/messages") %>
-    <main class="login-wrapper">
-      <div class="login-container">
-        <!-- Left: Login Form -->
-        <div class="login-left">
-          <h2>Log in to Electro</h2>
-          <p class="subtitle">Enter your details below</p>
+<%- include("../partials/user/messages") %>
 
-          <form id="loginForm">
-            <div class="form-group">
-              <input type="text" name="email" id="email" required>
-              <label for="email">Email Address</label>
-              <i class="fas fa-envelope"></i>
-              <span id="emailError" class="login-error"></span>
-            </div>
+<main class="login-wrapper">
+  <div class="login-container">
+    <!-- Left: Login Form -->
+    <div class="login-left">
+      <h2>Log in to Electro</h2>
 
-            <div class="form-group">
-              <input type="password" name="password" id="password" required>
-              <label for="password">Password</label>
-              <i class="fas fa-eye toggle-password" data-target="password"></i>
-              <span id="passwordError" class="login-error"></span>
-            </div>
+      <!-- Hidden input to store redirect -->
+      <input type="hidden" id="redirectInput" value="<%= redirect || '' %>">
 
-            <!-- Remember + Forgot -->
-            <div class="options">
-              <label><input id="rememberMe" type="checkbox" name="RememberMe"> Remember Me</label>
-              <a href="/forgetPass">Forget Password?</a>
-            </div>
+      <p class="subtitle">Enter your details below</p>
 
-            <!-- Buttons -->
-            <button id="submit" class="btn-main">Log In</button>
-            <a href="/auth/google" type="button" class="btn-google">
-              <i class="fab fa-google"></i> Sign in with Google
-            </a>
-            <!-- Signup Redirect -->
-            <div class="signup-link">
-              <a href="/signup">Create an account ?</a>
-            </div>
-          </form>
+      <form id="loginForm">
+        <div class="form-group">
+          <input type="text" name="email" id="email" required>
+          <label for="email">Email Address</label>
+          <i class="fas fa-envelope"></i>
+          <span id="emailError" class="login-error"></span>
         </div>
 
-        <!-- Right: Promo Banner -->
-        <div class="login-right">
-          <div class="promo-card">
-            <h3>Welcome Back!</h3>
-            <p>Access your account and enjoy exclusive <b>member-only offers</b>.</p>
-            <img src="/img/Banner2.jpg" alt="Promo Banner">
-          </div>
+        <div class="form-group">
+          <input type="password" name="password" id="password" required>
+          <label for="password">Password</label>
+          <i class="fas fa-eye toggle-password" data-target="password"></i>
+          <span id="passwordError" class="login-error"></span>
         </div>
+
+        <!-- Remember + Forgot -->
+        <div class="options">
+          <label>
+            <input id="rememberMe" type="checkbox" name="RememberMe"> Remember Me
+          </label>
+          <a href="<%= redirect ? '/forgetPass?redirect=' + encodeURIComponent(redirect) : '/forgetPass' %>">Forget Password?</a>
+        </div>
+
+        <!-- Buttons -->
+        <button id="submit" class="btn-main">Log In</button>
+
+        <a href="<%= redirect ? '/auth/google?redirect=' + encodeURIComponent(redirect) : '/auth/google' %>" class="btn-google">
+          <i class="fab fa-google"></i> Sign in with Google
+        </a>
+
+        <!-- Signup Redirect -->
+        <div class="signup-link">
+          <a href="<%= redirect ? '/signup?redirect=' + encodeURIComponent(redirect) : '/signup' %>">
+            Create an account?
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right: Promo Banner -->
+    <div class="login-right">
+      <div class="promo-card">
+        <h3>Welcome Back!</h3>
+        <p>Access your account and enjoy exclusive <b>member-only offers</b>.</p>
+        <img src="/img/Banner2.jpg" alt="Promo Banner">
       </div>
-    </main>
+    </div>
+  </div>
+</main>
 
-    <%- include('../partials/user/footer') %>
-      <script src="js/logIn.js"></script>
+<%- include('../partials/user/footer') %>
+<script src="/js/logIn.js"></script>

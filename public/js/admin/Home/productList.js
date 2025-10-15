@@ -260,23 +260,36 @@ function addImg(variantId) {
     confirmButtonText: "Upload",
     didOpen: () => {
       const fileInput = document.getElementById("swalImageFile");
+
       fileInput.addEventListener("change", () => {
         const file = fileInput.files[0];
         if (!file) return;
+
+        // ✅ Validate file type before reading
+        if (!file.type.startsWith("image/")) {
+          Swal.showValidationMessage("Please select a valid image file!");
+          return;
+        }
 
         const reader = new FileReader();
         reader.onload = () => {
           const previewDiv = document.getElementById("swalImagePreview");
           const img = document.getElementById("swalPreviewImg");
+
           previewDiv.style.display = "block";
           img.src = reader.result;
-          if (cropper) cropper.destroy();
-          cropper = new Cropper(img, {
-            aspectRatio: NaN,
-            viewMode: 2,
-            autoCropArea: 1,
-          });
+
+          // ✅ Wait for image to finish loading before creating cropper
+          img.onload = () => {
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(img, {
+              aspectRatio: NaN,
+              viewMode: 2,
+              autoCropArea: 1,
+            });
+          };
         };
+
         reader.readAsDataURL(file);
       });
     },
@@ -287,10 +300,18 @@ function addImg(variantId) {
       }
 
       return new Promise((resolve, reject) => {
-        cropper.getCroppedCanvas().toBlob(async (blob) => {
+        const croppedCanvas = cropper.getCroppedCanvas();
+        if (!croppedCanvas) {
+          Swal.showValidationMessage("Please crop the image before uploading!");
+          reject("Cropper canvas not ready");
+          return;
+        }
+
+        croppedCanvas.toBlob(async (blob) => {
           try {
             const fd = new FormData();
             fd.append("image", blob, "variant.jpg");
+
             const res = await fetch(
               `/admin/products/variants/${currentVariantId}/images`,
               {
@@ -299,6 +320,7 @@ function addImg(variantId) {
               }
             );
             const json = await res.json();
+
             if (json.success) resolve(json);
             else reject(json.message);
           } catch (err) {
@@ -307,7 +329,8 @@ function addImg(variantId) {
         }, "image/jpeg");
       });
     },
-  }).then((result) => {
+  })
+    .then((result) => {
       if (result.isConfirmed) {
         if (result.success)
           Swal.fire({
@@ -319,7 +342,7 @@ function addImg(variantId) {
         else
           Swal.fire({
             icon: "error",
-            title:result.data.message,
+            title: result.data.message,
             showConfirmButton: true,
             confirmButtonText: "OK",
           });

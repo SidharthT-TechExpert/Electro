@@ -188,11 +188,14 @@ getId("submit").addEventListener("click", (e) => {
     cPassword: cPasswordId.value.trim(),
     rememberMe: getId("rememberMe")?.checked || false,
   };
-console.log(data)
+  console.log(data);
+
+  const redirectPath = document.getElementById("redirectInput").value;
+
   fetch("/signUp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+     body: JSON.stringify({ ...data, redirect: redirectPath }),
   })
     .then((res) => res.json())
     .then((response) => {
@@ -204,12 +207,16 @@ console.log(data)
           showConfirmButton: false,
           timer: 2000,
         }).then(() => {
-          window.location.href = "/Verify-otp";
+          // redirect to /Verify-otp with the redirect info
+          const redirectPath = response.redirect || "/";
+          window.location.href = `/Verify-otp?redirect=${encodeURIComponent(
+            redirectPath
+          )}`;
         });
       } else {
         Swal.fire({
-          icon: "error",
-          title: "Error",
+          icon: response.info ? 'warning' : "error",
+          title: response.info ? 'Warning' : "Error",
           text: response.message,
         });
       }

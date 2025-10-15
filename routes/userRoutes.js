@@ -35,6 +35,8 @@ routes
   .get(checkSession.isAuth, userController.verify_Otp)
   .post(userController.post_Verify_Otp);
 
+routes.post('/resend-Otp', userController.resend_Otp);
+
 // LogOut Route
 routes.get("/logOut", checkSession.userLogOut, userController.logOut);
 

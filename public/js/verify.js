@@ -1,3 +1,4 @@
+
 (function () {
   const otpInputs = [...document.querySelectorAll(".rc-otp")],
     otpError = document.getElementById("otpError"),
@@ -5,6 +6,7 @@
     timerText = document.getElementById("timerText"),
     resendBtn = document.getElementById("resendBtn"),
     submitBtn = document.getElementById("verifyOtpBtn");
+    redirectPath = document.getElementById("redirectInput").value;
 
   let timer = null,
     DURATION = 30, // ⏳ change duration if needed
@@ -19,7 +21,7 @@
     $.ajax({
       type: "POST",
       url: "/verify-Otp",
-      data: { otp },
+      data: { otp , redirect : redirectPath },
       success: function (response) {
         if (response.success) {
           Swal.fire({
@@ -27,7 +29,9 @@
             title: "OTP Verified Successfully",
             showConfirmButton: false,
             timer: 1500,
-          }).then(() => {
+          }).then(async() => {
+            console.log(response.redirectUrl)
+ await new Promise(resolve => setTimeout(resolve,5000))
             window.location.href = response.redirectUrl;
           });
         } else {
@@ -38,11 +42,27 @@
           });
         }
       },
-      error: function () {
+      error: function (jqXHR, textStatus, errorThrown) {
+        // show nicer message but also log details for debugging
+        console.error(" OTP Verification failed:", {
+          status: jqXHR.status,
+          statusText: jqXHR.statusText,
+          responseText: jqXHR.responseText,
+          responseJSON: jqXHR.responseJSON,
+          textStatus,
+          errorThrown,
+        });
+
+        // try to surface any server-sent message
+        const serverMsg =
+          (jqXHR.responseJSON && jqXHR.responseJSON.message) ||
+          (jqXHR.responseText && jqXHR.responseText) ||
+          "Failed to OTP Verification . Try again!";
+
         Swal.fire({
           icon: "error",
-          title: "Invalid OTP ?",
-          text: "Please Try Again!",
+          title: "Server Error",
+          text: serverMsg,
         });
       },
     });
@@ -107,10 +127,12 @@
   });
 
   // --- Resend ---
+  
   window.Resend = function () {
     $.ajax({
       type: "POST",
       url: "/resend-Otp",
+      data: { redirectPath },
       success: function (response) {
         if (response.success) {
           Swal.fire({
@@ -131,11 +153,27 @@
           });
         }
       },
-      error: function () {
+      error: function (jqXHR, textStatus, errorThrown) {
+        // show nicer message but also log details for debugging
+        console.error("Resend OTP failed:", {
+          status: jqXHR.status,
+          statusText: jqXHR.statusText,
+          responseText: jqXHR.responseText,
+          responseJSON: jqXHR.responseJSON,
+          textStatus,
+          errorThrown,
+        });
+
+        // try to surface any server-sent message
+        const serverMsg =
+          (jqXHR.responseJSON && jqXHR.responseJSON.message) ||
+          (jqXHR.responseText && jqXHR.responseText) ||
+          "Failed to resend OTP. Try again!";
+
         Swal.fire({
           icon: "error",
           title: "Server Error",
-          text: "Failed to resend OTP. Try again!",
+          text: serverMsg,
         });
       },
     });

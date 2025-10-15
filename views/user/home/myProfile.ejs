@@ -72,7 +72,14 @@
             </div>
           </section>
       </div>
+      <session>
+        <div id="previewBox">
+
+        </div>
+      </session>
+
     </main>
+
 
     <%- include("../partials/user/footer") %>
 
@@ -108,6 +115,20 @@
 
         .btn-danger:hover {
           background: #c92c3d;
+        }
+
+        #previewBox {
+          position: absolute;
+          right: 450px;
+          top: 200px;
+          background-color: rgb(255, 255, 255);
+          width: 250px;
+          height: 250px;
+          display: none;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+          border-radius: 10px;
         }
       </style>
 
@@ -526,5 +547,30 @@
             Swal.fire("⚠️ Error", "Something went wrong. Please try again.", "error");
           }
         }
+
+        const previewBtn = document.getElementById('profilePreview');
+        const box = document.getElementById('previewBox');
+
+        previewBtn.addEventListener('click', (event) => {
+          // Prevent immediate closing when clicking the button
+          event.stopPropagation();
+
+          if (box.style.display === "none" || box.style.display === "") {
+            box.innerHTML = `<img src="<%= user.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/uploads/img/user.png' %>" 
+                      style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`;
+            box.style.display = "flex";
+          }
+        });
+
+        // Close when clicking anywhere outside the box
+        document.addEventListener('click', (event) => {
+          const isClickInsideBox = box.contains(event.target);
+          const isClickOnButton = event.target === previewBtn;
+
+          if (!isClickInsideBox && !isClickOnButton) {
+            box.style.display = "none";
+          }
+        });
+
 
       </script>

@@ -323,8 +323,10 @@ const pageNotFound = async (req, res) => {
 // Sign Up Page Loader
 const loadSignUpPage = async (req, res) => {
   try {
+    const redirect = req.query.redirect || "/";
     res.status(HTTP_STATUS.OK).render("auth/signUp", {
       user: null,
+      redirect,
       cartCount: null,
     });
   } catch (error) {
@@ -336,8 +338,10 @@ const loadSignUpPage = async (req, res) => {
 // Log In Page Loader
 const loadLogInPage = async (req, res) => {
   try {
+    const redirect = req.query.redirect || "/";
     res.status(HTTP_STATUS.OK).render("auth/logIn", {
       user: null,
+      redirect,
       cartCount: null,
     });
   } catch (error) {
@@ -423,9 +427,10 @@ If you didn’t request this, just ignore this message.
   }
 };
 
-// SignUp
+// SignUp Post
 const signUp = async (req, res) => {
-  const { name, email, phone, password, cPassword, rememberMe } = req.body;
+  const { name, email, phone, password, cPassword, rememberMe, redirect } =
+    req.body;
 
   try {
     // Check password match
@@ -440,6 +445,7 @@ const signUp = async (req, res) => {
     if (findUser) {
       return res.status(HTTP_STATUS.CONFLICT).json({
         success: false,
+        info: true,
         message: "You are already our customer. Please login!",
       });
     }
@@ -463,6 +469,7 @@ const signUp = async (req, res) => {
     // ✅ Final response — only one
     return res.status(HTTP_STATUS.OK).json({
       success: true,
+      redirect,
       message: "OTP sent successfully! Please verify.",
     });
   } catch (error) {
@@ -477,7 +484,8 @@ const signUp = async (req, res) => {
 // Verify page loader
 const verify_Otp = async (req, res) => {
   try {
-    res.render("auth/verify-Otp", { user: null, cartCount: null });
+    const redirect = req.query.redirect || "/";
+    res.render("auth/verify-Otp", { user: null, cartCount: null, redirect });
   } catch (error) {
     console.error("Error Verify otp page loder : ", error);
     res.send(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -497,10 +505,10 @@ const securePassword = async (password) => {
   }
 };
 
-//checking OTP
+//checking OTP & SignUp Data Saving
 const post_Verify_Otp = async (req, res) => {
   try {
-    const { otp } = req.body;
+    const { otp , redirect } = req.body;
     console.log("User enterd otp :", otp);
     if (otp === req.session.userOtp) {
       const user = req.session.userData;
@@ -524,7 +532,7 @@ const post_Verify_Otp = async (req, res) => {
       }
 
       req.flash("success_msg", "User SignUp Successfully");
-      res.json({ success: true, redirectUrl: "/" });
+      res.json({ success: true, redirectUrl: redirect || "/" });
       req.session.userData = null;
     } else {
       res
@@ -543,13 +551,14 @@ const post_Verify_Otp = async (req, res) => {
 // Resend OTP
 const resend_Otp = async (req, res) => {
   try {
-    const email = req.session.email;
+    const email = req.session.userData.email;
+    const { redirectPath } = req.body;
     console.log(email);
 
     if (!email) {
       return res
         .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ success: false, message: "Email not found in session!" });
+        .json({ success: false , message: "Email not found in session!" });
     }
 
     const OTP = generateOtp();
@@ -561,7 +570,7 @@ const resend_Otp = async (req, res) => {
       console.log("Resend OTP :", OTP);
       return res
         .status(HTTP_STATUS.OK)
-        .json({ success: true, message: "OTP Resend Successfully" });
+        .json({ success: true, redirectPath , message: "OTP Resend Successfully" });
     } else {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -627,9 +636,11 @@ const userLogIn = async (req, res) => {
 
     req.session.userId = user._id;
 
-    return res
-      .status(HTTP_STATUS.OK)
-      .json({ success: true, message: "Login successful" });
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "Login successful",
+      redirect: req.body.redirect || "/",
+    });
   } catch (error) {
     console.log("user Login verification Error :", error);
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -1239,7 +1250,7 @@ const loadProductDetails = async (req, res) => {
 
     const categoryFields = categoryVariant[product?.category[0]?.name || ""];
 
-    console.log(product.variants , user);
+    console.log(product.variants, user);
 
     res.status(HTTP_STATUS.OK).render("products/detailsPage", {
       user,

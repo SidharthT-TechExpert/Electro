@@ -12,7 +12,7 @@ const productSchema = new Schema(
     price: { type: Number, required: true },
     
     Images: { type: [String] },
-
+    isDeleted:{type:Boolean , default:false},
     isBlocked: { type: Boolean, default: false },
     status: {
       type: String,

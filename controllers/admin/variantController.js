@@ -132,7 +132,13 @@ const editVariants = async (req, res) => {
 const deleteVariants = async (req, res) => {
   try {
     const { id } = req.params;
-    const variant = await variantSchema.findById(id);
+
+    // Find and update in one go
+    const variant = await variantSchema.findByIdAndUpdate(
+      id,
+      { isDeleted: true },
+      { new: true } // return the updated document
+    );
 
     if (!variant) {
       return res
@@ -140,18 +146,9 @@ const deleteVariants = async (req, res) => {
         .json({ success: false, message: "Variant not found" });
     }
 
-    // Delete associated image files
-    if (variant.product_image && variant.product_image.length > 0) {
-      for (const imageUrl of variant.product_image) {
-      }
-    }
-
-    // Delete the variant
-    await variantSchema.findByIdAndDelete(id);
-
-    res.json({
+    res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: "Variant and associated images deleted successfully",
+      message: "Variant soft deleted successfully",
       variant,
     });
   } catch (err) {
@@ -176,6 +173,7 @@ const uploadVariantImage = async (req, res) => {
         .json({ success: false, message: "Variant not found" });
     }
 
+    //Check img uploded validation
     if (variant.product_image && variant.product_image.length >= 6) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -183,20 +181,22 @@ const uploadVariantImage = async (req, res) => {
       });
     }
 
-    // Multer upload
+    // Multer upload File
     upload.single("image")(req, res, async (err) => {
       if (err) {
         return res
           .status(HTTP_STATUS.BAD_REQUEST)
           .json({ success: false, message: err.message });
       }
-
+      
+      //File Validation
       if (!req.file) {
         return res
           .status(HTTP_STATUS.BAD_REQUEST)
           .json({ success: false, message: "No image file provided" });
       }
 
+      // File Type Validation
       if (!req.file.mimetype.startsWith("image/")) {
         return res
           .status(HTTP_STATUS.BAD_REQUEST)

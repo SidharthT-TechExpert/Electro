@@ -74,67 +74,43 @@ getId("submit").addEventListener("click", (e) => {
     rememberMe = rememberMeId.checked;
 
   // AJAX request
-  $.ajax({
-    type: "POST",
-    url: "/logIn",
-    data: { email, password, rememberMe },
-    success: function (response) {
-      if(response.blocked){
-        return Swal.fire({
-          icon: "info",
-          title: "User Blocked!",
-          text: response.message,
-          showConfirmButton: true,
-        })
-      }
+  const redirectPath = document.getElementById("redirectInput").value;
 
+  $.ajax({
+    url: "/logIn",
+    type: "POST",
+    data: {
+      email,
+      password,
+      rememberMe,
+      redirect: redirectPath,
+    },
+    success: function (response) {
       if (response.success) {
         Swal.fire({
           icon: "success",
-          title: "Login Successful!",
-          text: response.message,
+          title: "Logged in Successfully!",
           showConfirmButton: false,
-          timer: 2000,
+          timer: 1200,
         }).then(() => {
-          window.location.href = "/";
-        });
-      } else if (response.authType === "google") {
-        Swal.fire({
-          icon: "info",
-          title: "Login Failed!",
-          text: response.message,
-          showConfirmButton: true,
-        }).then(() => {
-          Swal.fire({
-            icon: "question",
-            title: "Redirect to Google Login?",
-            text: "Do you want to continue with Google?",
-            showConfirmButton: true,
-            showCancelButton: true,
-          }).then((res) => {
-            if (res.isConfirmed) {
-              window.location.href = "/auth/google";
-            }
-          });
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: response.message,
+          // Show overlay
+          const overlay = document.createElement("div");
+          overlay.style.position = "fixed";
+          overlay.style.top = "0";
+          overlay.style.left = "0";
+          overlay.style.width = "100%";
+          overlay.style.height = "100%";
+          overlay.style.background = "#fff";
+          overlay.style.zIndex = "9999";
+          overlay.style.opacity = "0";
+          overlay.style.transition = "opacity 0.5s";
+          document.body.appendChild(overlay);
+
+          // Fade in overlay then redirect
+          requestAnimationFrame(() => (overlay.style.opacity = "1"));
+          setTimeout(() => (window.location.href = response.redirect || "/"), 500);
         });
       }
-    },
-    error: function (xhr) {
-      let msg = "Failed to log in. Please try again later!";
-      if (xhr.responseJSON && xhr.responseJSON.message) {
-        msg = xhr.responseJSON.message;
-      }
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: msg,
-      });
     },
   });
 });
