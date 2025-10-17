@@ -137,3 +137,11 @@
 .toggle-pass:hover {
   color: #333;
 }
+
+
+
+.login-error {
+  color: red;
+  font-size: 0.75rem;
+  display: none;
+}

@@ -1,18 +1,18 @@
-
 (function () {
   const otpInputs = [...document.querySelectorAll(".rc-otp")],
     otpError = document.getElementById("otpError"),
     timerFill = document.getElementById("timerFill"),
     timerText = document.getElementById("timerText"),
     resendBtn = document.getElementById("resendBtn"),
-    submitBtn = document.getElementById("verifyOtpBtn");
-    redirectPath = document.getElementById("redirectInput").value;
+    submitBtn = document.getElementById("verifyOtpBtn"),
+    redirectInput = document.getElementById("redirectInput");
 
-  let timer = null,
-    DURATION = 30, // ⏳ change duration if needed
-    remaining = DURATION;
+  const redirectPath = redirectInput?.value || "/";
+  let timer = null;
+  const DURATION = 30; // ⏳ change duration if needed
+  let remaining = DURATION;
 
-  // --- Verify OTP AJAX ---
+  // --- Verify OTP AJAX
   function verifyOTP() {
     const otp = otpInputs.map((i) => i.value).join("");
     if (otp.length < 6) return; // require full 6 digits
@@ -21,7 +21,7 @@
     $.ajax({
       type: "POST",
       url: "/verify-Otp",
-      data: { otp , redirect : redirectPath },
+      data: { otp, redirect: redirectPath },
       success: function (response) {
         if (response.success) {
           Swal.fire({
@@ -29,22 +29,22 @@
             title: "OTP Verified Successfully",
             showConfirmButton: false,
             timer: 1500,
-          }).then(async() => {
-            console.log(response.redirectUrl)
- await new Promise(resolve => setTimeout(resolve,5000))
-            window.location.href = response.redirectUrl;
+          }).then(() => {
+            // Use encodeURIComponent to safely encode the redirect URL
+            const redirectUrl = response.redirectUrl || "/";
+            const encodedUrl = encodeURIComponent(redirectUrl);
+            window.location.href = `/logIn/?redirect=${encodedUrl}`;
           });
         } else {
           Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: response.message,
+            icon: "Warning",
+            title: "Warning",
+            text: response.message || "Invalid OTP!",
           });
         }
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        // show nicer message but also log details for debugging
-        console.error(" OTP Verification failed:", {
+        console.error("OTP Verification failed:", {
           status: jqXHR.status,
           statusText: jqXHR.statusText,
           responseText: jqXHR.responseText,
@@ -53,11 +53,10 @@
           errorThrown,
         });
 
-        // try to surface any server-sent message
         const serverMsg =
           (jqXHR.responseJSON && jqXHR.responseJSON.message) ||
           (jqXHR.responseText && jqXHR.responseText) ||
-          "Failed to OTP Verification . Try again!";
+          "Failed to verify OTP. Try again!";
 
         Swal.fire({
           icon: "error",
@@ -105,6 +104,7 @@
     timerFill.style.width = "100%";
     timerText.textContent = `⏳ ${remaining}s`;
     resendBtn.style.display = "none";
+    resendBtn.disabled = true;
 
     timer = setInterval(() => {
       remaining--;
@@ -115,7 +115,7 @@
       if (remaining <= 0) {
         clearInterval(timer);
         resendBtn.style.display = "block";
-        resendBtn.style.color = "#ffb08a";
+        resendBtn.disabled = false;
       }
     }, 1000);
   }
@@ -126,13 +126,14 @@
     verifyOTP();
   });
 
-  // --- Resend ---
-  
+  // --- Resend OTP ---
   window.Resend = function () {
+    resendBtn.disabled = true;
+
     $.ajax({
       type: "POST",
       url: "/resend-Otp",
-      data: { redirectPath },
+      data: { redirect: redirectPath }, // ✅ use 'redirect' for backend consistency
       success: function (response) {
         if (response.success) {
           Swal.fire({
@@ -147,14 +148,14 @@
           startTimer();
         } else {
           Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: response.message,
+            icon: "Warring",
+            title: "Warring",
+            text: response.message || "Unable to resend OTP.",
           });
+          resendBtn.disabled = false;
         }
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        // show nicer message but also log details for debugging
         console.error("Resend OTP failed:", {
           status: jqXHR.status,
           statusText: jqXHR.statusText,
@@ -164,7 +165,6 @@
           errorThrown,
         });
 
-        // try to surface any server-sent message
         const serverMsg =
           (jqXHR.responseJSON && jqXHR.responseJSON.message) ||
           (jqXHR.responseText && jqXHR.responseText) ||
@@ -175,8 +175,11 @@
           title: "Server Error",
           text: serverMsg,
         });
+
+        resendBtn.disabled = false; // re-enable on error
       },
     });
+
     return false;
   };
 

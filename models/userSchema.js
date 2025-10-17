@@ -12,12 +12,18 @@ const userSchema = new Schema({
   cart: [{ type: Schema.Types.ObjectId, ref: "Cart" }],
   wallet: [{ type: Schema.Types.ObjectId, ref: "Wallet" }],
   orderHistory: [{ type: Schema.Types.ObjectId, ref: "Order" }],
-  addresses:[{type:Schema.Types.ObjectId,ref:'address'}],
+  addresses: [{ type: Schema.Types.ObjectId, ref: "address" }],
   createdOn: { type: Date, default: Date.now },
-  referalCode: { type: String },
+  myReferalCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    uppercase: true,
+  },
+  referalCode: { type: String, trim: true, uppercase: true, default: null },
   redeemed: { type: Boolean, default: false },
   redeemedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  rememberMe: { type: Boolean, default: false },
   searchHistory: [
     {
       category: { type: Schema.Types.ObjectId, ref: "Category" },

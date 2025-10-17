@@ -40,7 +40,7 @@
           <!-- Submit -->
           <button type="submit" id="submit" class="btn-admin">Login</button>
         </form>
-        <a href="/admin/auth/google" type="button" class="btn-google">
+        <a href="/auth/google-admin" type="button" class="btn-google">
           <i class="fab fa-google"></i> Sign in with Google
         </a>
       </div>
@@ -55,4 +55,18 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/admin/login.js"></script>
+
+  <% if (error && error.length) { %>
+    <% error.forEach(msg=> { %>
+      <script>
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "<%= msg %>",
+          timer: 3000
+        });
+      </script>
+      <% }) %>
+  <% } %>

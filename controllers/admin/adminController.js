@@ -330,11 +330,16 @@ const userLogIn = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    // Handle rememberMe with session cookie
-    if (rememberMe === "true") {
+    if (rememberMe) {
+      // Persistent session — lasts 1 day
       req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
+      req.session.cookie.expires = new Date(
+        Date.now() + req.session.cookie.maxAge
+      );
     } else {
-      req.session.cookie.expires = false; // expires on browser close
+      // Browser-close session — cookie cleared when browser closes
+      req.session.cookie.expires = false;
+      delete req.session.cookie.maxAge;
     }
 
     req.session.adminId = user._id;
@@ -399,7 +404,6 @@ const LoadAdminPage = async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
-
 
 // Admin LogOut
 const logOut = async (req, res) => {

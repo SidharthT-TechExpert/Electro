@@ -12,6 +12,19 @@
   <% }) %>
 <% } %>
 
+<% if (error && error.length) { %>
+  <% error.forEach(msg => { %>
+    <script>
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: "<%= msg %>",
+        timer: 3000
+      });
+    </script>
+  <% }) %>
+<% } %>
+
 <% if (error_msg && error_msg.length) { %>
   <% error_msg.forEach(msg => { %>
     <script>

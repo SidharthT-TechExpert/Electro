@@ -149,7 +149,7 @@ const MY_Profile = async (req, res) => {
     const page = "profile";
 
     if (!user) {
-      req.flash("warning_msg","User not logged in");
+      req.flash("warning_msg", "User not logged in");
       return res.status(HTTP_STATUS.UNAUTHORIZED).redirect("/");
     }
 
@@ -312,7 +312,7 @@ const verify_Otp = async (req, res) => {
   }
 };
 
-// 📧 Send Email OTP
+// Send Email OTP
 const send_Email_otp = async (req, res) => {
   try {
     const { email, id } = req.body;
@@ -461,7 +461,9 @@ const upload_Profile_photo = (req, res) => {
       readStream
         .pipe(uploadStream)
         .on("error", () =>
-          res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Upload failed" })
+          res
+            .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+            .json({ success: false, message: "Upload failed" })
         )
         .on("finish", async () => {
           // 4️⃣ Save new fileId to user profile
@@ -476,7 +478,9 @@ const upload_Profile_photo = (req, res) => {
         });
     } catch (error) {
       console.error(error);
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "Server error" });
     }
   });
 };
@@ -500,6 +504,55 @@ const Profile_photo = async (req, res) => {
   }
 };
 
+// Delete profile photo
+const deleteProfile_photo = async (req, res) => {
+  try {
+    if (!req.body.deletePhoto) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No delete request received." });
+    }
+
+    if (!gfs) {
+      return res.status(503).json({
+        success: false,
+        message: "Server not ready. Try again later.",
+      });
+    }
+
+    const user = await User.findById(req.session.userId); // Mongoose document
+
+    if (!user || !user?.profilePhoto) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No profile photo found." });
+    }
+
+    // Delete file from GridFS first
+    const fileId = new mongoose.Types.ObjectId(user.profilePhoto);
+
+    user.profilePhoto = null;
+    await user.save(); // await is important
+
+    console.log(user);
+
+    gfs.delete(fileId, async (err) => {
+      if (err)
+        return res
+          .status(500)
+          .json({ message: "Error deleting file", error: err });
+    });
+
+    res.json({
+      success: true,
+      message: "Profile photo deleted and MongoDB updated.",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 module.exports = {
   MY_Profile,
   UpdateName,
@@ -510,4 +563,5 @@ module.exports = {
   verify_Email_Otp,
   Profile_photo,
   upload_Profile_photo,
+  deleteProfile_photo,
 };

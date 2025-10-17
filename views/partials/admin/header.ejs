@@ -1,3 +1,4 @@
+  <%- include("../partials/user/messages") %>
 <!-- Header -->
 <header class="electro-header d-flex align-items-center justify-content-between px-3">
   <!-- Left Section -->
@@ -43,7 +44,7 @@
       <a href="#" class="d-flex align-items-center" id="profileDropdown" data-bs-toggle="dropdown"
         aria-expanded="false">
         <img id="profilePreview"
-          src="<%= user.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/Uploads/img/default-avatar.png' %>"
+          src="<%= user?.profilePhoto ? '/profile-photo/' + user.profilePhoto : '/uploads/img/user.png' %>"
           alt="Profile Photo" class="rounded-circle border" width="40" height="40" style="object-fit: cover;">
       </a>
       <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">

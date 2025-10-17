@@ -32,6 +32,7 @@
     "nodemon": "^3.1.10",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "twilio": "^5.10.2"
+    "twilio": "^5.10.2",
+    "uuid": "^13.0.0"
   }
 }

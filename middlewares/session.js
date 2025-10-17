@@ -1,41 +1,40 @@
 const userSchema = require("../models/userSchema");
 
-const homeAuth = async (req, res, next) => {
+const isSession = async (req, res, next) => {
   try {
-    // case: both user and admin session exist => conflict
-    if (req.session.userId && req.session.adminId) {
-      req.flash("error_msg", "Conflict detected. Please log in again.");
+    // Conflict: both user & admin sessions
+    if (req.session?.userId && req.session?.adminId) {
+      req.flash("warning_msg", "Conflict detected. Please log in again.");
       req.session.userId = null;
       req.session.adminId = null;
-      res.redirect("/");
-      return;
+      return res.redirect("/"); // return prevents further execution
     }
 
-    // Pick whichever session exists
+    // Check user session first
     const sessionId = req.session?.userId;
-
     if (sessionId) {
       const user = await userSchema.findById(sessionId);
 
-      if (!user) next();
-
-      if (user.isBlocked) {
-        req.flash("error_msg", "Blocked User. Please contact Customer Care!");
-        req.session.userId = null;
-        res.redirect("/login");
-        return;
+      if (!user) {
+        return next(); // no user found → continue
       }
 
-      // All good
-      next();
-    } else {
-      // no session at all
-      next();
+      if (user.isBlocked) {
+        req.flash("warning_msg", "Blocked User. Please contact Customer Care!");
+        req.session.userId = null;
+        return res.redirect("/login"); // return prevents double headers
+      }
+
+      // All good → proceed To Home
+      return res.redirect('/'); // instead of res.redirect("/"), just allow route handler to continue
     }
+
+    // No session at all → continue To Login or SignUp
+    return next();
   } catch (err) {
     console.error("Auth error:", err);
     req.flash("error_msg", "Something went wrong. Please login again.");
-    res.redirect("/logIn");
+    return res.redirect("/login"); // always return after redirect
   }
 };
 
@@ -43,18 +42,18 @@ const isAuth = async (req, res, next) => {
   if (req.session && req.session.userId) {
     userSchema.findById(req.session.userId).then((data) => {
       if (data && !data.isBlocked) {
-         next();
+        next();
       } else {
         req.session.destroy();
-        console.log("Error :")
+        console.log("Error :");
         res.json({
           success: false,
-          blocked:true,
+          blocked: true,
           message: "Blocked User , You must Contact With Our costomer care!",
         });
       }
     });
-  }else{
+  } else {
     next();
   }
 };
@@ -79,7 +78,7 @@ const userLogOut = (req, res, next) => {
   if (req.session && req.session.userId) {
     next();
   } else {
-    req.flash("error_msg", "Session Expired!");
+    req.flash("warning_msg", "Session Expired!");
     res.redirect("/");
   }
 };
@@ -90,7 +89,7 @@ const isAdmin = async (req, res, next) => {
       const admin = await userSchema.findById(req.session.adminId);
 
       if (!admin) {
-        req.flash("error_msg", "Admin not found. Please log in again.");
+        req.flash("error_msg", "Invalid credentials!");
         return res.redirect("/admin/login");
       }
 
@@ -116,22 +115,45 @@ const isAdmin = async (req, res, next) => {
   }
 };
 
-const isChecker = (req, res, next) => {
-  if (req.session.adminId) {
-    userSchema.findById(req.session.adminId).then((data) => {
-      if (data && !data.isBlocked && data.isAdmin) {
-        return next();
-      }
-    });
-  } else {
-    req.flash("error_msg", "Unathrized access..");
+const isChecker = async (req, res, next) => {
+  try {
+    // Check if admin is logged in
+    if (!req.session.adminId) {
+      req.flash("error_msg", "Unauthorized access.");
+      return res.redirect("/admin");
+    }
+
+    // Find admin by ID
+    const admin = await userSchema.findById(req.session.adminId);
+
+    // Validate admin existence and status
+    if (!admin) {
+      req.flash("error_msg", "Admin not found.");
+      return res.redirect("/admin");
+    }
+
+    if (admin.isBlocked) {
+      req.flash("error_msg", "Your account is blocked.");
+      return res.redirect("/admin");
+    }
+
+    if (!admin.isAdmin) {
+      req.flash("error_msg", "Access denied.");
+      return res.redirect("/admin");
+    }
+
+    // If all good, proceed
+    next();
+  } catch (err) {
+    console.error("Middleware error:", err);
+    req.flash("error_msg", "Something went wrong.");
     return res.redirect("/admin");
   }
 };
 
 module.exports = {
   isAuth,
-  homeAuth,
+  isSession,
   userLogOut,
   isAdmin,
   isChecker,

@@ -1,7 +1,7 @@
 const express = require("express");
 const routes = express.Router();
 const passport = require("passport");
-const { query, validationResult } = require('express-validator');
+const { query, body } = require("express-validator");
 const checkSession = require("../middlewares/session.js");
 const userController = require("../controllers/user/userController.js");
 const DetailController = require("../controllers/user/myProfileController.js");
@@ -9,46 +9,185 @@ const AddressController = require("../controllers/user/addressController.js");
 const wishlistController = require("../controllers/user/wishlistController.js");
 const cartController = require("../controllers/user/cartController.js");
 
-//user Session
-const userSession = require("../middlewares/userSession.js");
-
 // Login Menagement Get
 routes.get("/pageNotFound", userController.pageNotFound);
 
 // SignUp Route
 routes
   .route("/signUp")
-  .get(checkSession.isAuth, userController.loadSignUpPage)
-  .post(userController.signUp);
+  .get(
+    query("redirect")
+      .optional({ checkFalsy: true })
+      .trim()
+      .matches(/^\/[a-zA-Z0-9\-\/]*$/)
+      .withMessage("Invalid redirect path"),
+    checkSession.isSession,
+    userController.loadSignUpPage
+  )
+  .post(
+    [
+      // Name: required, trimmed
+      body("name")
+        .notEmpty()
+        .trim()
+        .withMessage("Name is required")
+        .isLength({ min: 2 })
+        .withMessage("Name must be at least 2 characters")
+        .escape(),
 
-// LogIn Route
+      // Email: required, valid format
+      body("email")
+        .notEmpty()
+        .trim()
+        .isEmail()
+        .normalizeEmail()
+        .withMessage("Valid email is required")
+        .escape(),
+
+      // Phone: required, digits only
+      body("phone")
+        .notEmpty()
+        .trim()
+        .isMobilePhone("any")
+        .withMessage("Valid phone number is required")
+        .escape(),
+
+      // Password: required, min 8 chars
+      body("password")
+        .notEmpty()
+        .isLength({ min: 8 })
+        .withMessage("Password must be at least 8 characters")
+        .escape(),
+
+      // Confirm password: matches password
+      body("cPassword")
+        .notEmpty()
+        .custom((value, { req }) => value === req.body.password)
+        .withMessage("Passwords do not match")
+        .escape(),
+
+      // rememberMe: optional boolean
+      body("rememberMe")
+        .optional()
+        .isBoolean()
+        .withMessage("Invalid remember me value"),
+
+      // referralCode: optional, Cap alphanumeric and num
+      body("referalCode")
+        .optional({ checkFalsy: true })
+        .trim()
+        .matches(/^[A-Z0-9]{13}$/)
+        .withMessage(
+          "Referral code must be 13 characters, uppercase letters and numbers only"
+        )
+        .escape(),
+    ],
+    checkSession.isSession,
+    userController.signUp
+  );
+
+// ✅ LogIn Route
 routes
   .route("/logIn")
-  .get(userController.loadLogInPage)
-  .post(checkSession.isAuth, userController.userLogIn);
+  // Load login page
+  .get(
+    query("redirect")
+      .optional()
+      .trim()
+      .matches(/^\/[a-zA-Z0-9\-\/]*$/)
+      .withMessage("Invalid redirect path"),
+    checkSession.isSession,
+    userController.loadLogInPage
+  )
+  .post(
+    // 🔒 Redirect param validation
+    body("redirect")
+      .optional({ checkFalsy: true })
+      .trim()
+      .matches(/^\/[a-zA-Z0-9\-\/]*$/)
+      .withMessage("Invalid redirect path"),
+
+    // Email validation
+    body("email")
+      .trim()
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Enter a valid email address")
+      .normalizeEmail(),
+
+    // Password validation
+    body("password")
+      .notEmpty()
+      .withMessage("Password is required")
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters long")
+      .escape(),
+
+    // Remember Me (convert to real Boolean)
+    body("rememberMe")
+      .optional()
+      .isBoolean() // validator
+      .withMessage("Invalid remember me value")
+      .toBoolean(), // sanitizer
+
+    // Middlewares
+    checkSession.isAuth,
+    userController.userLogIn
+  );
 
 // Forget Password Route
 routes
-  .route("/forgetPass")
-  .get(checkSession.isAuth, userController.loadForgetPage)
-  .post(checkSession.isAuth, userController.forgetPass);
+  .route("/forgotPass")
+  .get(checkSession.isSession, userController.loadForgetPage)
+  .post(
+    body("email").notEmpty().isEmail().withMessage("Valid email is required"),
+    body("isOTP").optional().toBoolean(true),
+
+    checkSession.isSession,
+    userController.forgetPass
+  );
 
 // Verify OTP Route
 routes
   .route("/verify-Otp")
-  .get(query('redirect').notEmpty(), checkSession.isAuth, userController.verify_Otp)
-  .post(query('otp').notEmpty(),userController.post_Verify_Otp);
+  // GET route: verify-Otp page
+  .get(checkSession.isSession, userController.verify_Otp)
+  // POST route: verify OTP submission
+  .post(
+    body("otp").trim().escape(), // safe for OTP input
 
+    userController.post_Verify_Otp
+  );
+
+// Resend OTP Route
 routes.post("/resend-Otp", userController.resend_Otp);
+
+// Reset Password Route
+routes.post(
+  "/passReset",
+  body("otp").notEmpty().escape(),
+  checkSession.isSession,
+  userController.passReset
+);
+
+// Update Password Route
+routes.post(
+  "/update-password",
+  body("password").notEmpty().withMessage("Password is required"),
+  body("cPassword").notEmpty().withMessage("Password is required"),
+  checkSession.isSession,
+  userController.updatePass
+);
 
 // LogOut Route
 routes.get("/logOut", checkSession.userLogOut, userController.logOut);
 
 // Home Page Route
-routes.get("/", checkSession.homeAuth, userController.loadHomePage);
+routes.get("/", userController.loadHomePage);
 
 // Shop Page Route
-routes.get("/shop", checkSession.homeAuth, userController.loadShopPage);
+routes.get("/shop", userController.loadShopPage);
 
 // WishList Updating
 routes.post(
@@ -60,21 +199,17 @@ routes.post(
 // WishList Adding
 routes.post("/cart/add", checkSession.isValid, cartController.addToCart);
 
-// Resend OTP Route
-routes.post("/resend-Otp", userController.resend_Otp);
-// Reset Password Route
-routes.post("/passReset", userController.passReset);
-// Update Password Route
-routes.post("/update-password", userController.updatePass);
-
 // Profile
 routes.get("/myProfile", DetailController.MY_Profile);
+
+// -------------------- Serve Profile Photo Getting -------------------- //
+routes.get("/profile-photo/:id", DetailController.Profile_photo);
 
 // -------------------- Profile Photo Upload -------------------- //
 routes.post("/upload-profile-photo", DetailController.upload_Profile_photo);
 
-// -------------------- Serve Profile Photo Getting -------------------- //
-routes.get("/profile-photo/:id", DetailController.Profile_photo);
+// -------------------- Serve Profile Photo Dleting -------------------- //
+routes.post("/delete-profile-photo", DetailController.deleteProfile_photo);
 
 //Update Name
 routes.put("/update-name", DetailController.UpdateName);
@@ -102,42 +237,7 @@ routes
 // Product Details Page route
 routes.get("/product/:id", userController.loadProductDetails);
 
-// ==================== Google Auth ====================
-
-// Trigger Google Login
-routes.get(
-  "/auth/google",
-  (req, res, next) => {
-    const redirectUrl = req.query.redirect || req.headers.referer || "/";
-    console.log("Redirect URL before Google auth:", redirectUrl);
-
-    req.session.redirectUrl = redirectUrl;
-
-    req.session.save(() => next());
-  },
-  passport.authenticate("google-user", { scope: ["profile", "email"] })
-);
-
-// Handle Google Callback
-routes.get(
-  "/auth/google/callback",
-  (req, res, next) => {
-    // Save the redirectUrl before Passport regenerates the session
-    req.savedRedirect = req.session.redirectUrl;
-    next();
-  },
-  passport.authenticate("google-user", { failureRedirect: "/signUp" }),
-  (req, res) => {
-    if (!req.user) return res.redirect("/signUp?error=unauthorized");
-
-    // Attach userId
-    req.session.userId = req.user._id;
-
-    // Use the saved redirect URL
-    const redirectTo = req.savedRedirect || "/";
-    return res.redirect(redirectTo + "?auth=success");
-  }
-);
+// ==================== Google Auth
 
 
 module.exports = routes;

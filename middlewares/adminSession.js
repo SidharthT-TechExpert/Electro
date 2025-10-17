@@ -7,11 +7,12 @@ const adminSession = session({
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URL, // ✅ FIXED
+    mongoUrl: process.env.MONGO_URL,
     collectionName: "adminSessions",
+    ttl: 4 * 60 * 60, // 1 day in seconds
   }),
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    maxAge: 4 * 60 * 60 * 1000, // 4hrs
     httpOnly: true,
     sameSite: "lax",
     secure: false, // true if using HTTPS

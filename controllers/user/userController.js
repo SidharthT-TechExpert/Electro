@@ -12,8 +12,8 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const env = require("dotenv").config();
 const bcrypt = require("bcrypt");
-const categoryVariantFields = require("../../helpers/variant.js");
-const { query, validationResult } = require("express-validator");
+const { matchedData, validationResult } = require("express-validator");
+const generateUniqueReferralCode = require("../../helpers/generateUniqueReferralCode.js");
 
 const checkSession = async (_id) => {
   if (!_id) return null;
@@ -85,11 +85,11 @@ const loadHomePage = async (req, res) => {
     const user = await checkSession(req.session.userId);
     const now = new Date();
 
-    // ✅ Fetch listed categories
+    // Fetch listed categories
     const categories = await categorieSchema.find({ status: "listed" });
     const categoryIds = categories.map((cat) => cat._id);
 
-    // ✅ Fetch active banners
+    // Fetch active banners
     const bannerData = await bannerSchema
       .find({
         isActive: true,
@@ -102,9 +102,7 @@ const loadHomePage = async (req, res) => {
     // Common product query
     const query = { status: "In Stock", isBlocked: false };
 
-    // ------------------------------
-    // 1️⃣ Fetch New Arrivals (with active offers)
-    // ------------------------------
+    //  Fetch New Arrivals (with active offers)
     let newArrivals = await productSchema.aggregate([
       { $match: query },
       {
@@ -190,9 +188,7 @@ const loadHomePage = async (req, res) => {
       { $limit: 10 },
     ]);
 
-    // ------------------------------
-    // 2️⃣ Apply discount calculation (from shop page)
-    // ------------------------------
+    // Apply discount calculation (from shop page)
     newArrivals = newArrivals.map((product) => {
       let totalDiscountValue = 0;
 
@@ -248,9 +244,7 @@ const loadHomePage = async (req, res) => {
       return product;
     });
 
-    // ------------------------------
-    // 3️⃣ Enrich variant image and price
-    // ------------------------------
+    // Enrich variant image and price
     const newArrivalIds = newArrivals.map((p) => p._id);
     const variantsNewArrivals = await variantSchema
       .find(
@@ -272,9 +266,7 @@ const loadHomePage = async (req, res) => {
       return product;
     });
 
-    // ------------------------------
-    // 4️⃣ Best Sellers & Hot Sales
-    // ------------------------------
+    // Best Sellers & Hot Sales
     const bestSellers = await productSchema
       .find({ isBlocked: false, category: { $in: categoryIds } })
       .populate("brand", "name logo")
@@ -289,11 +281,7 @@ const loadHomePage = async (req, res) => {
       .limit(8)
       .lean();
 
-    console.log(enrichedNewArrivals[0]);
-
-    // ------------------------------
     // Render Home Page
-    // ------------------------------
     res.status(HTTP_STATUS.OK).render("home/home", {
       user,
       bannerData,
@@ -301,7 +289,6 @@ const loadHomePage = async (req, res) => {
       newProducts: enrichedNewArrivals,
       bestSellers,
       hotSales,
-      cartCount: req.cartCount || null,
     });
   } catch (error) {
     console.error("❌ Error loading home page:", error);
@@ -353,9 +340,16 @@ const loadLogInPage = async (req, res) => {
 
 // Forget Password Page Loader
 const loadForgetPage = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
+    const redirect = req.query.redirect || "/";
     res.status(HTTP_STATUS.OK).render("forgetPassword/forgetpass", {
       user: null,
+      redirect,
       cartCount: null,
     });
   } catch (error) {
@@ -431,7 +425,9 @@ If you didn’t request this, just ignore this message.
 // SignUp Post
 const signUp = async (req, res) => {
   const { name, email, phone, password, cPassword, rememberMe, redirect } =
-    req.body;
+    matchedData(req);
+
+  let { referalCode } = matchedData(req);
 
   try {
     // Check if user already exists
@@ -493,6 +489,18 @@ const signUp = async (req, res) => {
         .json({ success: false, message: "Passwords do not match!" });
     }
 
+    if (referalCode) {
+      const Pattern = /^[A-Z0-9]{13}$/;
+      if (!Pattern.test(referalCode)) {
+        return res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ success: false, message: "Referral Code do not match!" });
+      }
+      referalCode = (await userSchema.findOne({ myReferalCode: referalCode }))
+        ? referalCode
+        : null;
+    }
+
     // Generate OTP & send email
     const OTP = generateOtp();
     const emailSend = await sendVerificationEmail(email, OTP);
@@ -505,7 +513,16 @@ const signUp = async (req, res) => {
 
     // Store OTP & user data in session
     req.session.userOtp = OTP;
-    req.session.userData = { email, password, name, phone, rememberMe };
+    req.session.email = email;
+
+    req.session.userData = {
+      email,
+      password,
+      referalCode,
+      name,
+      phone,
+      rememberMe,
+    };
 
     console.log("OTP Sent:", OTP);
 
@@ -526,8 +543,13 @@ const signUp = async (req, res) => {
 
 // Verify page loader
 const verify_Otp = async (req, res) => {
-  const result = validationResult(req);
-if (result.isEmpty()) {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    req.flash("warning_msg", result.array()[0].msg);
+    return res.redirect("/signup", redirect);
+  }
+
   try {
     const redirect = req.query.redirect || "/";
     res.render("auth/verify-Otp", { user: null, cartCount: null, redirect });
@@ -539,11 +561,6 @@ if (result.isEmpty()) {
     });
     res.redirect("/veriry-Otp");
   }
-}else{
-    req.flash("warning_msg", result.array()[0].msg);
-    return res.redirect("/signup"); 
-}
- 
 };
 
 //password convert to hashed formate
@@ -558,47 +575,47 @@ const securePassword = async (password) => {
 //checking OTP & SignUp Data Saving
 const post_Verify_Otp = async (req, res) => {
   try {
-    const result = validationResult(req);
-    if (result.isEmpty()) {
-      const { otp, redirect } = req.body;
-      console.log("User enterd otp :", otp);
-      if (otp === req.session.userOtp) {
-        const user = req.session.userData;
-        const passwordHashed = await securePassword(user.password);
-        const saveUserData = new userSchema({
-          name: user.name,
-          email: user.email,
-          phone: user.phone.trim().replace(/^0+/, ""),
-          password: passwordHashed,
-        });
-
-        await saveUserData.save();
-
-        req.session.userId = saveUserData._id;
-
-        //  Handle rememberMe with session cookie
-        if (req.session.userData.rememberMe === "true") {
-          req.session.cookie.maxAge = 24 * 60 * 60 * 1000;
-        } else {
-          req.session.cookie.expires = false; // browser close
-        }
-
-        req.flash("success_msg", "User SignUp Successfully");
-        res.json({ success: true, redirectUrl: redirect || "/" });
-        req.session.userData = null;
-      } else {
-        res
-          .status(HTTP_STATUS.BAD_REQUEST)
-          .json({ success: false, message: "Your Enterd OTP Is Invalid!" });
-      }
-    }else{
-        res.send({ errors: result.array() });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
+
+    const { otp, redirect } = matchedData(req);
+
+    if (otp !== req.session.userOtp) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Your entered OTP is invalid!" });
+    }
+
+    const user = req.session.userData;
+
+    const passwordHashed = await securePassword(user.password);
+
+    const myReferalCode = await generateUniqueReferralCode();
+
+    const saveUserData = new userSchema({
+      name: user.name,
+      email: user.email,
+      phone: user.phone?.trim().replace(/^0+/, ""),
+      password: passwordHashed,
+      referalCode: user.referalCode,
+      myReferalCode,
+    });
+
+    await saveUserData.save();
+
+    delete req.session.userData; // clear session
+    delete req.session.email;
+    delete req.session.userOtp;
+
+    req.flash("success_msg", "User SignUp Successfully");
+    res.json({ success: true, redirectUrl: redirect || "/" });
   } catch (error) {
-    console.log("Error occure in post verify otp :", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+    console.error("Error occurred in post verify otp:", error);
+    res.status(500).json({
       success: false,
-      message: "Internel server Error Try again Later",
+      message: "Internal server error. Try again later",
     });
   }
 };
@@ -606,8 +623,7 @@ const post_Verify_Otp = async (req, res) => {
 // Resend OTP
 const resend_Otp = async (req, res) => {
   try {
-    const email = req.session.userData.email;
-    const { redirectPath } = req.body;
+    const email = req.session.email;
     console.log(email);
 
     if (!email) {
@@ -625,7 +641,6 @@ const resend_Otp = async (req, res) => {
       console.log("Resend OTP :", OTP);
       return res.status(HTTP_STATUS.OK).json({
         success: true,
-        redirectPath,
         message: "OTP Resend Successfully",
       });
     } else {
@@ -645,8 +660,14 @@ const resend_Otp = async (req, res) => {
 
 // Login verification step
 const userLogIn = async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const { email, password, rememberMe } = req.body;
+    const { email, password, rememberMe, redirect } = matchedData(req);
 
     // Find user with password field
     const user = await userSchema.findOne({ email }).select("+password");
@@ -662,7 +683,7 @@ const userLogIn = async (req, res) => {
     if (!user) {
       return res
         .status(HTTP_STATUS.NOT_FOUND)
-        .json({ success: false, message: "User not found!" });
+        .json({ success: false, message: "Invalid credentials!" });
     }
 
     if (!user.password) {
@@ -684,19 +705,30 @@ const userLogIn = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
-    // Handle rememberMe with session cookie
-    if (rememberMe === "true") {
+    if (rememberMe) {
+      // Persistent session — lasts 1 day
       req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
+
+      req.session.cookie.expires = new Date(
+        Date.now() + req.session.cookie.maxAge
+      );
+      
     } else {
-      req.session.cookie.expires = false; // expires on browser close
+      // Browser-close session — cookie cleared when browser closes
+      req.session.cookie.expires = false;
+      delete req.session.cookie.maxAge;
     }
 
     req.session.userId = user._id;
 
+    req.session.save((err) => {
+      if (err) console.error("Session save error:", err);
+    });
+
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       message: "Login successful",
-      redirect: req.body.redirect || "/",
+      redirect: redirect || "/",
     });
   } catch (error) {
     console.log("user Login verification Error :", error);
@@ -709,38 +741,50 @@ const userLogIn = async (req, res) => {
 
 // Forget password - send OTP
 const forgetPass = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const { email } = req.body;
+    const { email, isOTP } = matchedData(req);
+
     const user = await userSchema.findOne({ email });
 
     if (!user) {
       return res.json({
         success: false,
+        info: true,
         message: "User not found. Please sign up.",
       });
     }
+    console.log(isOTP);
 
-    const OTP = generateOtp();
-    const emailSend = await sendVerificationEmail(email, OTP);
+    if (isOTP) {
+      const OTP = generateOtp();
+      const emailSend = await sendVerificationEmail(email, OTP);
 
-    if (!emailSend) {
-      return res.json({
-        success: false,
-        message: "Failed to send email. Try again.",
-      });
-    }
-
-    req.session.userOtp = OTP;
-    req.session.email = email;
-
-    req.session.save((err) => {
-      if (err) {
-        console.error("Session save error:", err);
-        return res.json({ success: false, message: "Session error" });
+      if (!emailSend) {
+        return res.json({
+          success: false,
+          inofo: true,
+          message: "Failed to send email. Try again.",
+        });
       }
+
+      req.session.userOtp = OTP;
+      req.session.email = email;
+
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.json({ success: false, message: "Session error" });
+        }
+      });
       console.log("OTP generated:", OTP);
-      res.json({ success: true, message: "OTP sent to your email" });
-    });
+      return res.json({ success: true, message: "OTP sent to your email" });
+    }
+    res.json({ success: true, message: "Email verified Successfully." });
   } catch (error) {
     console.error("ForgetPass Error:", error);
     res
@@ -751,13 +795,21 @@ const forgetPass = async (req, res) => {
 
 // OTP Verify forgetPass
 const passReset = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const { otp } = req.body;
+    const { otp } = matchedData(req);
+
+    console.log("Enterd From Server:", otp);
+
     if (otp == req.session.userOtp) {
       return res.json({
         success: true,
         message: "OTP Verified Successfully",
-        redirectUrl: "/reset-password",
+        redirectUrl: `/reset-password`,
       });
     }
     return res.json({
@@ -774,14 +826,27 @@ const passReset = async (req, res) => {
 
 //Update Password
 const updatePass = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    const { password } = req.body;
+    const { password, cPassword } = matchedData(req);
+
     const email = req.session.email;
 
     if (!email) {
       return res
         .status(HTTP_STATUS.BAD_REQUEST)
         .json({ success: false, message: "Session expired. Please retry." });
+    }
+
+    if (password !== cPassword) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Passwords do not match! Please try again.",
+      });
     }
 
     // Hash the new password

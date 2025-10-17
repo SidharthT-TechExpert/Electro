@@ -1,27 +1,31 @@
 <link rel="stylesheet" href="/CSS/forgetpass.css">
 <%- include('../partials/user/header') %>
   <%- include("../partials/user/messages") %>
+
     <!-- ================= Reset Password ================= -->
     <div class="reset-container">
 
+      <input type="hidden" id="redirectInput" value="<%= redirect || '' %>">
       <!-- LEFT PANEL -->
       <div class="reset-left">
 
-        <!-- Enter Email-->
+        <!-- Step 1: Enter Email -->
         <div class="reset-step active" id="step-1">
           <h2>🔐 Reset Password</h2>
           <form onsubmit="Reset(this)">
             <p class="subtitle">Enter your <b>Email</b> to continue.</p>
-            <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email " />
-            <a href="/logIn">Login?</a>
+            <input id="identifier" name="email" class="rc-input" type="text" placeholder="Enter your Email " autofocus  autocomplete="off"/>
+             <span id="emailError" class="login-error"></span>
+            <a href="<%= redirect ? `/logIn?redirect=${encodeURIComponent(redirect)}` : '/logIn' %>">Login?</a>
             <div style="text-align: end;" class="signup-link">
-              <a href="/signUp">Sign Up?</a>
+              <a href="<%= redirect ? `/signUp?redirect=${encodeURIComponent(redirect)}` : '/signUp' %>">Sign Up?</a>
             </div>
+
             <button class="rc-btn" name="submit" type="submit" id="toStep2">Next</button>
           </form>
         </div>
 
-        <!-- OTP Verification -->
+        <!-- Step 2: OTP Verification -->
         <div class="reset-step" id="step-2" aria-hidden="true">
           <h2>📲 Verify OTP</h2>
           <p class="subtitle">Enter the <b>6-digit</b> code sent to your email.</p>
@@ -42,19 +46,18 @@
             </div>
           </div>
 
-          <a href="/logIn">Login?</a>
+          <a href="<%= redirect ? `/logIn?redirect=${encodeURIComponent(redirect)}` : '/logIn' %>">Login?</a>
           <div style="text-align: end;" class="signup-link">
-            <a href="/signUp">Sign Up?</a>
+            <a href="<%= redirect ? `/signUp?redirect=${encodeURIComponent(redirect)}` : '/signUp' %>">Sign Up?</a>
           </div>
 
           <p id="otpError" class="rc-error">❌ Invalid OTP. Please try again.</p>
           <button class="rc-btn" id="verifyOtpBtn">Verify OTP</button>
-          <button class="btn" style="color: rgb(68, 67, 67);background-color: #0f0f0f;" id="resendBtn"
-            class="rc-resend">Resend
+          <button class="btn" style="color: rgb(68, 67, 67);background-color: #0f0f0f;" id="resendBtn">Resend
             Code</button>
         </div>
 
-        <!-- Reset Password -->
+        <!-- Step 3: Reset Password -->
         <div class="reset-step" id="step-3" aria-hidden="true">
           <h2>🔑 Create New Password</h2>
           <form action="">
@@ -77,17 +80,15 @@
               <i class="fa fa-eye toggle-pass" data-target="confirmPass"></i>
             </div>
 
-            <a href="/logIn">Login?</a>
+            <a href="<%= redirect ? `/logIn?redirect=${encodeURIComponent(redirect)}` : '/logIn' %>">Login?</a>
             <div style="text-align: end;" class="signup-link">
-              <a href="/signUp">Sign Up?</a>
+              <a href="<%= redirect ? `/signUp?redirect=${encodeURIComponent(redirect)}` : '/signUp' %>">Sign Up?</a>
             </div>
 
             <p id="passError" class="rc-error">❌ Passwords do not match.</p>
-
             <button class="rc-btn" id="resetBtn">Update Password</button>
           </form>
         </div>
-
 
       </div>
 
@@ -98,7 +99,6 @@
         <img src="/img/Banner2.jpg" alt="promo" class="promo-img" />
       </div>
     </div>
-
 
     <%- include('../partials/user/footer') %>
       <script src="/js/forgetpass.js"></script>

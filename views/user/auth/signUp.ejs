@@ -14,14 +14,14 @@
           <p class="subtitle">Enter your details below</p>
 
           <div class="form-group">
-            <input type="text" name="name" id="name" required>
+            <input autofocus type="text" name="name" id="name" required>
             <label for="name">Name</label>
             <i class="fas fa-user"></i>
             <span id="nameError" class="signUp-error"></span>
           </div>
 
           <div class="form-group">
-            <input type="email" name="email" id="email" required>
+            <input type="text" name="email" id="email" required>
             <label for="email">Email</label>
             <i class="fas fa-envelope"></i>
             <span id="emailError" class="signUp-error"></span>
@@ -55,10 +55,18 @@
             <span id="cPasswordError" class="signUp-error"></span>
           </div>
 
-          <div class="remember-me mb-3">
-            <label>
-              <input type="checkbox" name="rememberMe" id="rememberMe"> Remember Me
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="referralToggle">
+            <label class="form-check-label" for="referralToggle">
+              I have a referral code
             </label>
+          </div>
+
+          <div id="referralField" class="form-group signup-only" style="display: none;">
+            <input type="password" id="referralCode" name="referralCode">
+            <label for="referralCode">Referral Code</label>
+            <i class="fas fa-lock ctoggle-password" data-target="referralCode"></i>
+            <small id="referralError" class="text-danger" style="display: none;"></small>
           </div>
 
           <button id="submit" class="btn-main">Create Account</button>

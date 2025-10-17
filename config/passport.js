@@ -2,100 +2,91 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const userSchema = require("../models/userSchema");
 require("dotenv").config();
+const generateUniqueReferralCode = require("../helpers/generateUniqueReferralCode");
 
+// =============== GOOGLE STRATEGY FOR USER ===============
 passport.use(
   "google-user",
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientID: process.env.GOOGLE_CLIENT_ID, // ✅ Added
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
+      callbackURL: "http://localhost:3000/auth/google-user/callback", // ✅ Must match Google Console
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        //Safely get email & name
         const email =
           profile.emails && profile.emails.length > 0
             ? profile.emails[0].value
             : null;
         const name = profile.displayName || profile.name?.givenName || "User";
 
-        if (!email) {
-          return done(new Error("Email not available in Google profile"), null);
-        }
+        if (!email) return done(new Error("Email not available"), null);
 
-        // Check if user already exists by googleId OR email
         let user = await userSchema.findOne({
           $or: [{ googleId: profile.id }, { email }],
         });
 
         if (!user) {
-          // Create new user
+          const myReferalCode = await generateUniqueReferralCode();
           user = new userSchema({
             name,
             email,
             googleId: profile.id,
+            myReferalCode,
           });
           await user.save();
         }
 
         return done(null, user);
-      } catch (error) {
-        return done(error, null);
+      } catch (err) {
+        done(err, null);
       }
     }
   )
 );
 
-// ---------- Admin Google Strategy ----------
+// =============== GOOGLE STRATEGY FOR ADMIN ===============
+
 passport.use(
   "google-admin",
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/admin/auth/google/callback",
+      clientID: process.env.GOOGLE_CLIENT_ID_ADMIN,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET_ADMIN,
+      callbackURL: "http://localhost:3000/auth/google-admin/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        let user = await userSchema.findOne({ googleId: profile.id });
+        const user = await userSchema.findOne({ googleId: profile.id });
+        console.log("Google with:",user);
 
-        if (!user) {
-          return done(null, false, { message: "Not authorized as admin" });
-        }
-
-        if (!user.isAdmin) {
-          return done(null, false, { message: "User is not an admin" });
-        }
+        if (!user || !user.isAdmin || user.isBlocked)
+          return done(null, false, { message: "Not authorized!" });
 
         return done(null, user);
+
       } catch (err) {
-        return done(err, null);
+        done(err, null);
       }
     }
   )
 );
 
-// ✅ Serialize user: store only what you need in the session
+// =============== SERIALIZE & DESERIALIZE ===============
 passport.serializeUser((user, done) => {
-  done(null, {
-    id: user.id,
-    role: user.isAdmin ? "admin" : "user",
-  });
+  done(null, { id: user._id, role: user.isAdmin ? "admin" : "user" });
 });
 
-// ✅ Deserialize user: fetch fresh data from DB + attach role
-passport.deserializeUser((obj, done) => {
-  userSchema
-    .findById(obj.id)
-    .then((user) => {
-      if (!user) return done(null, false);
-
-      // Attach role from serialized object
-      user.role = obj.role;
-      done(null, user);
-    })
-    .catch((err) => done(err, null));
+passport.deserializeUser(async (obj, done) => {
+  try {
+    const user = await userSchema.findById(obj.id);
+    if (!user) return done(null, false);
+    user.role = obj.role;
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });
 
 module.exports = passport;

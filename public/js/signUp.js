@@ -39,20 +39,32 @@ const nameId = getId("name"),
   emailErrorId = getId("emailError"),
   phoneErrorId = getId("phoneError"),
   passwordErrorId = getId("passwordError"),
-  cPasswordErrorId = getId("cPasswordError");
-
-// Password strength meter elements
-const meter = getId("strengthMeter"),
+  cPasswordErrorId = getId("cPasswordError"),
+  //For ReferralCode Toggle
+  toggle = getId("referralToggle"),
+  field = getId("referralField"),
+  input = getId("referralCode"),
+  error = getId("referralError"),
+  // Password strength meter elements
+  meter = getId("strengthMeter"),
   label = getId("strengthLabel");
 
 // Password strength meter
 passwordId.addEventListener("input", () => {
   const v = passwordId.value;
   let s = 0;
+
+  // Length check
   if (v.length >= 8) s++;
+
+  // Uppercase
   if (/[A-Z]/.test(v)) s++;
+
+  // Digit
   if (/[0-9]/.test(v)) s++;
-  if (/[^A-Za-z0-9]/.test(v)) s++;
+
+  // Special character (only allowed ones, ignore spaces)
+  if (/[@$!%*?&]/.test(v)) s++;
 
   const w = [0, 25, 50, 75, 100],
     c = ["#ff3d3d", "#ff8a3d", "#ffd54d", "#9be26b", "#4cd964"],
@@ -64,10 +76,31 @@ passwordId.addEventListener("input", () => {
   label.style.color = v ? c[s] : "red";
 });
 
+//referral Code Toggle Check / un update
+toggle.addEventListener("change", () => {
+  if (toggle.checked) {
+    field.style.display = "block";
+    setTimeout(() => input.focus(), 100);
+  } else {
+    field.style.display = "none";
+    input.value = "";
+    error.style.display = "none";
+  }
+});
+
 // Validation functions
 function validateName() {
+  const nameInput = nameId.value;
   const name = nameId.value.trim();
+
   const pattern = /^[A-Za-z\s]{3,30}$/;
+
+  if (nameInput !== name) {
+    nameErrorId.style.display = "inline-block";
+    nameErrorId.textContent = "❌ Name cannot start or end with a space.";
+    e.focus();
+    return false;
+  }
 
   if (!pattern.test(name)) {
     nameErrorId.style.display = "inline-block";
@@ -82,23 +115,26 @@ function validateName() {
 }
 
 // Email validation
-function validateEmail() {
-  const Regexemail = emailId.value;
-  const email = Regexemail.trim();
+function validate_Email() {
+  const emailInput = emailId.value;
 
-  // Check if email starts with a space
-  if (Regexemail.startsWith(' ')) {
+  // Trim spaces from both ends
+  const email = emailId.value.trim();
+
+  // Check for leading/trailing spaces
+  if (emailInput !== email) {
     emailErrorId.style.display = "inline-block";
-    emailErrorId.textContent = "❌ Email cannot start with a space. Please enter a valid email.";
+    emailErrorId.textContent = "❌ Email cannot start or end with a space.";
     return false;
   }
 
   // Regex for valid email format
   const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  
+
   if (!pattern.test(email)) {
     emailErrorId.style.display = "inline-block";
-    emailErrorId.textContent = "❌ Please enter a valid email (e.g., user@example.com).";
+    emailErrorId.textContent =
+      "❌ Please enter a valid email (e.g., user@example.com).";
     return false;
   }
 
@@ -124,14 +160,23 @@ function validatePhone() {
 }
 
 function validatePassword() {
-  const password = passwordId.value.trim();
+  const passwordInput = passwordId.value;
+  const password = passwordInput.trim();
+
   const cPassword = cPasswordId.value.trim();
 
   const lower = /[a-z]/,
     upper = /[A-Z]/,
     digit = /\d/,
     special = /[@$!%*?&]/,
-    allowed = /^[A-Za-z\d@$!%*?&]+$/; 
+    allowed = /^[A-Za-z\d@$!%*?&]+$/;
+
+  // Check for leading/trailing spaces
+  if (passwordInput !== password) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Password cannot contain spaces!";
+    return false;
+  }
 
   // No spaces
   if (password.includes(" ")) {
@@ -194,12 +239,36 @@ function validatePassword() {
   }
 }
 
+// 🔍 Validation function
+function validateReferalCode() {
+  const code = input.value.trim();
+
+  if (!toggle.checked) return true; // skip if toggle is off
+
+  if (!code) {
+    showError("Referral code cannot be empty.");
+    return false;
+  }
+
+  // ✅ Example pattern: only letters/numbers, 13 chars
+  const pattern = /^[A-Z0-9]{13}$/;
+
+  if (!pattern.test(code)) {
+    showError("Invalid referral code. Use 13 numbers or letters (CAPITAL) only.");
+    return false;
+  }
+
+  hideError();
+  return true;
+}
+
 // Real-time validation
 nameId.addEventListener("input", validateName);
-emailId.addEventListener("input", validateEmail);
+emailId.addEventListener("input", validate_Email);
 phoneId.addEventListener("input", validatePhone);
 passwordId.addEventListener("input", validatePassword);
 cPasswordId.addEventListener("input", validatePassword);
+input.addEventListener("input", validateReferalCode);
 
 //Submit Validation
 getId("submit").addEventListener("click", async (e) => {
@@ -210,14 +279,15 @@ getId("submit").addEventListener("click", async (e) => {
 
   // Run validations
   const valid =
-    validateName() &&
-    validateEmail() &&
-    validatePhone() &&
-    validatePassword();
+    validateName(e) &&
+    validate_Email(e) &&
+    validatePhone(e) &&
+    validatePassword(e) &&
+    validateReferalCode(e);
 
   if (!valid) {
     Swal.fire({
-      icon: "warning", 
+      icon: "warning",
       title: "Invalid Input",
       text: "Please fix the errors before submitting!",
       confirmButtonColor: "#3085d6",
@@ -232,7 +302,7 @@ getId("submit").addEventListener("click", async (e) => {
     phone: phoneId.value.trim(),
     password: passwordId.value.trim(),
     cPassword: cPasswordId.value.trim(),
-    rememberMe: getId("rememberMe")?.checked || false,
+    referalCode:input.value.trim(),
   };
 
   const redirectPath = getId("redirectInput").value || "/";
@@ -281,3 +351,12 @@ getId("submit").addEventListener("click", async (e) => {
   }
 });
 
+function showError(msg) {
+  error.textContent = "❌ " + msg;
+  error.style.display = "block";
+}
+
+function hideError() {
+  error.textContent = "";
+  error.style.display = "none";
+}

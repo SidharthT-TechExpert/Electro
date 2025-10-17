@@ -9,16 +9,13 @@ const nocache = require("nocache");
 const passport = require("./config/passport.js");
 const { GridFSBucket } = require("mongodb");
 const connectDB = require("./config/db");
-const session = require('express-session');
+const session = require("express-session");
 const MongoStore = require("connect-mongo");
-
-// Session middlewares
-const userSession = require("./middlewares/userSession.js");
-const adminSession = require("./middlewares/adminSession.js");
 
 // Routes
 const userRoutes = require("./routes/userRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
+const googleRoutes = require("./routes/googleRoutes.js");
 
 const app = express();
 
@@ -32,35 +29,28 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET_USER,
     resave: false,
-    saveUninitialized: true, // important for Google OAuth
+    saveUninitialized: true, // important for Google OAuth Redirecting
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URL,
       collectionName: "sessions",
+      ttl: 10 * 60, // 1 day in seconds
     }),
     cookie: {
       httpOnly: true,
       secure: false, // use true only in production (HTTPS)
-      sameSite: "lax", // ✅ allows Google OAuth to keep session
+      sameSite: "lax", // allows Google OAuth to keep session
+      maxAge: 10 * 60 * 1000, // 10min
     },
   })
 );
 
-app.use((req, res, next) => {
-  console.log("🧠 Session ID:", req.sessionID);
-  console.log("🧩 Session Data:", req.session);
-  next();
-});
-
-
-app.use("/admin", adminSession);
-
 // -------------------- Flash -------------------- //
 app.use(flash());
 app.use((req, res, next) => {
-res.locals.success_msg = req.flash("success_msg");
-res.locals.warning_msg = req.flash("warning_msg");
-res.locals.error_msg = req.flash("error_msg");
-res.locals.error = req.flash("error");
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.warning_msg = req.flash("warning_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  res.locals.error = req.flash("error");
   next();
 });
 
@@ -91,7 +81,8 @@ connectDB()
     console.error("❌ DB Connection Error:", err.message);
   });
 
-// -------------------- Routes -------------------- //
+// -------------------- Routes
+app.use("/auth", googleRoutes);
 app.use("/", userRoutes);
 app.use("/admin", adminRoutes);
 

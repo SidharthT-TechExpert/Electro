@@ -1,12 +1,61 @@
+const emailId = document.getElementById("identifier");
+const emailErrorId = document.getElementById("emailError");
+
+// Email validation
+function validateEmail() {
+  const rawEmail = emailId.value;
+  const email = rawEmail.trim();
+
+  if (!email) {
+    emailErrorId.style.display = "inline-block";
+    emailErrorId.textContent = "❌ Email cannot be empty.";
+    return false;
+  }
+
+  // Leading/trailing space check
+  if (rawEmail !== email) {
+    emailErrorId.style.display = "inline-block";
+    emailErrorId.textContent = "❌ Email cannot start or end with a space.";
+    return false;
+  }
+
+  const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!pattern.test(email)) {
+    emailErrorId.style.display = "inline-block";
+    emailErrorId.textContent =
+      "❌ Please enter a valid email (e.g., user@example.com).";
+    return false;
+  }
+
+  emailErrorId.style.display = "none";
+  emailErrorId.textContent = "";
+  return true;
+}
+
+// Real-time validation
+emailId.addEventListener("input", validateEmail);
+
+// Step 1: Submit Email
 function Reset(f) {
-  f.submit.disabled = true;
-  url = "/forgetPass";
-  method = "POST";
-  data = { email: f.email.value.trim() };
+  const submitBtn = f.querySelector('[type="submit"]');
+  submitBtn.disabled = true;
+
+  const email = emailId.value.trim();
+
+  if (!validateEmail()) {
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Input",
+      text: "Please fix the errors before submitting!",
+    });
+    submitBtn.disabled = false;
+    return;
+  }
+
   $.ajax({
-    type: method,
-    url: url,
-    data: data,
+    type: "POST",
+    url: "/forgotPass",
+    data: { email, isOTP: false },
     success: function (response) {
       if (response.success) {
         Swal.fire({
@@ -21,7 +70,15 @@ function Reset(f) {
           startTimer();
         });
       } else {
-        f.submit.disabled = false;
+        if (response.info) {
+          Swal.fire({
+            icon: "warning",
+            title: "Warring",
+            text: response.message,
+          });
+          submitBtn.disabled = false;
+          return;
+        }
         Swal.fire({ icon: "error", title: "Error", text: response.message });
       }
     },
@@ -29,41 +86,26 @@ function Reset(f) {
       Swal.fire({
         icon: "error",
         title: "Server Error",
-        text: "Please try again!",
+        text: "Please dtry again!",
       });
       f.submit.disabled = false;
+      return;
     },
   });
 }
 
-// Toggle password visibility using Font Awesome
-$(".toggle-pass").on("click", function () {
-  const targetId = $(this).data("target");
-  const input = $("#" + targetId);
-
-  if (input.attr("type") === "password") {
-    input.attr("type", "text");
-    $(this).removeClass("fa-eye").addClass("fa-eye-slash");
-  } else {
-    input.attr("type", "password");
-    $(this).removeClass("fa-eye-slash").addClass("fa-eye");
-  }
-});
-
 $(document).ready(function () {
   // ----------------- Variables -----------------
-  let timer = null,
-    DURATION = 50,
-    remaining = DURATION;
+  const emailId = document.getElementById("identifier");
+  const emailErrorId = document.getElementById("emailError");
 
   const step1 = $("#step-1"),
     step2 = $("#step-2"),
     step3 = $("#step-3"),
-    toStep2Btn = $("#toStep2"),
     verifyOtpBtn = $("#verifyOtpBtn"),
     resetBtn = $("#resetBtn"),
     resendBtn = $("#resendBtn"),
-    otpInputs = [...document.querySelectorAll(".rc-otp")],
+    otpInputs = Array.from(document.querySelectorAll(".rc-otp")), // convert to array
     timerFill = $("#timerFill"),
     timerText = $("#timerText"),
     passError = $("#passError"),
@@ -72,7 +114,43 @@ $(document).ready(function () {
     meter = $("#strengthMeter"),
     label = $("#strengthLabel");
 
-  // ----------------- Functions -----------------
+  let timer = null,
+    DURATION = 50,
+    remaining = DURATION;
+
+  // ----------------- Email Validation -----------------
+  function validateEmail() {
+    const rawEmail = emailId.value;
+    const email = rawEmail.trim();
+
+    if (!email) {
+      emailErrorId.style.display = "inline-block";
+      emailErrorId.textContent = "❌ Email cannot be empty.";
+      return false;
+    }
+
+    if (rawEmail !== email) {
+      emailErrorId.style.display = "inline-block";
+      emailErrorId.textContent = "❌ Email cannot start or end with a space.";
+      return false;
+    }
+
+    const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!pattern.test(email)) {
+      emailErrorId.style.display = "inline-block";
+      emailErrorId.textContent =
+        "❌ Please enter a valid email (e.g., user@example.com).";
+      return false;
+    }
+
+    emailErrorId.style.display = "none";
+    emailErrorId.textContent = "";
+    return true;
+  }
+
+  emailId.addEventListener("input", validateEmail);
+
+  // ----------------- Timer -----------------
   function startTimer() {
     clearInterval(timer);
     remaining = DURATION;
@@ -94,20 +172,37 @@ $(document).ready(function () {
 
   function resetOtpInputs() {
     otpInputs.forEach((i) => (i.value = ""));
-    otpInputs[0].focus();
+    if (otpInputs.length) otpInputs[0].focus();
   }
 
   // ----------------- Step 1: Email Submit -----------------
   $("#step-1 form").on("submit", function (e) {
     e.preventDefault();
-    const email = $("#identifier").val().trim();
+    const form = $(this);
+    const submitBtn = form.find("button[type='submit']");
+
+    const email = emailId.value.trim();
     if (!email) return;
+
+    if (!validateEmail()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Input",
+        text: "Please fix the errors before submitting!",
+        showConfirmButton: true,
+      });
+      submitBtn.prop("disabled", false);
+      return;
+    }
+
+    submitBtn.prop("disabled", true);
 
     $.ajax({
       type: "POST",
-      url: "/forgetPass",
-      data: { email },
+      url: "/forgotPass",
+      data: { email, isOTP: true },
       success: function (response) {
+        submitBtn.prop("disabled", false);
         if (response.success) {
           Swal.fire({
             icon: "success",
@@ -117,8 +212,14 @@ $(document).ready(function () {
           }).then(() => {
             step1.removeClass("active");
             step2.addClass("active");
-            otpInputs[0].focus();
+            if (otpInputs.length) otpInputs[0].focus();
             startTimer();
+          });
+        } else if (response.info) {
+          Swal.fire({
+            icon: "warning",
+            title: "Warning",
+            text: response.message,
           });
         } else {
           Swal.fire({ icon: "error", title: "Error", text: response.message });
@@ -130,11 +231,12 @@ $(document).ready(function () {
           title: "Server Error",
           text: "Please try again!",
         });
+        submitBtn.prop("disabled", false);
       },
     });
   });
 
-  // ----------------- Step 2: OTP Verification -----------------
+  // ----------------- Step 2: OTP -----------------
   verifyOtpBtn.on("click", function (e) {
     e.preventDefault();
     const otp = otpInputs.map((i) => i.value).join("");
@@ -182,8 +284,8 @@ $(document).ready(function () {
       success: function (response) {
         if (response.success) {
           Swal.fire({
-            icon: "info",
-            title: "New OTP sent",
+            icon: "success",
+            title: "New OTP sented!",
             showConfirmButton: false,
             timer: 1200,
           });
@@ -195,7 +297,7 @@ $(document).ready(function () {
     });
   });
 
-  // ----------------- OTP Input Behavior -----------------
+  // ----------------- OTP Input Navigation -----------------
   otpInputs.forEach((input, i) => {
     input.addEventListener("input", (e) => {
       e.target.value = e.target.value.replace(/[^0-9]/g, "");
@@ -214,7 +316,7 @@ $(document).ready(function () {
     });
   });
 
-  // ----------------- Step 3: Password Strength -----------------
+  // ----------------- Password Strength -----------------
   newPass.on("input", function () {
     const v = $(this).val();
     let s = 0;
@@ -231,7 +333,7 @@ $(document).ready(function () {
     label.text(v ? texts[s] : "");
   });
 
-  // ----------------- Reset Password Submit with Strength Check -----------------
+  // ----------------- Reset Password -----------------
   resetBtn.on("click", function (e) {
     e.preventDefault();
     const a = newPass.val().trim(),
@@ -246,7 +348,6 @@ $(document).ready(function () {
       return;
     }
 
-    // --- Strength Check ---
     let strength = 0;
     if (a.length >= 6) strength++;
     if (/[A-Z]/.test(a)) strength++;
@@ -267,7 +368,7 @@ $(document).ready(function () {
     $.ajax({
       type: "POST",
       url: "/update-password",
-      data: { password: a },
+      data: { password: a, cPassword: b },
       success: function (response) {
         if (response.success) {
           Swal.fire({
@@ -275,9 +376,7 @@ $(document).ready(function () {
             title: "Password updated!",
             showConfirmButton: false,
             timer: 1500,
-          }).then(() => {
-            window.location.href = "/login";
-          });
+          }).then(() => (window.location.href = "/login"));
         } else {
           passError.show().text(response.message || "Something went wrong");
         }
@@ -286,5 +385,19 @@ $(document).ready(function () {
         passError.show().text("Server error. Try again.");
       },
     });
+  });
+
+  // ----------------- Toggle Password Visibility -----------------
+  $(".toggle-pass").on("click", function () {
+    const targetId = $(this).data("target");
+    const input = $("#" + targetId);
+
+    if (input.attr("type") === "password") {
+      input.attr("type", "text");
+      $(this).removeClass("fa-eye").addClass("fa-eye-slash");
+    } else {
+      input.attr("type", "password");
+      $(this).removeClass("fa-eye-slash").addClass("fa-eye");
+    }
   });
 });
