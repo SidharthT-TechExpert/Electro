@@ -41,32 +41,44 @@
               <!-- Name -->
               <div class="mb-3">
                 <label class="form-label fw-semibold">Name
-                  <a onclick="editName('<%= user.name %>','<%= user._id %>' )" class="text-primary small ms-1">Edit</a>
+                  <a title="Edit Your Name" onclick="editName('<%= user.name %>','<%= user._id %>' )"
+                    class="text-primary small ms-1">Edit</a>
                 </label>
                 <input type="text" class="form-control" value="<%= user.name %>" readonly>
               </div>
 
               <!-- Password Changes -->
               <h6 class="fw-bold mt-4 mb-3">Password Changes</h6>
-              <form id="passwordForm" onsubmit="return ChangePassword(this)">
-                <% if(user?.password) { %>
+              <form id="passwordForm"
+                onsubmit="<%= user?.password ? 'return ChangePassword(this)' : 'return addPassword(this)' %>">
+
+                <% if (user?.password) { %>
                   <div class="mb-3">
-                    <input value='<% user?.password %>' type="password" name="cPassword" class="form-control"
-                      placeholder="Current Password">
+                    <input type="password" name="currentPassword" class="form-control" placeholder="Current Password">
                   </div>
                   <% } %>
+
                     <div class="mb-3">
-                      <input type="password" name="Password" class="form-control" placeholder="New Password">
+                      <input id="password" type="password" name="newPassword" class="form-control"
+                        placeholder="New Password">
+                      <span id="passwordError" class="signUp-error"></span>
                     </div>
+
                     <div class="mb-3">
-                      <input type="password" name="confirmPassword" class="form-control"
+                      <input id="cpassword" type="password" name="confirmPassword" class="form-control"
                         placeholder="Confirm New Password">
+                      <span id="cPasswordError" class="signUp-error"></span>
                     </div>
+
                     <div class="d-flex justify-content-end gap-2">
                       <button type="button" onclick="this.form.reset()" class="btn btn-outline-dark">Cancel</button>
-                      <button type="submit" class="btn btn-danger fw-semibold">Update Password</button>
+                      <button type="submit" class="btn btn-danger fw-semibold"
+                        title="<%= user?.password ? 'Update existing password' : 'Add a new password' %>">
+                        <%= user?.password ? "Update Password" : "Add Password" %>
+                      </button>
                     </div>
               </form>
+
 
               <!-- Email & Phone -->
               <div class="row mt-4">

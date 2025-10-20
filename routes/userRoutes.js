@@ -215,6 +215,8 @@ routes.post("/delete-profile-photo", DetailController.deleteProfile_photo);
 routes.put("/update-name", DetailController.UpdateName);
 //Update Password
 routes.post("/change-password", DetailController.updatePass);
+routes.post("/add-password", DetailController.addPass);
+
 //Update Phone number
 routes.post("/send-otp", DetailController.send_otp);
 routes.post("/verifyOTP", DetailController.verify_Otp);

@@ -303,14 +303,6 @@ const userLogIn = async (req, res) => {
         .json({ success: false, message: "Admin not found!" });
     }
 
-    if (!user.isAdmin) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        success: false,
-        isAdmin: false,
-        message: "Unauthorized access.",
-      });
-    }
-
     if (!user.password) {
       if (user.googleId) {
         return res.json({
@@ -328,6 +320,14 @@ const userLogIn = async (req, res) => {
       return res
         .status(HTTP_STATUS.UNAUTHORIZED)
         .json({ success: false, message: "Invalid credentials" });
+    }
+
+    if (!user.isAdmin) {
+      return res.json({
+        success: false,
+        isAdmin: false,
+        message: "Unauthorized access.",
+      });
     }
 
     if (rememberMe) {

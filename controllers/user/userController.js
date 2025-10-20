@@ -627,9 +627,10 @@ const resend_Otp = async (req, res) => {
     console.log(email);
 
     if (!email) {
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ success: false, message: "Email not found in session!" });
+      return res.json({
+        success: false,
+        message: "Email not found in session!",
+      });
     }
 
     const OTP = generateOtp();
@@ -644,14 +645,14 @@ const resend_Otp = async (req, res) => {
         message: "OTP Resend Successfully",
       });
     } else {
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      res.json({
         success: false,
         message: "Failed to resend OTP , Please Try Again!",
       });
     }
   } catch (error) {
     console.log("Resending OTP Error :", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+    res.json({
       success: false,
       message: "Internal Server Error , Please Try Again!",
     });
@@ -672,14 +673,6 @@ const userLogIn = async (req, res) => {
     // Find user with password field
     const user = await userSchema.findOne({ email }).select("+password");
 
-    if (user.isBlocked) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({
-        success: false,
-        blocked: true,
-        message: "Blocked User , You must Contact With Our costomer care!",
-      });
-    }
-
     if (!user) {
       return res
         .status(HTTP_STATUS.NOT_FOUND)
@@ -699,9 +692,16 @@ const userLogIn = async (req, res) => {
 
     const match = await bcrypt.compare(password, user.password);
 
+    if (user.isBlocked) {
+      return res.json({
+        success: false,
+        blocked: true,
+        message: "Blocked User , You must Contact With Our costomer care!",
+      });
+    }
+
     if (!match) {
       return res
-        .status(HTTP_STATUS.UNAUTHORIZED)
         .json({ success: false, message: "Invalid credentials" });
     }
 
@@ -712,7 +712,6 @@ const userLogIn = async (req, res) => {
       req.session.cookie.expires = new Date(
         Date.now() + req.session.cookie.maxAge
       );
-      
     } else {
       // Browser-close session — cookie cleared when browser closes
       req.session.cookie.expires = false;

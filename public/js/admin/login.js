@@ -86,7 +86,7 @@ getId("submit").addEventListener("click", (e) => {
         }).then(() => {
           window.location.href = "/admin/dashboard";
         });
-      } else if (res.status === 401 || response.isAdmin === false) {
+      } else if ( response.isAdmin === false) {
         Swal.fire({
           icon: "error",
           title: "Unauthorized",

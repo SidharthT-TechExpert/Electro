@@ -279,6 +279,12 @@ html {
   font-weight: 600;
 }
 
+.signUp-error {
+  color: red;
+  font-size: 0.75rem;
+  display: none;
+}
+
 /* Product Info */
 .text-center h6 {
   font-weight: 400;

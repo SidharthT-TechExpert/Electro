@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(nocache());
 
 // -------------------- Sessions -------------------- //
-app.use(
+app.use('/',
   session({
     secret: process.env.SESSION_SECRET_USER,
     resave: false,
@@ -44,6 +44,24 @@ app.use(
   })
 );
 
+app.use('/admin',
+  session({
+    secret: process.env.SESSION_SECRET_USER,
+    resave: false,
+    saveUninitialized: true, // important for Google OAuth Redirecting
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URL,
+      collectionName: "adminSessions",
+      ttl: 1 * 60 * 60, // 1 day in seconds
+    }),
+    cookie: {
+      httpOnly: true,
+      secure: false, // use true only in production (HTTPS)
+      sameSite: "lax", // allows Google OAuth to keep session
+      maxAge: 10 * 60 * 1000, // 10min
+    },
+  })
+);
 // -------------------- Flash -------------------- //
 app.use(flash());
 app.use((req, res, next) => {

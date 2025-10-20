@@ -60,13 +60,99 @@ async function editName(currentName, userId) {
   }
 }
 
-function ChangePassword(f) {
-  const cPassword = f.cPassword.value.trim(); // current password
-  const newPassword = f.Password.value.trim(); // new password
-  const confirmPassword = f.confirmPassword.value.trim(); // confirmation
+const passwordId = document.getElementById("password"),
+  cPasswordId = document.getElementById("cPassword"),
+  passwordErrorId = document.getElementById("passwordError"),
+  cPasswordErrorId = document.getElementById("cPasswordError");
 
-  // Validation: empty fields
-  if (!cPassword || !newPassword || !confirmPassword) {
+function validatePassword() {
+  const passwordInput = passwordId.value;
+  const password = passwordInput.trim();
+
+  const lower = /[a-z]/,
+    upper = /[A-Z]/,
+    digit = /\d/,
+    special = /[@$!%*?&]/,
+    allowed = /^[A-Za-z\d@$!%*?&]+$/;
+
+  // Check for leading/trailing spaces
+  if (passwordInput !== password) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Password cannot contain spaces!";
+    return false;
+  }
+
+  // No spaces
+  if (password.includes(" ")) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Password cannot contain spaces!";
+    return false;
+  }
+  // Only allowed characters
+  else if (!allowed.test(password)) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent =
+      "❌ Password contains invalid characters! Only letters, numbers, and @$!%*?& are allowed.";
+    return false;
+  }
+  // Minimum length
+  else if (password.length < 8) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Must be at least 8 characters!";
+    return false;
+  }
+  // Lowercase check
+  else if (!lower.test(password)) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Must include a lowercase letter!";
+    return false;
+  }
+  // Uppercase check
+  else if (!upper.test(password)) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Must include an uppercase letter!";
+    return false;
+  }
+  // Digit check
+  else if (!digit.test(password)) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent = "❌ Must include a number!";
+    return false;
+  }
+  // Special character check
+  else if (!special.test(password)) {
+    passwordErrorId.style.display = "inline-block";
+    passwordErrorId.textContent =
+      "❌ Must include a special character (@, $, !, %, *, ?, &)";
+    return false;
+  }
+
+  // All validations passed
+  passwordErrorId.style.display = "none";
+  passwordErrorId.textContent = "";
+  return true;
+}
+
+function validateCPassword() {
+  const passwordId = document.getElementById("password").value.trim();
+  const cpasswordId = document.getElementById("cpassword").value.trim();
+
+  if (passwordId !== cpasswordId) {
+    cPasswordErrorId.style.display = "inline-block";
+    cPasswordErrorId.textContent = "Password do not match!";
+    return false;
+  }
+  cPasswordErrorId.style.display = "none";
+  cPasswordErrorId.textContent = "";
+  return true;
+}
+
+function ChangePassword(f) {
+  const currentPassword = f.currentPassword.value.trim();
+  const newPassword = f.newPassword.value.trim();
+  const confirmPassword = f.confirmPassword.value.trim();
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
     Swal.fire({
       icon: "warning",
       title: "Missing Fields",
@@ -75,62 +161,36 @@ function ChangePassword(f) {
     return false;
   }
 
-  // Validation: minimum length
   if (newPassword.length < 8) {
     Swal.fire({
-      icon: "error",
+      icon: "warning",
       title: "Weak Password",
       text: "Password must be at least 8 characters long.",
     });
     return false;
   }
 
-  // Validation: must contain at least one number and one special character
-  const hasNumber = /[0-9]/.test(newPassword);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
-
-  if (!hasNumber || !hasSpecialChar) {
-    Swal.fire({
-      icon: "error",
-      title: "Weak Password",
-      text: "Password must contain at least one number and one special character.",
-    });
-    return false;
-  }
-
-  // Validation: confirm password match
   if (newPassword !== confirmPassword) {
     Swal.fire({
-      icon: "error",
+      icon: "warning",
       title: "Password Mismatch",
-      text: "New password and confirmation do not match.",
+      text: "New and confirm password do not match.",
     });
     return false;
   }
 
-  // Validation: new password should differ from current password
-  if (newPassword === cPassword) {
-    Swal.fire({
-      icon: "info",
-      title: "Same Password",
-      text: "New password must be different from your current password.",
-    });
-    return false;
-  }
-
-  // Send data to backend
   fetch("/change-password", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cPassword, newPassword }),
+    body: JSON.stringify({ currentPassword, newPassword }),
   })
-    .then((res) => res.json()) // ✅ parse JSON first
+    .then((res) => res.json())
     .then((response) => {
       if (response.success) {
         Swal.fire({
           icon: "success",
           title: "Password Updated!",
-          text: response.message || "Your password was changed successfully.",
+          text: response.message || "Password changed successfully.",
           timer: 1500,
           showConfirmButton: false,
         }).then(() => location.reload());
@@ -142,8 +202,8 @@ function ChangePassword(f) {
         });
       }
     })
-    .catch((error) => {
-      console.error("Error changing password:", error);
+    .catch((err) => {
+      console.error("Error changing password:", err);
       Swal.fire({
         icon: "error",
         title: "Server Error",
@@ -151,7 +211,73 @@ function ChangePassword(f) {
       });
     });
 
-  return false; // ✅ prevent form reload
+  return false;
+}
+
+function addPassword(f) {
+  const newPassword = f.newPassword.value.trim();
+  const confirmPassword = f.confirmPassword.value.trim();
+
+  if (!newPassword || !confirmPassword) {
+    Swal.fire({
+      icon: "warning",
+      title: "Missing Fields",
+      text: "Please fill in all password fields.",
+    });
+    return false;
+  }
+
+  if (newPassword.length < 8) {
+    Swal.fire({
+      icon: "error",
+      title: "Weak Password",
+      text: "Password must be at least 8 characters long.",
+    });
+    return false;
+  }
+
+  if (newPassword !== confirmPassword) {
+    Swal.fire({
+      icon: "error",
+      title: "Password Mismatch",
+      text: "New password and confirmation do not match.",
+    });
+    return false;
+  }
+
+  fetch("/add-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newPassword, confirmPassword }),
+  })
+    .then((res) => res.json())
+    .then((response) => {
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Password Added!",
+          text: response.message || "Password added successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        }).then(() => location.reload());
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.message || "Unable to add password.",
+        });
+      }
+    })
+    .catch((err) => {
+      console.error("Error adding password:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong. Please try again later.",
+      });
+    });
+
+  return false;
 }
 
 async function editPhone(currentPhone) {
@@ -241,8 +367,8 @@ async function editEmail(currentEmail, id) {
     showCancelButton: true,
     inputValidator: (value) => {
       if (!value) return "Please enter an email address.";
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) return "Please enter a valid email address.";
+      const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!emailRegex.test(value)) return "Please enter a valid and properly formatted email address (for example: johndoe@example.com)"
     },
   });
 
@@ -533,5 +659,17 @@ document.addEventListener("click", (event) => {
   const isClickOnButton = event.target === previewBtn;
   if (!isClickInsideBox && !isClickOnButton) {
     box.style.display = "none";
+  }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const passwordId = document.getElementById("password");
+  const cpasswordId = document.getElementById("cpassword");
+
+  if (passwordId) {
+    passwordId.addEventListener("input", validatePassword);
+  }
+  if (cpasswordId) {
+    cpasswordId.addEventListener("input", validateCPassword);
   }
 });

@@ -197,7 +197,7 @@ const UpdateName = async (req, res) => {
 // Update Password
 const updatePass = async (req, res) => {
   try {
-    const { newPassword, cPassword } = req.body;
+    const { currentPassword, newPassword } = req.body;
     const id = req.session.userId;
 
     if (!id) {
@@ -213,7 +213,8 @@ const updatePass = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    const isMatch = await bcrypt.compare(cPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    
     if (!isMatch) {
       return res
         .status(HTTP_STATUS.UNAUTHORIZED)
@@ -238,6 +239,50 @@ const updatePass = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating password:", error);
+    res
+      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Add Password
+const addPass = async (req, res) => {
+  try {
+    const { confirmPassword, newPassword } = req.body;
+    const id = req.session.userId;
+    console.log(confirmPassword);
+
+    if (confirmPassword.trim() !== newPassword) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Password Do not Match!." });
+    }
+
+    if (!id) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ success: false, message: "Session expired. Please retry." });
+    }
+
+    const user = await userSchema.findById(id);
+
+    if (!user) {
+      return res
+        .status(HTTP_STATUS.NOT_FOUND)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const hashPass = await securePassword(newPassword);
+
+    user.password = hashPass;
+    await user.save();
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "Password Added successfully",
+    });
+  } catch (error) {
+    console.error("Error Adding password:", error);
     res
       .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Internal server error" });
@@ -564,4 +609,5 @@ module.exports = {
   Profile_photo,
   upload_Profile_photo,
   deleteProfile_photo,
+  addPass,
 };

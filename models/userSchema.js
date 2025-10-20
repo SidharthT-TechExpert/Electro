@@ -14,6 +14,7 @@ const userSchema = new Schema({
   orderHistory: [{ type: Schema.Types.ObjectId, ref: "Order" }],
   addresses: [{ type: Schema.Types.ObjectId, ref: "address" }],
   createdOn: { type: Date, default: Date.now },
+
   myReferalCode: {
     type: String,
     unique: true,
@@ -21,9 +22,11 @@ const userSchema = new Schema({
     trim: true,
     uppercase: true,
   },
+
   referalCode: { type: String, trim: true, uppercase: true, default: null },
   redeemed: { type: Boolean, default: false },
   redeemedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  
   searchHistory: [
     {
       category: { type: Schema.Types.ObjectId, ref: "Category" },

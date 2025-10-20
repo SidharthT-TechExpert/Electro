@@ -15,6 +15,14 @@ router.get(
     failureFlash: true, // ✅ Enables flash messages from passport
   }),
   (req, res) => {
+    if (req.user.isBlocked) {
+      req.flash(
+        "warning_msg",
+        "Blocked user account! Please contact with our customer care."
+      );
+      return res.redirect("/logIn");
+    }
+
     req.session.userId = req.user._id;
 
     // Redirect to saved URL or home
@@ -34,23 +42,29 @@ router.get(
 router.get(
   "/google-admin/callback",
   passport.authenticate("google-admin", {
-    failureRedirect: "/admin",
-    failureFlash: true,
+    failureRedirect: "/admin/login",
+    failureFlash: true, // ✅ enables custom flash messages from passport
   }),
   (req, res) => {
-    // ✅ Here, req.user is guaranteed to exist if authentication succeeded
-    if (!req.user) {
-      req.flash("error_msg", "Unauthorized admin access!");
-      return res.redirect("/admin");
+    // If user exists but is blocked
+    if (req.user.isBlocked) {
+      req.flash(
+        "warning_msg",
+        "Blocked admin account! Please contact support."
+      );
+      return res.redirect("/admin/login");
     }
 
-    console.log("✅ Google with:", req.user);
+    // If not an admin
+    if (!req.user.isAdmin) {
+      req.flash("error", "Unauthorized access! Admins only.");
+      return res.redirect("/admin/login");
+    }
 
-    // ✅ Store adminId in session
+    // ✅ Successful login
     req.session.adminId = req.user._id;
-    req.session.save(() => {
-      res.redirect("/admin/dashboard");
-    });
+    req.flash("success", `Welcome back, ${req.user.name || "Admin"}!`);
+    res.redirect("/admin/dashboard?auth=success");
   }
 );
 

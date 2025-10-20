@@ -112,7 +112,7 @@
 
 /* Resend */
 .rc-resend {
-  display: inline-block;
+  display: none;
   margin-top: 14px;
   color: #aaa;
   font-size: 13px;

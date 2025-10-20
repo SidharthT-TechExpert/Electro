@@ -1,47 +1,130 @@
 <link rel="stylesheet" href="/CSS/Verify.css">
 <%- include('../partials/user/header') %>
-<%- include('../partials/user/messages') %>
+  <%- include('../partials/user/messages') %>
 
-<!-- OTP Verification -->
-<div class="reset-container">
-  <div class="reset-left">
-    <h2>📲 Verify OTP</h2>
+    <!-- OTP Verification -->
+    <div class="reset-container">
+      <div class="reset-left">
+        <h2>📲 Verify OTP</h2>
 
-    <!-- Hidden input to store redirect path -->
-    <input type="hidden" id="redirectInput" value="<%= redirect || '' %>">
+        <!-- Hidden input to store redirect path -->
+        <input type="hidden" id="redirectInput" value="<%= redirect || '' %>">
 
-    <p class="subtitle">Enter the <b>6-digit</b> code sent to your email.</p>
+        <p class="subtitle">Enter the <b>6-digit</b> code sent to your email.</p>
 
-    <div class="rc-otp-row" id="otpRow">
-      <input maxlength="1" class="rc-otp" inputmode="numeric" />
-      <input maxlength="1" class="rc-otp" inputmode="numeric" />
-      <input maxlength="1" class="rc-otp" inputmode="numeric" />
-      <input maxlength="1" class="rc-otp" inputmode="numeric" />
-      <input maxlength="1" class="rc-otp" inputmode="numeric" />
-      <input maxlength="1" class="rc-otp" inputmode="numeric" />
-    </div>
+        <div class="rc-otp-row" id="otpRow">
+          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+          <input maxlength="1" class="rc-otp" inputmode="numeric" />
+        </div>
 
-    <div class="rc-timer-wrap">
-      <div class="rc-timer-label" id="timerText">⏳ 30s</div>
-      <div class="rc-timer-bar">
-        <div id="timerFill"></div>
+        <div class="rc-timer-wrap">
+          <div class="rc-timer-label" id="timerText">⏳ 50s</div>
+          <div class="rc-timer-bar">
+            <div id="timerFill"></div>
+          </div>
+        </div>
+
+        <p id="otpError" class="rc-error" style="display:none;">❌ Invalid OTP. Please try again.</p>
+        <button class="rc-btn" id="verifyOtpBtn">Verify OTP</button>
+        <button id="resendBtn"
+          style=" display: none; color: rgb(250, 250, 250);margin-top: 10px; height: 40px;border-radius: 10px;"
+          class="btn-danger">Resend OTP</button>
+      </div>
+
+      <div class="reset-right">
+        <h3>Welcome Back!</h3>
+        <p>Access your account and enjoy exclusive <b>member-only offers.</b></p>
+        <img src="/img/Banner.jpeg" alt="Promo" class="promo-img" />
       </div>
     </div>
 
-    <p id="otpError" class="rc-error" style="display:none;">❌ Invalid OTP. Please try again.</p>
-    <button class="rc-btn" id="verifyOtpBtn">Verify OTP</button>
-    <button id="resendBtn" style="color: rgb(250, 250, 250);margin-top: 10px; height: 40px;border-radius: 10px;" onclick="Resend()" class="btn-danger">Resend OTP</button>
-  </div>
+    <!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/verify.js"></script>
+    <%- include('../partials/user/footer') %>
 
-  <div class="reset-right">
-    <h3>Welcome Back!</h3>
-    <p>Access your account and enjoy exclusive <b>member-only offers.</b></p>
-    <img src="/img/Banner.jpeg" alt="Promo" class="promo-img" />
-  </div>
-</div>
 
-<!-- JS -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="/js/verify.js"></script>
-<%- include('../partials/user/footer') %>
+      <script>
+        // Global state
+        let isResending = false;
+
+        document.addEventListener("DOMContentLoaded", () => {
+          const resendBtn = document.getElementById("resendBtn");
+
+          if (!resendBtn) return;
+
+          resendBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            // 🧱 Lock instantly at JS level (before DOM updates)
+            if (isResending) {
+              console.log("🚫 Resend already in progress");
+              return;
+            }
+            isResending = true;
+
+            // Then disable UI
+            resendBtn.disabled = true;
+            resendBtn.style.pointerEvents = "none";
+            resendBtn.style.opacity = "0.6";
+            resendBtn.style.cursor = "not-allowed";
+            const originalText = resendBtn.textContent;
+            resendBtn.textContent = "Sending...";
+
+            try {
+              const response = await $.ajax({
+                type: "POST",
+                url: "/resend-otp",
+                data: { redirect: redirectPath },
+              });
+
+              if (response.success) {
+                await Swal.fire({
+                  icon: "info",
+                  title: "OTP Resent Successfully",
+                  text: "Please check your email for the new OTP.",
+                  showConfirmButton: false,
+                  timer: 2000,
+                });
+
+                otpInputs.forEach((input) => (input.value = ""));
+                otpInputs[0].focus();
+                otpError.style.display = "none";
+                startTimer();
+              } else {
+                await Swal.fire({
+                  icon: "warning",
+                  title: "Warning",
+                  text: response.message || "Unable to resend OTP.",
+                });
+              }
+            } catch (jqXHR) {
+              const serverMsg =
+                (jqXHR.responseJSON && jqXHR.responseJSON.message) ||
+                jqXHR.responseText ||
+                "Failed to resend OTP. Try again!";
+              await Swal.fire({
+                icon: "error",
+                title: "Server Error",
+                text: serverMsg,
+              });
+            } finally {
+              // ✅ Fully unlock safely
+              resendBtn.disabled = false;
+              resendBtn.style.pointerEvents = "auto";
+              resendBtn.style.opacity = "1";
+              resendBtn.style.cursor = "pointer";
+              resendBtn.textContent = originalText;
+              isResending = false;
+            }
+          });
+
+          // Start timer on load
+          startTimer();
+        });
+      </script>

@@ -34,7 +34,8 @@
               <label>
                 Remember Me
               </label>
-              <a class="form-switch mb-3" href="<%= redirect ? '/forgotPass?redirect=' + encodeURIComponent(redirect) : '/forgetPass' %>">Forgot
+              <a class="form-switch mb-3"
+                href="<%= redirect ? '/forgotPass?redirect=' + encodeURIComponent(redirect) : '/forgetPass' %>">Forgot
                 Password?
               </a>
             </div>
@@ -68,4 +69,5 @@
     </main>
 
     <%- include('../partials/user/footer') %>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       <script src="/js/logIn.js"></script>

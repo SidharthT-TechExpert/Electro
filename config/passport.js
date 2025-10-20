@@ -37,7 +37,6 @@ passport.use(
           });
           await user.save();
         }
-
         return done(null, user);
       } catch (err) {
         done(err, null);
@@ -59,13 +58,8 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         const user = await userSchema.findOne({ googleId: profile.id });
-        console.log("Google with:",user);
-
-        if (!user || !user.isAdmin || user.isBlocked)
-          return done(null, false, { message: "Not authorized!" });
-
+        console.log("Google with:", user);
         return done(null, user);
-
       } catch (err) {
         done(err, null);
       }

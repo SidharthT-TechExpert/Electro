@@ -55,7 +55,7 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/admin/login.js"></script>
 
   <% if (error && error.length) { %>
@@ -70,3 +70,17 @@
       </script>
       <% }) %>
   <% } %>
+
+  <% if (warning_msg && warning_msg.length) { %>
+  <% warning_msg.forEach(msg => { %>
+    <script>
+      Swal.fire({
+        icon: "warning",
+        title: "Warning",
+        text: "<%= msg %>",
+        timer: 3500,
+        showConfirmButton: false
+      });
+    </script>
+  <% }) %>
+<% } %>
